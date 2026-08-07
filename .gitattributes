@@ -1,0 +1,22 @@
+# Line endings and file modes, pinned rather than left to each machine's git config.
+#
+# The client repository learned this the hard way: developed on Windows with `core.autocrlf=true`
+# and `core.filemode=false`, `gradlew` landed in the index as 100644 with CRLF line endings, and
+# every CI job failed — first with `Permission denied`, then with `bad interpreter`. Both halves
+# are pinned here from the first commit rather than after the first red build.
+#
+# The mode half is not expressible in this file; it is set once with
+# `git update-index --chmod=+x gradlew scripts/*.sh`.
+
+* text=auto
+
+# Shell scripts must be LF on every platform: the shebang is read byte-for-byte.
+*.sh            text eol=lf
+gradlew         text eol=lf
+
+# Windows batch files must be CRLF: cmd.exe mis-parses LF-only labels and gotos.
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+
+*.jar           binary
+*.dump          binary

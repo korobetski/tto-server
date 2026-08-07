@@ -1,0 +1,16 @@
+# Everything here would otherwise be sent to the daemon as build context on every build, and
+# `build/` alone is hundreds of megabytes of output the image must not contain anyway.
+.git
+.github
+.gradle
+.kotlin
+build
+*.iml
+.idea
+
+# Never inside an image.
+.env
+
+docs
+scripts
+README.md

@@ -1,0 +1,69 @@
+# The development stack: the server and the database it owns.
+#
+#   cp .env.sample .env
+#   docker compose up -d --build
+#   docker compose logs -f server
+#   docker compose down          # stop, keeping data
+#   docker compose down -v       # stop and DESTROY the volume
+#
+# This is a development topology, and it says so: the database is reachable from the host, the
+# credentials are in a file everybody has, and there is no TLS. See docs/operations.md for what
+# changes on a real host — the short version is that none of the three survives.
+
+name: tto
+
+services:
+  postgres:
+    # Pinned to a major version rather than `latest`: Postgres does not upgrade its data directory
+    # in place, so a silent major bump leaves the volume unreadable by the new container and looks
+    # exactly like data loss. MigrationTest pins the same image, on purpose.
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tripletriad}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tripletriad}
+      POSTGRES_DB: ${POSTGRES_DB:-tripletriad}
+    ports:
+      # Loopback, not 0.0.0.0. The `5432:5432` most examples use publishes the database to every
+      # machine on the network, with the development password above.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # `pg_isready` with no database name reports ready during the image's own bootstrap pass,
+      # when the server is briefly up on a private socket. Naming the database makes the check mean
+      # "ready for us" rather than "a postmaster is answering".
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-tripletriad} -d ${POSTGRES_DB:-tripletriad}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  server:
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        # `service_started` would not be enough: the server migrates at start-up and would exit
+        # non-zero against a Postgres that has accepted the port but is still initialising. With
+        # `restart: unless-stopped` that becomes a crash loop that eventually succeeds — which
+        # works, and hides a real failure among the noise of a start-up that always looks broken.
+        condition: service_healthy
+    environment:
+      TTO_ENV: development
+      TTO_PORT: 8080
+      # `postgres` is the service name, resolved on compose's own network. Not localhost: inside
+      # the container, localhost is the container.
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tripletriad}
+      DATABASE_USER: ${POSTGRES_USER:-tripletriad}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-tripletriad}
+    ports:
+      - "127.0.0.1:${TTO_PORT:-8080}:8080"
+
+volumes:
+  # A named volume, not a bind mount: Postgres requires POSIX ownership on its data directory,
+  # which a bind mount from a Windows host cannot provide.
+  postgres-data:

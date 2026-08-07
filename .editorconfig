@@ -1,0 +1,32 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+# Kept in step with detekt's MaxLineLength so the two tools cannot disagree.
+max_line_length = 100
+
+# The same style the client repository uses, so a contributor moving between the two is not
+# reformatted in opposite directions. `ktlint_official` — ktlint's default since 1.0 — additionally
+# explodes every multi-argument call one-per-line and forbids a blank line after a class's opening
+# brace; both are house style rather than correctness, and neither matches how this code is written.
+ktlint_code_style = intellij_idea
+
+# On deliberately: explicit imports only. Wildcards hide which `Card`, `Application` or `Route` a
+# file means, and Ktor's packages collide with the standard library's in several places.
+ktlint_standard_no-wildcard-imports = enabled
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[gradlew.bat]
+end_of_line = crlf

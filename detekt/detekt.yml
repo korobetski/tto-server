@@ -1,0 +1,38 @@
+# detekt overrides for tto-server. `buildUponDefaultConfig = true` is set in build.gradle.kts, so
+# this file records only where we deliberately differ from the defaults.
+#
+# Each override says why. An override without a reason is a rule someone silenced because it was
+# inconvenient, and that is exactly what a code-quality gate is meant to prevent.
+
+build:
+  # Any finding fails the build. A warning threshold nobody watches is the same as no gate at all.
+  maxIssues: 0
+
+complexity:
+  LongParameterList:
+    # Configuration records carry one property per environment variable; splitting them to satisfy
+    # a counter would only move the parameters one indirection away.
+    ignoreDataClasses: true
+
+style:
+  MaxLineLength:
+    # Kept in step with .editorconfig so ktlint and detekt cannot disagree.
+    maxLineLength: 100
+  MagicNumber:
+    # Ports, timeouts and pool sizes are declared as defaults on configuration properties, where
+    # the property name already says what the number means.
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreNamedArgument: true
+  ForbiddenComment:
+    # A TODO with an owner and a reason is documentation while the server is being built; a bare
+    # one is a note somebody meant to come back to. Only the bare form is forbidden.
+    comments:
+      - reason: 'Attach an owner and a reason, or open an issue instead.'
+        value: 'TODO:'
+
+exceptions:
+  # The entry point and the shutdown hook both have to catch broadly: anything escaping there
+  # would take the process down without a log line explaining why.
+  TooGenericExceptionCaught:
+    excludes: ['**/Application.kt']

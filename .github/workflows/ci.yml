@@ -1,0 +1,58 @@
+# The gate. Everything here also runs locally with `./gradlew build` — CI is where it becomes
+# non-optional, not where it lives.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch cancels the first. Without this, a busy branch queues runs that
+# are already obsolete before they start.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          # Must match `jvmToolchain` in build.gradle.kts and the image in the Dockerfile.
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # `build` is ktlint + detekt + tests + the distribution, in that order. Testcontainers needs
+      # a Docker daemon; the ubuntu runners have one, which is the reason this job is not on a
+      # container-less runner.
+      - name: Build, lint and test
+        run: ./gradlew build --no-daemon
+
+      # Published on failure, since a red run is exactly when the reports are worth reading.
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            build/reports/
+            build/test-results/
+          retention-days: 7
+
+  image:
+    # The image is built separately and only after the gate is green: an image that fails the tests
+    # must never exist, because an image that exists eventually gets deployed.
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Builds without pushing. There is no registry yet — when there is, this is where the push
+      # and the tagging go.
+      - name: Build the image
+        run: docker build --tag tto-server:${{ github.sha }} .

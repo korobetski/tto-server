@@ -1,0 +1,27 @@
+<!--
+  Logging goes to stdout and nowhere else.
+
+  This is not laziness: in a container, the runtime already collects stdout, timestamps it, rotates
+  it and ships it. A file appender inside the container writes into a layer that disappears with
+  the container, needs its own rotation to avoid filling the disk, and hides the logs from every
+  tool that would otherwise find them. One stream out, and let the platform own the rest.
+
+  `%X{callId}` is the correlation id installed by the CallId plugin. It is printed on every line,
+  including lines from code that has no idea it is inside a request.
+-->
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{callId:-—}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <!-- Netty logs one line per connection at DEBUG, which is noise at every level of interest. -->
+    <logger name="io.netty" level="WARN"/>
+    <!-- Hikari announces pool state at DEBUG; INFO keeps the start-up and shutdown lines only. -->
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+</configuration>

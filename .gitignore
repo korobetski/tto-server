@@ -1,0 +1,14 @@
+.gradle/
+build/
+.kotlin/
+.idea/
+*.iml
+
+# Written by the IDE, and machine-specific. Not needed to build: this project has no Android SDK.
+local.properties
+
+# Local configuration and secrets; see .env.sample for the template.
+.env
+
+# Database dumps produced by scripts/backup.sh.
+backups/
