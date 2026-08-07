@@ -52,9 +52,28 @@ server.
 | `TTO_HOST` | `0.0.0.0` | inside a container this must stay `0.0.0.0` |
 | `TTO_PORT` | `8080` | |
 | `DATABASE_URL` | `jdbc:postgresql://localhost:5432/tripletriad` | |
-| `DATABASE_USER` | `tripletriad` | |
-| `DATABASE_PASSWORD` | `tripletriad` | |
+| `DATABASE_USER` | `tripletriad` | compose supplies `tto_app`, an unprivileged role — see below |
+| `DATABASE_PASSWORD` | `tripletriad` | the code default no longer matches any real database |
 | `DATABASE_POOL_SIZE` | `10` | raise in response to a measurement, not a worry |
+
+### The server does not connect as the superuser
+
+Two roles, and the distinction is deliberate. `POSTGRES_USER` (`tripletriad`) owns the cluster and is
+the account for psql, `scripts/backup.sh` and `scripts/restore.sh`. `DATABASE_USER` (`tto_app`) is
+what the **server** authenticates as: it may connect, and create and use objects in `public`, and
+nothing else — it cannot create roles, read `pg_shadow`, or drop the database. A leaked
+`DATABASE_PASSWORD` therefore costs the application's own tables rather than the cluster, which
+given that progression is server-held is the difference between a bad day and an unrecoverable one.
+
+`tto_app` is created on first boot by `docker/postgres/init/10-app-role.sh`, from the values in
+`.env`. That directory runs **only on an empty data directory**, so an existing volume needs the
+role created by hand — `.env.sample` carries the exact commands, including the one that is easy to
+miss: handing `flyway_schema_history` over to the new owner, without which the server refuses to
+start with `permission denied for table flyway_schema_history`.
+
+The two development defaults in the table above are now a `./gradlew run` fallback and nothing
+else. They name a role whose password is machine-specific, so that path needs `DATABASE_USER` and
+`DATABASE_PASSWORD` set explicitly from `.env`.
 
 ### Exit codes
 

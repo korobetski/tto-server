@@ -21,14 +21,23 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-tripletriad}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tripletriad}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env - see .env.sample}
       POSTGRES_DB: ${POSTGRES_DB:-tripletriad}
+      # Read by docker/postgres/init/10-app-role.sh, on first boot only. This is the role the
+      # server connects as; the superuser above exists to own the cluster and to be the account
+      # a human uses for psql, and the application is not a human.
+      APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env - see .env.sample}
+      APP_DB_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env - see .env.sample}
     ports:
       # Loopback, not 0.0.0.0. The `5432:5432` most examples use publishes the database to every
       # machine on the network, with the development password above.
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Runs **once**, on an empty data directory. Read-only because the container has no business
+      # rewriting its own bootstrap. See the long note in 10-app-role.sh for what that implies when
+      # the script changes: it does not re-run, and an existing volume has to be told separately.
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       # `pg_isready` with no database name reports ready during the image's own bootstrap pass,
       # when the server is briefly up on a private socket. Naming the database makes the check mean
@@ -44,6 +53,17 @@ services:
   server:
     build:
       context: .
+      additional_contexts:
+        # The developer's local Maven repository, mounted read-only into the build so it can
+        # resolve `com.tripletriad:core` — the client's rules engine, which is published nowhere
+        # yet. See the long note in the Dockerfile; the short version is that this is the one
+        # ingredient the image cannot get from its own context, and it disappears the day `:core`
+        # is published somewhere real.
+        #
+        # The path is absolute and machine-specific, which is why it lives in `.env` rather than
+        # here. Compose does not expand `~`, and `${HOME}` is set by some shells on Windows and
+        # not others, so guessing it would fail differently on every machine.
+        m2: ${MAVEN_LOCAL_REPO:?set MAVEN_LOCAL_REPO in .env - see .env.sample}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -58,8 +78,10 @@ services:
       # `postgres` is the service name, resolved on compose's own network. Not localhost: inside
       # the container, localhost is the container.
       DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tripletriad}
-      DATABASE_USER: ${POSTGRES_USER:-tripletriad}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-tripletriad}
+      # The unprivileged application role, not the superuser above — see
+      # docker/postgres/init/10-app-role.sh for why the two are different accounts.
+      DATABASE_USER: ${DATABASE_USER:?set DATABASE_USER in .env - see .env.sample}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env - see .env.sample}
     ports:
       - "127.0.0.1:${TTO_PORT:-8080}:8080"
 

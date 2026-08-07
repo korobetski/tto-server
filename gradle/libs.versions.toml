@@ -5,6 +5,11 @@
 kotlin = "2.2.20"
 serializationJson = "1.9.0"
 
+# The client's rules engine, published from the AS3-Triple-Triad repository with
+# `./gradlew :core:publishToMavenLocal`. A SNAPSHOT, and resolved from mavenLocal, until there is a
+# registry to publish it to — see settings.gradle.kts.
+core = "0.1.0-SNAPSHOT"
+
 ktor = "3.5.2"
 # Flyway needs its Postgres support in a separate artifact since v10; without it, migration fails
 # at runtime with "unsupported database" rather than at compile time.
@@ -19,7 +24,13 @@ ktlintPlugin = "12.1.2"
 detekt = "1.23.8"
 
 [libraries]
-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+# The single most important dependency here. The server verifies a match by replaying it with the
+# *same* engine the client played it with; a second implementation of the rules would make the two
+# able to disagree, which is the one thing the design rules out. Gradle module metadata picks the
+# JVM variant of this multiplatform library.
+tripletriad-core = { module = "com.tripletriad:core", version.ref = "core" }
+
+ktor-server-core ={ module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 # Netty rather than CIO: it is the engine Ktor's own deployment documentation is written against,
 # and the one whose graceful-shutdown behaviour is best specified. Nothing here depends on the
 # choice — the engine is named once, in Application.kt.

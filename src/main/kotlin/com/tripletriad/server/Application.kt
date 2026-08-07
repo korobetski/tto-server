@@ -36,6 +36,15 @@ fun main() {
 
     logger.info("Starting in {} mode on {}:{}", config.environment, config.host, config.port)
 
+    // Before the database, because it needs nothing and costs milliseconds: a catalog that will
+    // not parse should not wait behind a connection attempt to be discovered.
+    try {
+        Catalogs.preload()
+    } catch (failure: Exception) {
+        logger.error("Refusing to start: the card or opponent catalog could not be read", failure)
+        exitProcess(EXIT_MISCONFIGURED)
+    }
+
     // Two blocks rather than one: opening the pool already connects (see Database.pool), so a
     // wrong host or password fails here, before there is anything to close. Only the second block
     // owns a resource.
@@ -79,6 +88,7 @@ fun Application.module(dataSource: DataSource, registry: PrometheusMeterRegistry
 
     routing {
         healthRoutes(dataSource)
+        matchRoutes(Catalogs.cards, Catalogs.npcs)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.

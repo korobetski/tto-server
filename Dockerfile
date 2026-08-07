@@ -16,7 +16,11 @@ WORKDIR /build
 COPY gradlew ./
 COPY gradle ./gradle
 COPY settings.gradle.kts build.gradle.kts gradle.properties ./
-RUN chmod +x gradlew && ./gradlew --no-daemon dependencies --quiet || true
+# The same `m2` mount as the build step below, for the same reason — without it this warm-up
+# cannot resolve `com.tripletriad:core` and quietly caches an incomplete set, leaving the real
+# work for the uncached layer it exists to protect.
+RUN --mount=type=bind,from=m2,target=/root/.m2/repository,ro \
+    chmod +x gradlew && ./gradlew --no-daemon dependencies --quiet || true
 
 COPY detekt ./detekt
 COPY src ./src
@@ -27,7 +31,23 @@ COPY src ./src
 #
 # Tests are NOT run here. They need a Docker daemon (Testcontainers), which is not available inside
 # a build container; CI runs them, and CI is where a failing test must stop a release.
-RUN ./gradlew --no-daemon installDist -x test
+#
+# ### Why the build reaches outside its own context for one directory
+#
+# `com.tripletriad:core` is the client's rules engine, and it is not published anywhere yet — it
+# exists only in the local Maven repository that `:core:publishToMavenLocal` writes on the
+# developer's machine. `settings.gradle.kts` already lists `mavenLocal()` for exactly that reason,
+# so the *host* build resolves it; a build container has its own empty `/root/.m2` and does not.
+#
+# The mount is read-only and exists only for the duration of this instruction — nothing from the
+# host is baked into a layer, and the jar that lands in the image is the one Gradle resolved here.
+# `m2` is a named build context, supplied by `compose.yaml`; building with plain `docker build`
+# requires `--build-context m2=<path-to>/.m2/repository`.
+#
+# This is the one thing about this image that is not self-contained, and it is temporary: the day
+# `:core` is published to a real repository, this mount and the context that feeds it both go away.
+RUN --mount=type=bind,from=m2,target=/root/.m2/repository,ro \
+    ./gradlew --no-daemon installDist -x test
 
 # ---- runtime ----------------------------------------------------------------------------------
 FROM eclipse-temurin:21-jre-alpine AS runtime

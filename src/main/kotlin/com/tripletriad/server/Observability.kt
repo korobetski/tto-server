@@ -5,6 +5,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.calllogging.CallLogging
@@ -65,6 +66,15 @@ fun Application.installObservability(meters: PrometheusMeterRegistry) {
     }
 
     install(StatusPages) {
+        // Before the catch-all, and it has to be: a body that will not parse is the *client's*
+        // mistake, and the catch-all would report it as a 500 — telling the caller to retry an
+        // identical request that cannot ever succeed, and putting a server error in the metrics
+        // for every malformed probe.
+        exception<BadRequestException> { call, cause ->
+            call.application.environment.log.debug("Rejected a malformed request", cause)
+            call.respond(HttpStatusCode.BadRequest, ErrorResponse(error = "malformed_request"))
+        }
+
         exception<Throwable> { call, cause ->
             call.application.environment.log.error("Unhandled failure", cause)
             // Deliberately says nothing about the cause. An exception message can carry a SQL

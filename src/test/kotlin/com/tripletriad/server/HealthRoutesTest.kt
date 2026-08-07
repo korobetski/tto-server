@@ -4,11 +4,6 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import java.io.PrintWriter
-import java.sql.Connection
-import java.sql.SQLException
-import java.util.logging.Logger
-import javax.sql.DataSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -75,31 +70,4 @@ class HealthRoutesTest {
             "the registry exposed no JVM metrics, so it was never bound",
         )
     }
-}
-
-/**
- * A [DataSource] that always fails to connect.
- *
- * Hand-written rather than mocked: the readiness probe's whole job is to behave well when the
- * database is gone, and a stub that throws on `getConnection` reproduces that in three lines
- * without a mocking framework in the dependency set.
- */
-private object UnreachableDataSource : DataSource {
-    override fun getConnection(): Connection = throw SQLException("connection refused")
-
-    override fun getConnection(username: String?, password: String?): Connection = connection
-
-    override fun getLogWriter(): PrintWriter? = null
-
-    override fun setLogWriter(out: PrintWriter?) = Unit
-
-    override fun setLoginTimeout(seconds: Int) = Unit
-
-    override fun getLoginTimeout(): Int = 0
-
-    override fun getParentLogger(): Logger = Logger.getGlobal()
-
-    override fun <T : Any?> unwrap(iface: Class<T>?): T = throw SQLException("not a wrapper")
-
-    override fun isWrapperFor(iface: Class<*>?): Boolean = false
 }
