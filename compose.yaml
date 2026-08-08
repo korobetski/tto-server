@@ -82,6 +82,15 @@ services:
       # docker/postgres/init/10-app-role.sh for why the two are different accounts.
       DATABASE_USER: ${DATABASE_USER:?set DATABASE_USER in .env - see .env.sample}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env - see .env.sample}
+      # How this deployment describes itself on `GET /server`, and what it publishes as the
+      # current client build. All optional: blank means "nothing to announce", which is the right
+      # answer for a developer machine that is not shipping anything. See ServerConfig.kt.
+      TTO_SERVER_NAME: ${TTO_SERVER_NAME:-Triple Triad (local)}
+      TTO_CLIENT_VERSION: ${TTO_CLIENT_VERSION:-}
+      TTO_CLIENT_DOWNLOAD_ANDROID: ${TTO_CLIENT_DOWNLOAD_ANDROID:-}
+      TTO_CLIENT_DOWNLOAD_DESKTOP: ${TTO_CLIENT_DOWNLOAD_DESKTOP:-}
+      TTO_CLIENT_DOWNLOAD_IOS: ${TTO_CLIENT_DOWNLOAD_IOS:-}
+      TTO_CLIENT_NOTES: ${TTO_CLIENT_NOTES:-}
     ports:
       - "127.0.0.1:${TTO_PORT:-8080}:8080"
 

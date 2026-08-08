@@ -43,6 +43,15 @@ fun Route.healthRoutes(dataSource: DataSource) {
 }
 
 /**
+ * The same probe, reduced to the yes-or-no a client can act on.
+ *
+ * `/server` needs the fact and not the diagnosis: a player can be told "this server is reachable
+ * but cannot serve you yet", and nothing they could do with the driver's error message would help.
+ * The message stays in [ready], which is read by whoever is on call.
+ */
+internal fun isDatabaseReachable(dataSource: DataSource): Boolean = probeDatabase(dataSource) == OK
+
+/**
  * Asks the database whether it is there, and returns [OK] or the reason it is not.
  *
  * `isValid` rather than `SELECT 1`: the driver implements it as a protocol-level check with a

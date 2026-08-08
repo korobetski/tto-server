@@ -1,5 +1,10 @@
 package com.tripletriad.server
 
+import com.tripletriad.protocol.AppVersion
+import com.tripletriad.protocol.ClientPlatform
+import com.tripletriad.protocol.ClientRelease
+import org.slf4j.LoggerFactory
+
 /**
  * Everything the process needs to start, read once from the environment.
  *
@@ -22,6 +27,7 @@ data class ServerConfig(
     val host: String,
     val port: Int,
     val database: DatabaseConfig,
+    val identity: ServerIdentity,
 ) {
     companion object {
         /**
@@ -51,6 +57,7 @@ data class ServerConfig(
                     ),
                     maxPoolSize = lookup("DATABASE_POOL_SIZE")?.toIntOrNull() ?: 10,
                 ),
+                identity = ServerIdentity.from(lookup),
             )
         }
 
@@ -58,6 +65,79 @@ data class ServerConfig(
 
         /** The username and the password happen to coincide in `compose.yaml`. */
         private const val DEV_DATABASE_CREDENTIAL = "tripletriad"
+    }
+}
+
+/**
+ * What this deployment calls itself, and which client build it points people at.
+ *
+ * ### Why it is configuration and not a constant
+ *
+ * Because none of it is a property of the *code*. The name distinguishes two deployments of the
+ * same artifact in a client's server list, and the release is a fact about a store listing or a
+ * file on a web host, which changes without this program being rebuilt. Baking either in would
+ * mean a redeploy to correct a URL.
+ *
+ * ### Why a missing release is not an error
+ *
+ * A development container publishes nothing, and demanding a download URL from it would make the
+ * common case the one that fails to start. Absent means "this deployment makes no claim about
+ * client builds", which is honest and is what a client renders as nothing at all.
+ */
+data class ServerIdentity(
+    val name: String,
+    val release: ClientRelease? = null,
+) {
+    companion object {
+        /**
+         * Reads the identity from the environment.
+         *
+         * A malformed `TTO_CLIENT_VERSION` yields **no release** rather than a failure to start.
+         * The judgement is deliberate and goes the other way from [DatabaseConfig]'s: a wrong
+         * database is a server that cannot work, whereas a wrong version string costs an update
+         * banner. Refusing to boot over the second would take a working server down to protect a
+         * label — so it is logged loudly instead, where the deploy that typed it can see it.
+         */
+        fun from(lookup: (String) -> String?): ServerIdentity = ServerIdentity(
+            name = lookup("TTO_SERVER_NAME")?.takeIf { it.isNotBlank() } ?: DEFAULT_NAME,
+            release = releaseFrom(lookup),
+        )
+
+        private fun releaseFrom(lookup: (String) -> String?): ClientRelease? {
+            val raw = lookup("TTO_CLIENT_VERSION")?.takeIf { it.isNotBlank() } ?: return null
+            val version = AppVersion.parse(raw)
+
+            if (version == null) {
+                logger.warn(
+                    "TTO_CLIENT_VERSION is '{}', which is not a version; publishing no release",
+                    raw,
+                )
+            }
+
+            return version?.let {
+                ClientRelease(
+                    version = it,
+                    downloads = buildMap {
+                        DOWNLOAD_VARIABLES.forEach { (platform, variable) ->
+                            lookup(variable)?.takeIf { url -> url.isNotBlank() }
+                                ?.let { url -> put(platform, url) }
+                        }
+                    },
+                    notes = lookup("TTO_CLIENT_NOTES")?.takeIf { notes -> notes.isNotBlank() },
+                )
+            }
+        }
+
+        private const val DEFAULT_NAME = "Triple Triad"
+
+        /** One variable per platform, because the answer is a different artifact for each. */
+        private val DOWNLOAD_VARIABLES = mapOf(
+            ClientPlatform.ANDROID to "TTO_CLIENT_DOWNLOAD_ANDROID",
+            ClientPlatform.DESKTOP to "TTO_CLIENT_DOWNLOAD_DESKTOP",
+            ClientPlatform.IOS to "TTO_CLIENT_DOWNLOAD_IOS",
+        )
+
+        private val logger = LoggerFactory.getLogger(ServerIdentity::class.java)
     }
 }
 

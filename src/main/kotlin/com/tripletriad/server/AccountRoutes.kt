@@ -122,8 +122,8 @@ fun Route.accountRoutes(store: AccountStore, clock: () -> Long = System::current
      *
      * So this takes the client at its word. What that costs is stated plainly in
      * [AccountStore.replaceSave]: a determined player can still edit their own MGP. What it does
-     * **not** cost is anything a match established — the score, the reward, and the match record are
-     * computed here from a replay and are not reachable from this endpoint at all.
+     * **not** cost is anything a match established — the score, the reward and the match record
+     * are computed here from a replay and are not reachable from this endpoint at all.
      */
     put("/me/save") {
         if (!requireCompatibleClient()) return@put

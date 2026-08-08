@@ -65,7 +65,7 @@ fun main() {
 
     val registry = prometheusRegistry()
     val server = embeddedServer(Netty, port = config.port, host = config.host) {
-        module(dataSource, registry)
+        module(dataSource, registry, config.identity)
     }
 
     // Closes the pool on SIGTERM, which is what `docker stop` and every orchestrator send first.
@@ -83,7 +83,11 @@ fun main() {
  * Wires the application. Kept separate from [main] so tests can start it without a socket, a
  * shutdown hook or a real Postgres.
  */
-fun Application.module(dataSource: DataSource, registry: PrometheusMeterRegistry) {
+fun Application.module(
+    dataSource: DataSource,
+    registry: PrometheusMeterRegistry,
+    identity: ServerIdentity = ServerIdentity(name = "Triple Triad"),
+) {
     installObservability(registry)
 
     // One store for the whole application. It holds no state of its own — the pool does — so this
@@ -92,6 +96,7 @@ fun Application.module(dataSource: DataSource, registry: PrometheusMeterRegistry
 
     routing {
         healthRoutes(dataSource)
+        serverRoutes(identity, dataSource)
         accountRoutes(accounts)
         matchRoutes(Catalogs.cards, Catalogs.npcs, accounts)
 
