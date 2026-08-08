@@ -86,9 +86,14 @@ fun main() {
 fun Application.module(dataSource: DataSource, registry: PrometheusMeterRegistry) {
     installObservability(registry)
 
+    // One store for the whole application. It holds no state of its own — the pool does — so this
+    // is about there being a single place the SQL lives, not about sharing anything.
+    val accounts = AccountStore(dataSource)
+
     routing {
         healthRoutes(dataSource)
-        matchRoutes(Catalogs.cards, Catalogs.npcs)
+        accountRoutes(accounts)
+        matchRoutes(Catalogs.cards, Catalogs.npcs, accounts)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.

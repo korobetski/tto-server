@@ -1,15 +1,14 @@
 package com.tripletriad.server
 
-import com.tripletriad.data.PveMatches
 import com.tripletriad.model.CardCollection
-import com.tripletriad.model.CardColor
 import com.tripletriad.model.Deck
 import com.tripletriad.model.GameSave
-import com.tripletriad.model.MatchAi
+import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.MatchVerdict
 import com.tripletriad.protocol.RejectionReason
-import com.tripletriad.protocol.TranscriptMove
+import com.tripletriad.protocol.VERSION_HEADER
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -18,7 +17,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
-import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -45,6 +43,7 @@ class MatchRoutesTest {
 
         val response = client.post("/matches/verify") {
             contentType(ContentType.Application.Json)
+            header(VERSION_HEADER, CURRENT_VERSION.toString())
             setBody(json.encodeToString(honestTranscript(SEED)))
         }
 
@@ -69,6 +68,7 @@ class MatchRoutesTest {
 
         val response = client.post("/matches/verify") {
             contentType(ContentType.Application.Json)
+            header(VERSION_HEADER, CURRENT_VERSION.toString())
             setBody(json.encodeToString(forged))
         }
 
@@ -86,6 +86,7 @@ class MatchRoutesTest {
 
         val response = client.post("/matches/verify") {
             contentType(ContentType.Application.Json)
+            header(VERSION_HEADER, CURRENT_VERSION.toString())
             setBody("{\"not\":\"a transcript\"}")
         }
 
@@ -108,6 +109,7 @@ class MatchRoutesTest {
 
         val response = client.post("/matches/verify") {
             contentType(ContentType.Application.Json)
+            header(VERSION_HEADER, CURRENT_VERSION.toString())
             setBody(json.encodeToString(honestTranscript(SEED + 1)))
         }
 
@@ -116,47 +118,20 @@ class MatchRoutesTest {
     }
 
     /**
-     * Plays a real match against a shipped opponent and writes down what the player did.
+     * A real match played with `:core`, against a profile owning the deck it fields.
      *
-     * This is the client's half of the protocol. Note the move choice: first card in hand, first
-     * empty cell. It must not consult [Random], because the match generator is shared with the
-     * opponent's moves and drawing from it on the player's turn would desynchronise the replay —
-     * the invariant documented on `TranscriptVerifier`.
+     * The five cards are taken off the front of the catalog rather than from [GameSave]'s starter
+     * set, so this stays a test about *verification* — nothing here depends on what a new profile
+     * happens to own.
      */
     private fun honestTranscript(seed: Int): MatchTranscript {
-        val opponent = Catalogs.npcs.collection(COLLECTION).first()
         val deck = Catalogs.cards.collection(COLLECTION.prefix).take(DECK_SIZE).map { it.id }
         val profile = GameSave(
             mode = COLLECTION,
             cards = deck,
             decks = listOf(Deck("test", deck)),
         )
-
-        val random = Random(seed)
-        val match = PveMatches.assemble(profile, opponent, Catalogs.cards, random)
-        val ai = MatchAi()
-        var state = match.setup.state
-        val moves = mutableListOf<TranscriptMove>()
-
-        while (!state.isFinished) {
-            state = if (state.currentPlayer == CardColor.BLUE) {
-                val card = state.currentHand.first()
-                val position = state.playablePositions().first()
-                moves += TranscriptMove(card.id, position)
-                state.play(card, position)
-            } else {
-                ai.play(state, random)
-            }
-        }
-
-        return MatchTranscript(
-            seed = seed,
-            collection = COLLECTION,
-            opponentIconId = opponent.iconId,
-            deck = deck,
-            ownedCards = deck,
-            moves = moves,
-        )
+        return Transcripts.honest(profile, seed)
     }
 
     private val json = Json

@@ -42,6 +42,7 @@ dependencies {
 
     implementation(libs.logback.classic)
     implementation(libs.micrometer.prometheus)
+    implementation(libs.bcrypt)
 
     testImplementation(libs.kotlin.test)
     testImplementation(libs.ktor.server.test.host)

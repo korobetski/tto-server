@@ -10,7 +10,12 @@ serializationJson = "1.9.0"
 # registry to publish it to — see settings.gradle.kts.
 core = "0.1.0-SNAPSHOT"
 
-ktor = "3.5.2"
+# Held in step with the client's Ktor, and the client's is held down by Kotlin: from 3.4.0 onwards
+# Ktor's Kotlin/Native klibs are compiled by Kotlin 2.3, whose ABI the client's Kotlin 2.2.20
+# refuses. Nothing here needs a klib — this is a JVM server — but two Ktor versions across a
+# protocol boundary is a class of bug not worth the newer patch releases. Raise Kotlin in both
+# repositories first, then raise this in both.
+ktor = "3.3.1"
 # Flyway needs its Postgres support in a separate artifact since v10; without it, migration fails
 # at runtime with "unsupported database" rather than at compile time.
 flyway = "13.2.0"
@@ -18,6 +23,11 @@ hikari = "7.1.0"
 postgres = "42.7.13"
 logback = "1.6.1"
 micrometer = "1.17.0"
+# Password hashing. A dedicated library rather than the JDK's PBKDF2, because the property that
+# matters is deliberate slowness with a tunable cost, and bcrypt's cost factor is stored inside the
+# digest itself — so raising it later re-hashes each password on the owner's next sign-in without a
+# migration or a second column. This one is a single small artifact with no transitive dependencies.
+bcrypt = "0.10.2"
 testcontainers = "1.21.4"
 
 ktlintPlugin = "12.1.2"
@@ -53,6 +63,7 @@ postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 micrometer-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer" }
+bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 # The database tests run against a real Postgres in a container rather than an in-memory
