@@ -195,21 +195,17 @@ systemctl list-timers 'tto-*'
 ### When one of them fails
 
 Both units carry `OnFailure=tto-alert@%n.service`, which runs `scripts/alert.sh` with the failed
-unit's name. It POSTs the last twelve journal lines to `TTO_ALERT_URL` from `/srv/tto/.env` — a
-Discord webhook, whose URL is itself the credential and belongs nowhere but that file.
-
-**Not ntfy.sh**, which was tried first and does not work from this host: its free quota is per
-source IP, and OVH's ranges are shared widely enough that the day's allowance is routinely spent by
-other people before this machine sends anything. It answers `429` all day, which is a property of
-the address rather than a mistake.
+unit's name. It POSTs the last twelve journal lines to the Discord webhook in `TTO_ALERT_URL`, read
+from `/srv/tto/.env`. That URL is itself the credential — anyone holding it can post to the channel
+— so it belongs in that file and nowhere else.
 
 Three properties are deliberate. The alert writes to the journal *before* attempting to send, so
 the record survives the notification service being down — the day you would most want both. The
-**HTTP status** is checked rather than curl's exit code, because curl exits 0 on a 4xx: the first
-live run reported "notification sent" over that very `429`, which is this mechanism's own failure
-mode appearing at its last link. And `alert.sh` always exits 0: a notifier that fails is a notifier
-that shows up in `systemctl --failed` having told nobody, and a notifier with its own `OnFailure`
-is a loop.
+**HTTP status** is checked rather than curl's exit code, because curl exits 0 on a 4xx: an early
+version reported "notification sent" over a refusal, which is this mechanism's own failure mode
+appearing at its last link. And `alert.sh` always exits 0: a notifier that fails is a notifier that
+shows up in `systemctl --failed` having told nobody, and a notifier with its own `OnFailure` is a
+loop.
 
 Test it without breaking anything:
 

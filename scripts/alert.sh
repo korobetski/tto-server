@@ -25,14 +25,11 @@ UNIT="${1:?usage: alert.sh <unit-name>}"
 
 cd "$(dirname "$0")/.."
 
-# One variable, in the same .env as everything else. Two shapes are understood, chosen by the URL:
-# a Discord webhook, which wants JSON, and anything else, which gets the text as-is (ntfy, and most
-# things that accept a plain POST).
+# One variable, in the same .env as everything else: a Discord webhook URL.
 #
-# ntfy.sh was the first choice and does not work from this host: its free quota is per source IP,
-# and OVH's ranges are shared widely enough that the day's allowance is routinely spent by other
-# people before this machine sends anything. It answers `429` all day. That is a property of the
-# address, not of a mistake, so the transport was changed rather than retried.
+# Only that one shape is handled, deliberately. A second, untested code path for a service nobody
+# uses is a path that is broken whenever it is finally needed — which is the entire lesson of this
+# script's first two versions.
 #
 # Unset means "not configured", and that is not an error: the failure is still in the journal, and
 # refusing to run would turn a missing alert into a second failed unit.
@@ -63,58 +60,47 @@ if [ -z "$URL" ]; then
     exit 0
 fi
 
+# Discord takes JSON, so the journal excerpt has to be escaped — it is log text and will contain
+# quotes, backslashes and newlines sooner or later. Done with sed and awk rather than jq or python,
+# neither of which is installed on a minimal Debian; installing a JSON parser to send one
+# notification is a dependency that outlives its reason.
+#
+# Order matters: backslashes first, or the escaping of the quotes is itself escaped.
+#
+# Every control character except newline goes, and that includes the two it is tempting to keep. A
+# literal tab or carriage return inside a JSON string is invalid — the payload is rejected whole —
+# and the first version of this kept both, so every real alert would have been refused with a 400.
+# Tabs become spaces rather than vanishing, since docker and psql both use them for alignment and
+# deleting them runs the columns together; CR is dropped outright, having no meaning here. Newlines
+# survive to be turned into `\n` by awk.
+#
+# Truncated to 1500 characters: Discord rejects a `content` over 2000, and a notification refused
+# for being long is worse than one that is short.
+ESCAPED="$(printf '%s' "$BODY" \
+    | tr -d '\000-\010\013-\037' \
+    | tr '\011' ' ' \
+    | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
+    | awk 'BEGIN { ORS = "" } { print sep $0; sep = "\\n" }' \
+    | cut -c1-1500)"
+
 # The HTTP status is checked, not curl's exit status. **curl exits 0 on a 4xx or 5xx** — it reports
-# only transport failures — so `if curl ...` calls a refused request a success. The first live test
-# of this script did exactly that: ntfy answered `429 daily message quota reached` and the journal
-# recorded "notification sent". A notifier that claims to have told somebody is the precise failure
-# this whole mechanism exists to remove, reintroduced at its last link.
+# only transport failures — so `if curl ...` calls a refused request a success, and an early version
+# of this script did exactly that, recording "notification sent" over a refusal. A notifier that
+# claims to have told somebody is the precise failure this mechanism exists to remove, reintroduced
+# at its last link.
 #
 # `--max-time` so a hanging notification service cannot hold a systemd unit open. The response body
-# is kept and printed on failure: `429` alone does not say which limit, and the answer is in there.
+# is kept and printed on failure: a status alone rarely says which rule was hit, and Discord's
+# answer does.
+#
+# Success here is 204 No Content, which is why the check is a 2xx range rather than an equality.
 RESPONSE="$(mktemp)"
-
-case "$URL" in
-    *discord.com/api/webhooks/*|*discordapp.com/api/webhooks/*)
-        # Discord takes JSON, so the journal excerpt has to be escaped — it is log text and will
-        # contain quotes, backslashes and newlines sooner or later. Done with sed rather than jq or
-        # python, neither of which is installed on a minimal Debian, and installing a JSON parser to
-        # send one notification is a dependency that will outlive the reason for it.
-        #
-        # Order matters: backslashes first, or the escaping of the quotes is itself escaped.
-        #
-        # Every control character except newline goes, and that includes the two it is tempting to
-        # keep. A literal tab or carriage return inside a JSON string is invalid — the payload is
-        # rejected whole — and the first version of this kept both. Tabs become spaces rather than
-        # vanishing, since docker and psql both use them for alignment and deleting them runs the
-        # columns together; CR is dropped outright, having no meaning here. Newlines survive to be
-        # turned into `\n` by awk.
-        #
-        # Truncated to 1500 characters: Discord rejects a `content` over 2000, and a notification
-        # refused for being long is worse than one that is short.
-        ESCAPED="$(printf '%s' "$BODY" \
-            | tr -d '\000-\010\013-\037' \
-            | tr '\011' ' ' \
-            | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
-            | awk 'BEGIN { ORS = "" } { print sep $0; sep = "\\n" }' \
-            | cut -c1-1500)"
-        CODE="$(curl --silent --show-error --max-time 20 \
-                --header 'Content-Type: application/json' \
-                --data-binary "{\"content\":\"$ESCAPED\"}" \
-                --output "$RESPONSE" \
-                --write-out '%{http_code}' \
-                "$URL" 2>/dev/null || echo 000)"
-        ;;
-    *)
-        CODE="$(curl --silent --show-error --max-time 20 \
-                --header "Title: $UNIT failed on $HOSTNAME" \
-                --header "Priority: high" \
-                --header "Tags: warning" \
-                --data-binary "$BODY" \
-                --output "$RESPONSE" \
-                --write-out '%{http_code}' \
-                "$URL" 2>/dev/null || echo 000)"
-        ;;
-esac
+CODE="$(curl --silent --show-error --max-time 20 \
+        --header 'Content-Type: application/json' \
+        --data-binary "{\"content\":\"$ESCAPED\"}" \
+        --output "$RESPONSE" \
+        --write-out '%{http_code}' \
+        "$URL" 2>/dev/null || echo 000)"
 
 case "$CODE" in
     2*)
