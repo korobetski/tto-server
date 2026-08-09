@@ -1,21 +1,22 @@
 [versions]
-# Kept in step with the client repository (AS3-Triple-Triad). It is not a hard requirement today —
-# nothing is shared yet — but it becomes one the moment `:core` is consumed as an artifact, because
-# a Kotlin library and its consumer must agree on the language version.
-kotlin = "2.2.20"
-serializationJson = "1.9.0"
+# Kept in step with the client repository (AS3-Triple-Triad), and now a hard requirement rather
+# than a courtesy: `:core` is consumed as an artifact, and a Kotlin library's metadata cannot be
+# read by a consumer on an older language version. The client went to 2.4.10 on 2026-08-08 and this
+# followed the same day.
+kotlin = "2.4.10"
+serializationJson = "1.11.0"
 
 # The client's rules engine, published from the AS3-Triple-Triad repository with
 # `./gradlew :core:publishToMavenLocal`. A SNAPSHOT, and resolved from mavenLocal, until there is a
 # registry to publish it to — see settings.gradle.kts.
 core = "0.1.0-SNAPSHOT"
 
-# Held in step with the client's Ktor, and the client's is held down by Kotlin: from 3.4.0 onwards
-# Ktor's Kotlin/Native klibs are compiled by Kotlin 2.3, whose ABI the client's Kotlin 2.2.20
-# refuses. Nothing here needs a klib — this is a JVM server — but two Ktor versions across a
-# protocol boundary is a class of bug not worth the newer patch releases. Raise Kotlin in both
-# repositories first, then raise this in both.
-ktor = "3.3.1"
+# Held in step with the client's Ktor. It was pinned at 3.3.1 by the client's Kotlin — from 3.4.0
+# Ktor's Kotlin/Native klibs are compiled by Kotlin 2.3, whose ABI Kotlin 2.2.20 refused — and
+# nothing here ever needed a klib, this being a JVM server. The constraint was still binding on
+# *this* number, because two Ktor versions across a protocol boundary is a class of bug not worth
+# the newer patch releases. Kotlin moved in both repositories on 2026-08-08 and both Ktors followed.
+ktor = "3.5.2"
 # Flyway needs its Postgres support in a separate artifact since v10; without it, migration fails
 # at runtime with "unsupported database" rather than at compile time.
 flyway = "13.2.0"
@@ -28,6 +29,9 @@ micrometer = "1.17.0"
 # digest itself — so raising it later re-hashes each password on the owner's next sign-in without a
 # migration or a second column. This one is a single small artifact with no transitive dependencies.
 bcrypt = "0.10.2"
+# **Held at 1.x.** Testcontainers 2.0 reorganised its coordinates: `org.testcontainers:postgresql`
+# and `:junit-jupiter` are not published at 2.0.5 at all, so taking it means finding and rewriting
+# the module names for a test-only dependency that works. Not now.
 testcontainers = "1.21.4"
 
 ktlintPlugin = "12.1.2"

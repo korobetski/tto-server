@@ -180,5 +180,10 @@ class ServerRoutesTest {
      * installed, and installing one would be testing Ktor's plumbing rather than this route.
      */
     private suspend fun info(response: HttpResponse): ServerInfo =
-        Json { ignoreUnknownKeys = true }.decodeFromString(response.bodyAsText())
+        json.decodeFromString(response.bodyAsText())
+
+    private companion object {
+        /** One format for the suite: building a `Json` per call is slow, and 1.11 now says so. */
+        val json = Json { ignoreUnknownKeys = true }
+    }
 }
