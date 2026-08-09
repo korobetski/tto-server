@@ -56,19 +56,40 @@ if [ -z "$URL" ]; then
     exit 0
 fi
 
-# `--max-time` so a hanging notification service cannot hold a systemd unit open, and `--silent`
-# because curl's progress meter in a journal is noise. The exit status is deliberately swallowed:
-# this script running as a consequence of a failure must not itself become a failed unit that
-# triggers nothing and clutters `systemctl --failed`.
-if curl --silent --show-error --max-time 20 \
+# The HTTP status is checked, not curl's exit status. **curl exits 0 on a 4xx or 5xx** — it reports
+# only transport failures — so `if curl ...` calls a refused request a success. The first live test
+# of this script did exactly that: ntfy answered `429 daily message quota reached` and the journal
+# recorded "notification sent". A notifier that claims to have told somebody is the precise failure
+# this whole mechanism exists to remove, reintroduced at its last link.
+#
+# `--max-time` so a hanging notification service cannot hold a systemd unit open. The response body
+# is kept and printed on failure: `429` alone does not say which limit, and the answer is in there.
+RESPONSE="$(mktemp)"
+CODE="$(curl --silent --show-error --max-time 20 \
         --header "Title: $UNIT failed on $HOSTNAME" \
         --header "Priority: high" \
         --header "Tags: warning" \
         --data-binary "$BODY" \
-        "$URL" > /dev/null 2>&1; then
-    echo "notification sent" >&2
-else
-    echo "FAILED to send the notification - the journal above is the only record" >&2
-fi
+        --output "$RESPONSE" \
+        --write-out '%{http_code}' \
+        "$URL" 2>/dev/null || echo 000)"
 
+case "$CODE" in
+    2*)
+        echo "notification sent (HTTP $CODE)" >&2
+        ;;
+    000)
+        echo "FAILED to reach $URL - the journal above is the only record" >&2
+        ;;
+    *)
+        echo "FAILED to notify: HTTP $CODE - the journal above is the only record" >&2
+        head -c 400 "$RESPONSE" >&2
+        echo >&2
+        ;;
+esac
+rm -f "$RESPONSE"
+
+# The exit status is deliberately swallowed, whatever happened above. This script runs *because*
+# something already failed; becoming a failed unit itself would add a second entry to
+# `systemctl --failed` that notifies nobody, and giving it its own OnFailure would be a loop.
 exit 0
