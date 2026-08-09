@@ -1,0 +1,51 @@
+# The only thing on this VPS the internet can reach.
+#
+# Caddy obtains and renews the certificate for {$TTO_DOMAIN} from Let's Encrypt by itself, on first
+# start and every 60 days after, and redirects :80 to :443 without being asked. That is the whole
+# reason it is here rather than Nginx: a renewal nobody has to remember is a renewal that does not
+# expire on a Sunday.
+
+{
+	# Where expiry and validation-failure warnings go. Required by ACME, and the only warning that
+	# arrives before the certificate is actually broken.
+	email {$TTO_TLS_EMAIL}
+}
+
+{$TTO_DOMAIN} {
+	encode zstd gzip
+
+	# `/metrics` is unauthenticated by design — it is meant for a scraper on a private network, and
+	# it leaks route names, latencies and traffic volume to anyone who asks. Nothing scrapes it from
+	# outside today, so outside is refused. When something does, this becomes an allow-list of that
+	# scraper's address, not a removal.
+	#
+	# Same for the health endpoints: they are for the container runtime and for scripts/deploy.sh,
+	# both of which reach the server directly on the compose network. Published, they are a free
+	# readiness oracle for anyone probing the host.
+	@internal path /metrics /health/*
+	respond @internal 404
+
+	reverse_proxy server:8080 {
+		# The server generates one when absent and logs every line under it, so a request can be
+		# followed end to end. Passing the proxy's own id through means the two agree.
+		header_up X-Request-Id {http.request.header.X-Request-Id}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+
+	header {
+		# HSTS. Note what it commits to: a browser that sees this will refuse plain HTTP to this
+		# domain for a year, and there is no way to withdraw that faster than it expires. Correct
+		# for a host that is HTTPS-only and staying that way, which this one is.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		# The server is an API — nothing it returns is ever a document a browser should frame.
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		# The proxy's own version, on every response, is free reconnaissance.
+		-Server
+	}
+}

@@ -31,28 +31,39 @@ That single requirement rules out most of the interesting hosting options — ed
 serverless platforms, every game-backend product whose match handlers are written in its own
 language — and it is the reason the stack below looks conventional.
 
-`:core` is extracted and consumed. It is not *published* anywhere, though — it is resolved from the
-developer's local Maven repository, which is the one thing below that needs a step before the
-obvious one.
+`:core` is extracted, published from the `tto-core` repository to GitHub Packages, and consumed from
+there — which is what makes this repository buildable on a machine that has never seen the client's
+sources, and therefore what makes CI able to build an image and deploy it.
 
 ---
 
 ## Quick start
 
-`:core` has to exist locally first, from the client repository:
+Reading `com.tripletriad:core` needs a GitHub token with `read:packages`, because GitHub Packages
+answers an anonymous request with 401 even for a public package. It goes in your Gradle home file,
+outside this repository:
 
 ```
-cd ../AS3-Triple-Triad && ./gradlew :core:publishToMavenLocal
+# ~/.gradle/gradle.properties
+gpr.user=your-github-username
+gpr.key=ghp_...
 ```
 
-Then, back here — `MAVEN_LOCAL_REPO` in `.env` is the one value with no portable default, because
-the image build mounts that directory to resolve `:core`:
+Then — `GRADLE_PROPERTIES` in `.env` is the one value with no portable default, because the image
+build mounts that file as a secret to resolve `:core`:
 
 ```
 cp .env.sample .env
-$EDITOR .env          # MAVEN_LOCAL_REPO, and a password for each of the two database roles
+$EDITOR .env          # GRADLE_PROPERTIES, and a password for each of the two database roles
 docker compose up -d --build
 curl localhost:8080/health/ready
+```
+
+To try an *unreleased* engine change instead, publish `:core` locally from the client repository —
+`settings.gradle.kts` prefers that copy over the published one, on purpose:
+
+```
+cd ../AS3-Triple-Triad && ./gradlew :core:publishToMavenLocal
 ```
 
 `.env` has no working defaults on purpose: compose refuses to start rather than fall back to a
@@ -61,9 +72,9 @@ superuser that owns the cluster, and the unprivileged `tto_app` the server actua
 See `.env.sample`, which also carries the commands for the case where the volume already exists,
 since the bootstrap only ever runs on an empty one.
 
-Or without Docker, against a Postgres you already have — `mavenLocal()` is in
-`settings.gradle.kts`, so this needs no `MAVEN_LOCAL_REPO`, but it does need the two database
-variables, whose code defaults no longer match any real database:
+Or without Docker, against a Postgres you already have — Gradle reads your home file directly, so
+this needs no `GRADLE_PROPERTIES`, but it does need the two database variables, whose code defaults
+no longer match any real database:
 
 ```
 TTO_ENV=development DATABASE_USER=tto_app DATABASE_PASSWORD=... ./gradlew run
@@ -113,3 +124,16 @@ of what is not built yet.
 
 The backups section is the one to read. Progression being server-held means losing this database
 ends the game, and the scripts in `scripts/` are a starting point rather than a strategy.
+
+[docs/deployment.md](docs/deployment.md) — provisioning the VPS, the GitHub secrets, and how a tag
+becomes the running server. The short version:
+
+```
+git tag -a v0.2.0 -m "What changed" && git push origin v0.2.0
+```
+
+CI verifies the tagged commit, pushes an image to `ghcr.io`, and the host pulls that digest and
+restarts — rolling itself back if the new one never answers `/health/ready`.
+
+[docs/core-package.md](docs/core-package.md) — why `com.tripletriad:core` is a published package and
+not a directory somebody has to have.

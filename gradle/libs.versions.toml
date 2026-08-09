@@ -6,10 +6,14 @@
 kotlin = "2.4.10"
 serializationJson = "1.11.0"
 
-# The client's rules engine, published from the AS3-Triple-Triad repository with
-# `./gradlew :core:publishToMavenLocal`. A SNAPSHOT, and resolved from mavenLocal, until there is a
-# registry to publish it to — see settings.gradle.kts.
-core = "0.1.0-SNAPSHOT"
+# The rules engine, published from the `tto-core` repository to GitHub Packages — see
+# settings.gradle.kts for the two repositories that can serve it and why the local one wins.
+#
+# A real version rather than the SNAPSHOT this used to be, and the difference matters here more
+# than anywhere: a match is verified by replaying it with this engine, so a `verify` that resolved a
+# different one than the release did would be re-testing a server nobody deployed. The client pins
+# this same number, and the two move together — tag `tto-core`, then the client, then this line.
+core = "0.1.0"
 
 # Held in step with the client's Ktor. It was pinned at 3.3.1 by the client's Kotlin — from 3.4.0
 # Ktor's Kotlin/Native klibs are compiled by Kotlin 2.3, whose ABI Kotlin 2.2.20 refused — and

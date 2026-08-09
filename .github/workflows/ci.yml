@@ -1,5 +1,8 @@
 # The gate. Everything here also runs locally with `./gradlew build` — CI is where it becomes
 # non-optional, not where it lives.
+#
+# This workflow never deploys and never pushes an image. It answers one question — is this commit
+# releasable — and .github/workflows/release.yml answers the other one.
 name: CI
 
 on:
@@ -12,6 +15,12 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# Read-only. This workflow has no business writing to the repository or to the registry, and a
+# token that cannot do a thing is the only reliable way of knowing it will not.
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   build:
@@ -32,6 +41,18 @@ jobs:
       # container-less runner.
       - name: Build, lint and test
         run: ./gradlew build --no-daemon
+        env:
+          # Reads `com.tripletriad:core` from GitHub Packages — see settings.gradle.kts. GitHub
+          # Packages returns 401 to an anonymous request even for a public package, so this is not
+          # optional.
+          #
+          # The built-in GITHUB_TOKEN is scoped to *this* repository, and `tto-core` is another one.
+          # It works only once that package has granted this repository read access (Package →
+          # Settings → Manage Actions access). GH_PACKAGES_TOKEN is the way out when it has not: a
+          # PAT with `read:packages` and nothing else. Preferred when present, so the repository
+          # keeps working either way.
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
       # Published on failure, since a red run is exactly when the reports are worth reading.
       - name: Upload reports
@@ -45,14 +66,34 @@ jobs:
           retention-days: 7
 
   image:
-    # The image is built separately and only after the gate is green: an image that fails the tests
-    # must never exist, because an image that exists eventually gets deployed.
+    # Built only after the gate is green: an image that fails the tests must never exist, because
+    # an image that exists eventually gets deployed.
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Builds without pushing. There is no registry yet — when there is, this is where the push
-      # and the tagging go.
+      # The Dockerfile needs BuildKit for its `--mount=type=secret`, and buildx is what guarantees
+      # it regardless of what the runner's docker defaults to.
+      - uses: docker/setup-buildx-action@v3
+
+      # The credentials the build needs to resolve `com.tripletriad:core`, in the file Gradle reads
+      # them from. Written under RUNNER_TEMP and not in the workspace: nothing here may be picked up
+      # by the build context and end up in a layer. `docker build --secret` mounts it into exactly
+      # one instruction and records nothing.
+      - name: Compose the Gradle credentials
+        run: |
+          umask 077
+          {
+            echo "gpr.user=${{ github.actor }}"
+            echo "gpr.key=${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}"
+          } > "$RUNNER_TEMP/gradle.properties"
+
+      # Built and thrown away. This job proves the Dockerfile still works — that the sources compile
+      # in a clean container and that the runtime image assembles — and nothing more. Pushing is
+      # release.yml's job, so that the only images which exist are the ones a tag asked for.
       - name: Build the image
-        run: docker build --tag tto-server:${{ github.sha }} .
+        run: |
+          docker build \
+            --secret id=gradle_properties,src="$RUNNER_TEMP/gradle.properties" \
+            --tag tto-server:${{ github.sha }} .

@@ -1,0 +1,119 @@
+# The deployed stack: a reverse proxy that owns TLS, the server, and the database it owns.
+#
+# This file is not `compose.yaml` with different values — it is a different topology, and the
+# differences are the point:
+#
+#   * nothing is built here. `TTO_IMAGE` names an image that CI already built and tested, and the
+#     only way a new one arrives is a tag on `main`. A host that can build is a host where the
+#     running code and the released code can differ.
+#   * neither Postgres nor the server publishes a port. The only thing the internet can reach is
+#     Caddy, on 80 and 443.
+#   * TLS exists.
+#
+# It is driven by `scripts/deploy.sh`, not by hand. See docs/deployment.md.
+#
+#   docker compose -f compose.prod.yaml ps
+#   docker compose -f compose.prod.yaml logs -f server
+
+name: tto
+
+services:
+  postgres:
+    # Same pin, same reason as in compose.yaml: Postgres does not upgrade its data directory in
+    # place, and a silent major bump on a host holding player progression is not a bad deployment,
+    # it is the end of the game.
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-tripletriad}
+      APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env}
+      APP_DB_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
+    # No `ports:` at all. Not even `127.0.0.1:5432` — reaching it from the host is what
+    # `docker compose exec postgres psql` is for, and an OVH VPS with a published database port is
+    # found by a scanner within the hour.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+      # Where scripts/backup.sh writes. A bind mount, so the dumps outlive `docker compose down -v`
+      # — which is the one command that destroys the volume next to them.
+      - ./backups:/backups
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-tripletriad}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  server:
+    # Set by scripts/deploy.sh from the tag being deployed, never edited by hand. Pinned to a
+    # digest-stable tag rather than `latest`, so `docker compose up -d` after a reboot brings back
+    # the version that was deployed and not whatever has been pushed since.
+    image: ${TTO_IMAGE:?set TTO_IMAGE - scripts/deploy.sh writes it into .env}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Anything that is not `development` is production, and production refuses every credential
+      # default. See ServerConfig.kt.
+      TTO_ENV: production
+      TTO_PORT: 8080
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tripletriad}
+      DATABASE_USER: ${DATABASE_USER:?set DATABASE_USER in .env}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      TTO_SERVER_NAME: ${TTO_SERVER_NAME:-Triple Triad}
+      TTO_CLIENT_VERSION: ${TTO_CLIENT_VERSION:-}
+      TTO_CLIENT_DOWNLOAD_ANDROID: ${TTO_CLIENT_DOWNLOAD_ANDROID:-}
+      TTO_CLIENT_DOWNLOAD_DESKTOP: ${TTO_CLIENT_DOWNLOAD_DESKTOP:-}
+      TTO_CLIENT_DOWNLOAD_IOS: ${TTO_CLIENT_DOWNLOAD_IOS:-}
+      TTO_CLIENT_NOTES: ${TTO_CLIENT_NOTES:-}
+    # No published port either: Caddy reaches it as `server:8080` on this network. Publishing it
+    # would put a plaintext HTTP server on the VPS's public address, next to the HTTPS one, and
+    # every client that found it would work — which is how a TLS deployment stays untested.
+    logging:
+      # The default json-file driver has no limit, so a chatty week fills the disk and takes the
+      # database down with it. Ten files of 10 MB is a few days of logs and a bounded worst case.
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  caddy:
+    # Terminates TLS. Caddy rather than Nginx for one reason: certificates. It obtains and renews
+    # them from Let's Encrypt on its own, with no cron, no certbot and no renewal that is forgotten
+    # until the day it expires.
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+      - "443:443"
+      # QUIC. Harmless if the client never speaks it, and 80 has to stay open regardless — that is
+      # where the ACME HTTP challenge and the redirect to HTTPS live.
+      - "443:443/udp"
+    environment:
+      TTO_DOMAIN: ${TTO_DOMAIN:?set TTO_DOMAIN in .env - the DNS name pointing at this VPS}
+      TTO_TLS_EMAIL: ${TTO_TLS_EMAIL:?set TTO_TLS_EMAIL in .env - Let's Encrypt expiry warnings}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # The certificates and the ACME account key. Losing this volume is not fatal but it is not
+      # free either — Let's Encrypt rate-limits issuance per domain, and a container that is
+      # recreated often enough without it will eventually be refused.
+      - caddy-data:/data
+      - caddy-config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

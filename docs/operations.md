@@ -152,16 +152,20 @@ publicly on a host — it leaks route names, latencies and traffic volume.
 
 Named rather than implied, so none of it is discovered at the wrong moment:
 
-- **TLS.** Nothing terminates HTTPS. On a host that is a reverse proxy's job, not this process's.
-- **Secrets.** `.env` is a file with a password in it. Adequate for a laptop, not for a host.
-- **Authentication.** No accounts, no keys, no sessions — the design exists, the code does not.
-- **A registry.** CI builds an image and throws it away; there is nowhere to push it.
-- **`:core`.** The whole point of a JVM server is that it replays matches with the *real* engine.
-  Until the client's `:core` is extracted and consumable, this server cannot verify anything.
+- **Secrets management.** `.env` is still a file with passwords in it — on the VPS it is mode 600 and
+  owned by the deploy user, which is adequate for one host and not a secrets store. Nothing rotates
+  them, and nothing would notice if a copy leaked.
 - **More than one instance.** Several decisions here are single-instance decisions and say so.
+- **Anything watching the deployed host.** `/metrics` is served and nothing scrapes it; see
+  `deployment.md` for the rest of what a real host is still missing.
+
+Resolved since this list was written, and kept here so the change is visible rather than silently
+edited away: TLS is Caddy's, in `compose.prod.yaml`; the registry is `ghcr.io`, and CI pushes to it
+on a tag; `:core` is published from the `tto-core` repository and consumed as an artifact.
 
 ---
 
 ## Related
 
+- `deployment.md` — provisioning the VPS, and how a tag becomes the running server
 - `../../AS3-Triple-Triad/docs/migration/09-PHASE-5-NETWORK.md` — the design this serves

@@ -16,10 +16,10 @@ WORKDIR /build
 COPY gradlew ./
 COPY gradle ./gradle
 COPY settings.gradle.kts build.gradle.kts gradle.properties ./
-# The same `m2` mount as the build step below, for the same reason — without it this warm-up
+# The same credentials mount as the build step below, for the same reason — without it this warm-up
 # cannot resolve `com.tripletriad:core` and quietly caches an incomplete set, leaving the real
 # work for the uncached layer it exists to protect.
-RUN --mount=type=bind,from=m2,target=/root/.m2/repository,ro \
+RUN --mount=type=secret,id=gradle_properties,target=/root/.gradle/gradle.properties \
     chmod +x gradlew && ./gradlew --no-daemon dependencies --quiet || true
 
 COPY detekt ./detekt
@@ -32,21 +32,29 @@ COPY src ./src
 # Tests are NOT run here. They need a Docker daemon (Testcontainers), which is not available inside
 # a build container; CI runs them, and CI is where a failing test must stop a release.
 #
-# ### Why the build reaches outside its own context for one directory
+# ### The one credential this build needs
 #
-# `com.tripletriad:core` is the client's rules engine, and it is not published anywhere yet — it
-# exists only in the local Maven repository that `:core:publishToMavenLocal` writes on the
-# developer's machine. `settings.gradle.kts` already lists `mavenLocal()` for exactly that reason,
-# so the *host* build resolves it; a build container has its own empty `/root/.m2` and does not.
+# `com.tripletriad:core` is the client's rules engine, published from the `tto-core` repository to
+# GitHub Packages — which requires authentication even to read a public package. So the build needs
+# a GitHub username and a `read:packages` token, and a token must never become a layer: an `ARG` is
+# readable in `docker history`, and an `ENV` is readable in the image itself.
 #
-# The mount is read-only and exists only for the duration of this instruction — nothing from the
-# host is baked into a layer, and the jar that lands in the image is the one Gradle resolved here.
-# `m2` is a named build context, supplied by `compose.yaml`; building with plain `docker build`
-# requires `--build-context m2=<path-to>/.m2/repository`.
+# A BuildKit secret is neither. It is a tmpfs that exists for the duration of this one instruction
+# and is not recorded in the layer, so the artifact that lands in the image is the jar Gradle
+# resolved here and nothing else. Mounted where Gradle already looks — `~/.gradle/gradle.properties`
+# — so `settings.gradle.kts` needs no special case for the container.
 #
-# This is the one thing about this image that is not self-contained, and it is temporary: the day
-# `:core` is published to a real repository, this mount and the context that feeds it both go away.
-RUN --mount=type=bind,from=m2,target=/root/.m2/repository,ro \
+# `docker build --secret id=gradle_properties,src=$HOME/.gradle/gradle.properties .`
+#
+# The file needs the two properties `settings.gradle.kts` reads:
+#
+#   gpr.user=your-github-username
+#   gpr.key=ghp_...
+#
+# The mount is optional as far as BuildKit is concerned — a build without it does not fail here, it
+# fails a few seconds later on an unresolved `com.tripletriad:core`, which is the message worth
+# reading anyway.
+RUN --mount=type=secret,id=gradle_properties,target=/root/.gradle/gradle.properties \
     ./gradlew --no-daemon installDist -x test
 
 # ---- runtime ----------------------------------------------------------------------------------

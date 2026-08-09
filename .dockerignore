@@ -14,3 +14,9 @@ build
 docs
 scripts
 README.md
+
+# The deployment topology. Read by compose on the VPS, never by a build — and `compose.prod.yaml`
+# in particular must not be reachable from inside an image that it starts.
+compose.prod.yaml
+Caddyfile
+.env.prod.sample
