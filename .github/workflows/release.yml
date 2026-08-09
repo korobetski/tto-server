@@ -133,19 +133,71 @@ jobs:
     # that the gate is a settings change rather than a workflow change, and so the deployment shows
     # up in the repository's environment history.
     environment: production
+    # Every secret enters through the environment rather than through `${{ }}` inside a `run:`
+    # block. Two reasons, and the first one is why this job existed for a run and a half without
+    # working: an expression that expands to nothing leaves no trace — the shell simply receives one
+    # argument fewer, and `ssh` answers with its usage text, which names nothing. As a variable, an
+    # empty value is a value, and the preflight below can say which one. The second reason is that a
+    # secret pasted straight into a command line is text the shell parses, so a stray quote or `$`
+    # in it would be executed rather than sent.
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+      IMAGE_REF: ${{ needs.publish.outputs.image }}
     steps:
       - uses: actions/checkout@v4
+
+      # Fails before anything is attempted, naming the secret that is missing. A deployment that
+      # cannot start is a five-second failure; a deployment that starts on a half-configured runner
+      # is one that has already sent a tar somewhere by the time it goes wrong.
+      #
+      # Values are never printed — only whether each is empty. `VPS_SSH_KEY` gets one extra check,
+      # because the way it fails is specific: pasted without its trailing newline, or without the
+      # final `-----END OPENSSH PRIVATE KEY-----` line, OpenSSH rejects it as `invalid format` and
+      # nothing in that message suggests a copy-paste.
+      - name: Check the deployment secrets
+        run: |
+          missing=""
+          for name in VPS_HOST VPS_USER VPS_SSH_KEY VPS_KNOWN_HOSTS; do
+            eval "value=\${$name}"
+            [ -n "$value" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing or empty repository secrets:$missing" >&2
+            echo "Set them under Settings → Secrets and variables → Actions." >&2
+            exit 1
+          fi
+          case "$VPS_SSH_KEY" in
+            *"PRIVATE KEY-----"*) ;;
+            *) echo "::error::VPS_SSH_KEY does not look like a private key - paste the whole file, both header lines included." >&2; exit 1 ;;
+          esac
+          echo "host=${VPS_HOST}, user=${VPS_USER}, port=${VPS_PORT}"
 
       # The private half of the key pair whose public half is in the deploy user's
       # ~/.ssh/authorized_keys on the VPS. VPS_KNOWN_HOSTS pins the host key: without it the only
       # options are refusing to connect and accepting whatever answers, and the second one means a
       # DNS or routing compromise gets handed a shell and a database password.
+      #
+      # `printf %s\n` rather than `echo`: a key whose final newline was lost in the paste is
+      # rejected outright, and this puts it back rather than depending on how it was copied.
       - name: Configure SSH
         run: |
           umask 077
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
-          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_deploy ~/.ssh/known_hosts
+
+      # Proves the credentials before anything is sent. `BatchMode=yes` so a host key that does not
+      # match the pin fails immediately instead of waiting on a prompt nobody can answer.
+      - name: Check the connection
+        run: |
+          ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" 'id && test -w /srv/tto && echo "/srv/tto is writable"'
 
       # The host runs the deployment topology from this repository, so it has to be the version
       # being deployed. Sent as a tar over the existing SSH connection rather than with rsync or
@@ -156,8 +208,9 @@ jobs:
       - name: Sync the deployment files
         run: |
           tar czf - compose.prod.yaml Caddyfile scripts docker/postgres/init \
-            | ssh -i ~/.ssh/id_deploy -p "${{ secrets.VPS_PORT || 22 }}" \
-                "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            | ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" \
+                -o BatchMode=yes -o StrictHostKeyChecking=yes \
+                "$VPS_USER@$VPS_HOST" \
                 'tar xzf - -C /srv/tto && chmod +x /srv/tto/scripts/*.sh'
 
       # deploy.sh pulls, pins the digest into /srv/tto/.env, restarts, waits for /health/ready, and
@@ -165,18 +218,19 @@ jobs:
       # rollback shows up as a red release rather than a green one nobody looks at.
       - name: Deploy
         run: |
-          ssh -i ~/.ssh/id_deploy -p "${{ secrets.VPS_PORT || 22 }}" \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "/srv/tto/scripts/deploy.sh '${{ needs.publish.outputs.image }}'"
+          ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "/srv/tto/scripts/deploy.sh '$IMAGE_REF'"
 
       - name: Summarise
         if: always()
         run: |
           {
-            echo "### ${{ github.ref_name }} → ${{ secrets.VPS_HOST }}"
+            echo "### ${{ github.ref_name }} → $VPS_HOST"
             echo
             echo '```'
-            echo "${{ needs.publish.outputs.image }}"
+            echo "$IMAGE_REF"
             echo '```'
             echo
             echo "Rollback, on the host: \`cd /srv/tto && ./scripts/deploy.sh $IMAGE:<previous-tag>\`"
