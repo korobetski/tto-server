@@ -31,6 +31,35 @@ READY_TIMEOUT="${READY_TIMEOUT:-120}"
 
 cd "$(dirname "$0")/.."
 
+# Waits for the server to answer /health/ready, or gives up. Used twice — once for the release and
+# once for the rollback — because a rollback that is not checked is a guess, and the run that most
+# needs the truth is the one where something has already gone wrong.
+#
+# /health/ready and not /health/live: live answers for the process alone and would be satisfied by a
+# server that cannot reach the database. Reached from inside the container, because the host cannot
+# reach it — nothing publishes that port, on purpose.
+await_ready() {
+    elapsed=0
+    while [ "$elapsed" -lt "$READY_TIMEOUT" ]; do
+        if $COMPOSE exec -T server wget --quiet --spider http://127.0.0.1:8080/health/ready 2>/dev/null; then
+            return 0
+        fi
+        sleep 3
+        elapsed=$((elapsed + 3))
+    done
+    return 1
+}
+
+# Rewrites the one line that says what this host runs. Atomic: a half-written .env is a host that
+# cannot start at all, which is worse than either version of it.
+pin_image() {
+    {
+        grep -v '^TTO_IMAGE=' .env || true
+        echo "TTO_IMAGE=$1"
+    } > .env.next
+    mv .env.next .env
+}
+
 if [ ! -f .env ]; then
     echo "FAILED: no .env in $(pwd). See docs/deployment.md - the host is not provisioned." >&2
     exit 1
@@ -47,13 +76,8 @@ docker pull "$IMAGE"
 
 # `.env` is the single source of truth for what this host runs, so that `docker compose up -d`
 # after a reboot brings back the deployed version rather than whatever `latest` has become.
-# Rewritten atomically: a half-written .env is a host that cannot start at all.
 echo "==> pinning TTO_IMAGE"
-{
-    grep -v '^TTO_IMAGE=' .env || true
-    echo "TTO_IMAGE=$IMAGE"
-} > .env.next
-mv .env.next .env
+pin_image "$IMAGE"
 
 echo "==> starting"
 $COMPOSE up -d --remove-orphans
@@ -63,24 +87,15 @@ $COMPOSE up -d --remove-orphans
 # `up -d` returns as soon as the container is *started*, which says nothing about whether the
 # process inside it survived its own configuration. A server that exits 78 on a missing variable,
 # or 70 on a migration it cannot apply, restarts forever behind a deployment that reported success.
-#
-# /health/ready and not /health/live: live answers for the process alone and would be satisfied by a
-# server that cannot reach the database. Reached from inside the container, because the host cannot
-# reach it — nothing publishes that port, on purpose.
 echo "==> waiting for readiness (up to ${READY_TIMEOUT}s)"
-ELAPSED=0
-while [ "$ELAPSED" -lt "$READY_TIMEOUT" ]; do
-    if $COMPOSE exec -T server wget --quiet --spider http://127.0.0.1:8080/health/ready 2>/dev/null; then
-        echo "==> ready: $IMAGE"
-        # Images accumulate at ~200 MB each and the smallest OVH VPS has a small disk. Dangling
-        # only: every tag this host has deployed stays pullable locally, which is what makes a
-        # rollback instant instead of a download.
-        docker image prune --force > /dev/null 2>&1 || true
-        exit 0
-    fi
-    sleep 3
-    ELAPSED=$((ELAPSED + 3))
-done
+if await_ready; then
+    echo "==> ready: $IMAGE"
+    # Images accumulate at ~200 MB each and the smallest OVH VPS has a small disk. Dangling only:
+    # every tag this host has deployed stays pullable locally, which is what makes a rollback
+    # instant instead of a download.
+    docker image prune --force > /dev/null 2>&1 || true
+    exit 0
+fi
 
 # ---- the rollback ------------------------------------------------------------------------------
 echo "FAILED: $IMAGE did not become ready in ${READY_TIMEOUT}s" >&2
@@ -94,10 +109,18 @@ if [ -z "$PREVIOUS" ] || [ "$PREVIOUS" = "$IMAGE" ]; then
 fi
 
 echo "==> rolling back to $PREVIOUS" >&2
-{
-    grep -v '^TTO_IMAGE=' .env || true
-    echo "TTO_IMAGE=$PREVIOUS"
-} > .env.next
-mv .env.next .env
+pin_image "$PREVIOUS"
 $COMPOSE up -d
-exit 1
+
+# The rollback is waited on too, and this is not symmetry for its own sake. `up -d` returning says
+# the previous container started, not that it recovered — and the one case where that distinction
+# decides what somebody does next is exactly this one. Reporting "rolled back" over a stack that is
+# also down sends whoever reads it looking in the wrong place.
+if await_ready; then
+    echo "==> rolled back: $PREVIOUS is serving" >&2
+    exit 1
+fi
+
+echo "FAILED: the rollback to $PREVIOUS did not become ready either - THIS HOST IS DOWN" >&2
+$COMPOSE logs --tail 100 server >&2
+exit 2

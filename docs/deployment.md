@@ -43,6 +43,14 @@ limit measured in hours.
 dig +short tto.example.com
 ```
 
+**A name is required, not a preference.** ACME validates a domain and never a bare address, so an
+IP alone cannot be given a publicly trusted certificate — and this server carries accounts and
+passwords, which rules out serving it in the clear. If the domain is not bought yet, steps 2 to 7
+do not depend on it and can be done now; only this one and the first `docker compose up` have to
+wait. A generic-DNS service such as `sslip.io` — where `<your-ip>.sslip.io` resolves to that
+address, and Let's Encrypt will issue for it — is a working stopgap, at the price of an address
+that contains the IP, so that changing VPS changes the address every player has saved.
+
 ### 2. A user for deployments
 
 ```
