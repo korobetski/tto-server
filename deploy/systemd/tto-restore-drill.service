@@ -10,6 +10,9 @@
 Description=Restore the newest dump into a throwaway Postgres, and check it
 After=docker.service
 Requires=docker.service
+# The drill failing is the single most important thing this host can tell you: it means the dumps
+# being taken and kept cannot be restored.
+OnFailure=tto-alert@%n.service
 
 [Service]
 Type=oneshot

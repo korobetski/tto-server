@@ -189,10 +189,32 @@ the argument for holding fourteen dumps rather than one.
 ```
 journalctl -u tto-backup --since '7 days ago'
 journalctl -u tto-restore-drill --since '30 days ago'
+systemctl list-timers 'tto-*'
 ```
 
-Still missing: **nothing tells you when one of these fails.** The timers run, the journal records
-it, and no one is informed. That is the next gap, and it is the same gap as `/metrics` being served
+### When one of them fails
+
+Both units carry `OnFailure=tto-alert@%n.service`, which runs `scripts/alert.sh` with the failed
+unit's name. It POSTs the last twelve journal lines to `TTO_ALERT_URL` from `/srv/tto/.env` — any
+endpoint that takes a plain body: `https://ntfy.sh/<unguessable-topic>` needs no account and pushes
+to a phone, a Discord or Slack webhook works the same way. On ntfy the topic name *is* the
+credential, so generate it (`openssl rand -hex 16`) rather than choosing it.
+
+Two properties are deliberate. The alert always writes to the journal first, so the record survives
+the notification service being down — the day you would most want both. And `alert.sh` always exits
+0: a notifier that fails is a notifier that shows up in `systemctl --failed` triggering nothing,
+and a notifier with its own `OnFailure` is a loop.
+
+Test it without breaking anything:
+
+```
+sudo systemctl start tto-alert@tto-backup.service
+```
+
+**What this is not is a dead man's switch.** A host that is off sends nothing, and its silence is
+indistinguishable from a quiet week. This tells you a job failed; it cannot tell you the machine
+died, and nothing running on the machine can. Closing that needs something outside it that expects
+a ping and complains when none arrives — which is the same missing piece as `/metrics` being served
 and unscraped.
 
 ---

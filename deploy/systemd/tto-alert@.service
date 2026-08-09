@@ -1,0 +1,25 @@
+# Reports that another unit failed. Templated: `tto-alert@tto-backup.service` alerts about
+# `tto-backup.service`, and the units that matter reference it as `OnFailure=tto-alert@%n.service`.
+#
+# A template rather than one unit per job, so that adding a fourth scheduled thing later means one
+# `OnFailure=` line and no new file — the arrangement where a new job silently has no alerting is
+# the one worth designing out.
+
+[Unit]
+Description=Report that %i failed
+# No OnFailure of its own, deliberately. A notifier that alerts about its own failure to alert is a
+# loop; alert.sh always exits 0 for the same reason.
+
+[Service]
+Type=oneshot
+# Root, not `deploy`: this reads the journal of another unit, which `deploy` cannot. It sends one
+# HTTP request and writes nothing.
+WorkingDirectory=/srv/tto
+ExecStart=/srv/tto/scripts/alert.sh %i
+
+# A notification that has not gone out in half a minute is not going out. Keeping it short matters
+# because this runs at the moment something is already wrong.
+TimeoutStartSec=30
+
+StandardOutput=journal
+StandardError=journal

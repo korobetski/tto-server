@@ -10,6 +10,9 @@ Description=Logical backup of the Triple Triad database
 # is not up, and leave a failure in the journal that means nothing.
 After=docker.service
 Requires=docker.service
+# Everything else about these backups is worthless if they stop working and nobody is told. A
+# backup silently broken for six weeks looks exactly like one that works.
+OnFailure=tto-alert@%n.service
 
 [Service]
 Type=oneshot
