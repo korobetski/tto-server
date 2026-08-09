@@ -1,0 +1,32 @@
+# When the backup runs, and why at that minute.
+#
+# OVH's automated VPS backup images this machine daily at **12:41 UTC**. The dump is taken at 12:10,
+# half an hour ahead, so that the freshest dump is already on disk when the image is taken — the VPS
+# image is what carries these dumps off the machine, and a dump written at 13:00 would wait a full
+# day before any copy of it existed anywhere else.
+#
+# Thirty minutes is a wide margin for a dump measured in seconds. It is wide on purpose: the margin
+# has to hold on the day the database is a hundred times bigger, and moving this number after that
+# day is how you discover it was too narrow.
+#
+# If OVH's window moves, this moves with it. That coupling is real and it is written down here
+# rather than being a coincidence somebody has to rediscover.
+
+[Unit]
+Description=Daily logical backup, taken ahead of the OVH VPS image
+
+[Timer]
+OnCalendar=*-*-* 12:10:00 UTC
+# UTC explicitly, matching how OVH states its window. A local timezone would drift by an hour twice
+# a year and quietly cross the OVH window each summer.
+
+# Fires at boot if the machine was off when it should have run. Without this a VPS that was down at
+# 12:10 simply has no backup that day, and nothing says so.
+Persistent=true
+
+# Up to five minutes of jitter. Nothing else contends here, but it costs nothing and keeps this
+# host from hammering the same minute as every other machine following the same guide.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

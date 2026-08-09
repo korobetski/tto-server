@@ -1,0 +1,29 @@
+# Restores the newest dump into a throwaway container and fails loudly if it does not work.
+#
+# This is the unit that turns a pile of files into a backup. The other three properties — a
+# schedule, a copy off the machine, a retention policy — can all be satisfied while every dump held
+# is unreadable, and nothing detects that except restoring one.
+#
+# It touches nothing the server uses: its own container, its own tmpfs, no network to production.
+
+[Unit]
+Description=Restore the newest dump into a throwaway Postgres, and check it
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+Group=deploy
+WorkingDirectory=/srv/tto
+ExecStart=/srv/tto/scripts/restore-drill.sh
+
+# Pulling the Postgres image on a cold host, starting it, and replaying a dump. Generous, because
+# the failure this unit exists to catch must never be confused with a slow week.
+TimeoutStartSec=900
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

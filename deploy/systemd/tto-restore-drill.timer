@@ -1,0 +1,21 @@
+# Weekly, and the day is chosen rather than defaulted.
+#
+# Monday morning: far from the backup window, and on a day somebody is likely to look at a failure
+# rather than at the end of a Friday. A drill whose failures are noticed on Monday is worth more
+# than one whose failures are noticed on Saturday and remembered on Tuesday.
+#
+# Weekly and not daily because the thing it catches — dumps that do not restore — does not appear
+# from one day to the next; it appears when something about the database or the tooling changes. A
+# week is short enough that at most seven dumps were ever suspect, and long enough that the drill
+# does not become background noise nobody reads.
+
+[Unit]
+Description=Weekly restore drill
+
+[Timer]
+OnCalendar=Mon *-*-* 06:00:00 UTC
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

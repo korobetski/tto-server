@@ -102,33 +102,98 @@ write.
 
 ## Backups
 
-**This is the part that matters, and it is the least finished.**
+**This is the part that matters.**
 
 Decision 2 of the Phase 5 design makes player progression server-held. That means losing this
 database is not an incident, it is the end of the game — the same way the original Triple Triad
 Online ended.
 
-What exists:
+### Two mechanisms, doing different jobs
+
+**OVH's automated VPS backup** images the whole machine daily at **12:41 UTC**. It is taken hot, so
+for Postgres it is a power cut — which Postgres survives by design, that being what the WAL is for.
+It is a genuine safety net and, crucially, it is *off this machine*, which is the hard part.
+
+What it cannot do is restore a *database*. It restores a VPS, to one moment, whole. No extracting a
+single table, no standing a copy beside production to check it, no going back two days if the
+retention holds one image.
+
+**The logical dumps** are the other shape. `pg_dump` custom-format, restorable into a different
+Postgres version on a different machine, small enough to keep many of, and readable without touching
+anything.
+
+The two are wired together on purpose: the dump runs at **12:10 UTC**, half an hour ahead of OVH's
+window, into `/srv/tto/backups` — a directory the VPS image includes. **OVH provides the transport
+off the machine; the dumps make what OVH carries restorable in a useful way.** If OVH's window
+moves, `deploy/systemd/tto-backup.timer` moves with it; that coupling is written in the unit rather
+than left as a coincidence for somebody to rediscover.
+
+### The commands
 
 ```
-./scripts/backup.sh              # writes backups/<db>-<utc-timestamp>.dump
-./scripts/restore.sh <dump>      # DESTROYS the target and restores
+./scripts/backup.sh              # writes backups/<db>-<utc-timestamp>.dump, verified, then prunes
+./scripts/restore-drill.sh       # restores the newest dump into a throwaway container and checks it
+./scripts/restore.sh <dump>      # DESTROYS the target and restores. The real one.
 ```
 
-`backup.sh` takes a `pg_dump` custom-format dump and verifies it can be listed before declaring
-success, so a truncated write is caught now instead of during a restore.
+All three work in both places: a developer's checkout drives `compose.yaml`, the deployed host —
+which has no `compose.yaml` — drives `compose.prod.yaml`. That is tested by the presence of the
+*development* file, since the checkout has both.
 
-What does **not** exist, and must before anything real is stored:
+`backup.sh` writes under a `.partial` name and moves it into place only after `pg_restore --list`
+has read it back, so a failed run leaves nothing rather than a zero-byte file that would count
+against retention and be picked up as "the newest dump". Retention keeps the newest `BACKUP_KEEP`
+(14) by **count and not by age** — a rule expressed in days deletes the last surviving copy on a
+host whose backups have been failing for a fortnight, which is the one moment it must not.
 
-- **A schedule.** A backup that runs when somebody remembers is not a backup.
-- **Somewhere else.** The dumps land next to the database, on the same disk, which protects against
-  exactly none of the failures that destroy a disk.
-- **Retention.** Nothing is ever deleted, so the useful history is eventually buried and the disk
-  eventually fills.
-- **A tested restore, on a schedule.** This is the only one that actually decides whether the
-  backups are real. `restore.sh` exists so that the test is a command and not a project.
+### The schedule
 
-Managed backups from a database provider replace the first three. They do not replace the fourth.
+Two systemd timers, in `deploy/systemd/`. Delivered by every release so the host has the current
+copy; installed once by hand, because a release that could rewrite what runs as root on a schedule
+is a release that could be made to.
+
+```
+sudo install -m 644 /srv/tto/deploy/systemd/*.service /srv/tto/deploy/systemd/*.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now tto-backup.timer tto-restore-drill.timer
+systemctl list-timers 'tto-*'
+```
+
+| Unit | When | What |
+|---|---|---|
+| `tto-backup.timer` | daily 12:10 UTC | one dump, verified, then prune |
+| `tto-restore-drill.timer` | Monday 06:00 UTC | restore the newest dump into a throwaway Postgres |
+
+Both are `Persistent=true`, so a run missed while the host was down fires at boot rather than
+silently not happening.
+
+### The drill is the one that decides whether any of this is real
+
+A schedule, a copy off the machine and a retention policy can all be satisfied while every dump held
+is unreadable. Nothing detects that except restoring one, and the failure is silent by construction:
+a backup is only ever consulted on the day it is the last copy.
+
+`restore-drill.sh` restores into a container that exists for a minute — its own tmpfs, no network to
+production, destroyed on exit however the script ends. It creates the roles the dump names rather
+than skipping the grants with `--no-privileges`, so a dump whose privileges are broken still fails
+here instead of during the restore it was kept for. It asserts the schema is not empty and prints a
+row count per table; it deliberately does not assert a row *threshold*, which would fail on the day
+the server is legitimately new.
+
+What it cannot prove is that the contents are correct — a dump of an already-corrupted database
+restores perfectly. Nothing automatic closes that gap. What closes it is noticing early, which is
+the argument for holding fourteen dumps rather than one.
+
+### Reading the history
+
+```
+journalctl -u tto-backup --since '7 days ago'
+journalctl -u tto-restore-drill --since '30 days ago'
+```
+
+Still missing: **nothing tells you when one of these fails.** The timers run, the journal records
+it, and no one is informed. That is the next gap, and it is the same gap as `/metrics` being served
+and unscraped.
 
 ---
 

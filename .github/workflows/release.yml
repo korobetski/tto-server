@@ -205,9 +205,13 @@ jobs:
       #
       # Deliberately not `--delete`-style: /srv/tto also holds .env, ./backups and the volumes'
       # mount points, none of which are in the repository and all of which must survive.
+      #
+      # `deploy/` carries the systemd units. They are *delivered* on every release so the host has
+      # the current copy, and *installed* only by hand — a release that could rewrite what runs as
+      # root on a schedule is a release that could be made to.
       - name: Sync the deployment files
         run: |
-          tar czf - compose.prod.yaml Caddyfile scripts docker/postgres/init \
+          tar czf - compose.prod.yaml Caddyfile scripts docker/postgres/init deploy \
             | ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" \
                 -o BatchMode=yes -o StrictHostKeyChecking=yes \
                 "$VPS_USER@$VPS_HOST" \
