@@ -8,11 +8,11 @@
         "RULE_ALL_OPEN"
       ],
       "fetishesCards": [
-        2,
-        4,
-        5,
-        7,
-        13
+        258,
+        260,
+        261,
+        263,
+        269
       ],
       "cards": [],
       "level": "STR_NPC_LEVEL_NOVICE",
@@ -29,12 +29,12 @@
           "rate": 0.02
         },
         {
-          "card": 4,
+          "card": 260,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 13,
+          "card": 269,
           "type": "card",
           "rate": 0.2
         }
@@ -50,15 +50,15 @@
         "RULE_SAME"
       ],
       "fetishesCards": [
-        23,
-        3,
-        4
+        279,
+        259,
+        260
       ],
       "cards": [
-        11,
-        15,
-        20,
-        26
+        267,
+        271,
+        276,
+        282
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 10,
@@ -69,12 +69,12 @@
       },
       "itemRewards": [
         {
-          "card": 15,
+          "card": 271,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 20,
+          "card": 276,
           "type": "card",
           "rate": 0.2
         }
@@ -90,15 +90,15 @@
         "RULE_PLUS"
       ],
       "fetishesCards": [
-        38,
-        26,
-        23
+        294,
+        282,
+        279
       ],
       "cards": [
-        41,
-        27,
-        13,
-        11
+        297,
+        283,
+        269,
+        267
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 15,
@@ -109,12 +109,12 @@
       },
       "itemRewards": [
         {
-          "card": 13,
+          "card": 269,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 27,
+          "card": 283,
           "type": "card",
           "rate": 0.125
         }
@@ -131,14 +131,14 @@
       ],
       "fetishesCards": [],
       "cards": [
-        51,
-        43,
-        24,
-        38,
-        33,
-        27,
-        12,
-        35
+        307,
+        299,
+        280,
+        294,
+        289,
+        283,
+        268,
+        291
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -149,12 +149,12 @@
       },
       "itemRewards": [
         {
-          "card": 12,
+          "card": 268,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 27,
+          "card": 283,
           "type": "card",
           "rate": 0.125
         }
@@ -171,15 +171,15 @@
         "RULE_ALL_OPEN"
       ],
       "fetishesCards": [
-        59,
-        56,
-        47
+        315,
+        312,
+        303
       ],
       "cards": [
-        58,
-        50,
-        57,
-        45
+        314,
+        306,
+        313,
+        301
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
@@ -190,12 +190,12 @@
       },
       "itemRewards": [
         {
-          "card": 45,
+          "card": 301,
           "type": "card",
           "rate": 0.15
         },
         {
-          "card": 50,
+          "card": 306,
           "type": "card",
           "rate": 0.125
         }
@@ -210,15 +210,15 @@
         "RULE_PLUS"
       ],
       "fetishesCards": [
-        61,
-        50,
-        45
+        317,
+        306,
+        301
       ],
       "cards": [
-        62,
-        39,
-        49,
-        41
+        318,
+        295,
+        305,
+        297
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -234,12 +234,12 @@
           "rate": 0.25
         },
         {
-          "card": 45,
+          "card": 301,
           "type": "card",
           "rate": 0.125
         },
         {
-          "card": 61,
+          "card": 317,
           "type": "card",
           "rate": 0.05
         }
@@ -255,15 +255,15 @@
         "RULE_SAME"
       ],
       "fetishesCards": [
-        37,
-        14,
-        1
+        293,
+        270,
+        257
       ],
       "cards": [
-        21,
-        12,
-        7,
-        2
+        277,
+        268,
+        263,
+        258
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 10,
@@ -274,17 +274,17 @@
       },
       "itemRewards": [
         {
-          "card": 2,
+          "card": 258,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 14,
+          "card": 270,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 37,
+          "card": 293,
           "type": "card",
           "rate": 0.125
         }
@@ -299,15 +299,15 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        41,
-        49,
-        39
+        297,
+        305,
+        295
       ],
       "cards": [
-        38,
-        22,
-        47,
-        20
+        294,
+        278,
+        303,
+        276
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -318,12 +318,12 @@
       },
       "itemRewards": [
         {
-          "card": 20,
+          "card": 276,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 41,
+          "card": 297,
           "type": "card",
           "rate": 0.125
         }
@@ -342,16 +342,16 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        28,
-        29,
-        30
+        284,
+        285,
+        286
       ],
       "cards": [
-        56,
-        38,
-        49,
-        27,
-        21
+        312,
+        294,
+        305,
+        283,
+        277
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -362,12 +362,12 @@
       },
       "itemRewards": [
         {
-          "card": 18,
+          "card": 274,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 29,
+          "card": 285,
           "type": "card",
           "rate": 0.25
         }
@@ -383,14 +383,14 @@
         "RULE_ASCENSION"
       ],
       "fetishesCards": [
-        54,
-        50,
-        33
+        310,
+        306,
+        289
       ],
       "cards": [
-        37,
-        27,
-        25
+        293,
+        283,
+        281
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -401,17 +401,17 @@
       },
       "itemRewards": [
         {
-          "card": 21,
+          "card": 277,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 27,
+          "card": 283,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 33,
+          "card": 289,
           "type": "card",
           "rate": 0.25
         }
@@ -427,17 +427,17 @@
         "RULE_PLUS"
       ],
       "fetishesCards": [
-        65,
-        54,
-        41
+        321,
+        310,
+        297
       ],
       "cards": [
-        58,
-        38,
-        50,
-        49,
-        30,
-        24
+        314,
+        294,
+        306,
+        305,
+        286,
+        280
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -453,17 +453,17 @@
           "rate": 0.125
         },
         {
-          "card": 49,
+          "card": 305,
           "type": "card",
           "rate": 0.33
         },
         {
-          "card": 54,
+          "card": 310,
           "type": "card",
           "rate": 0.22
         },
         {
-          "card": 65,
+          "card": 321,
           "type": "card",
           "rate": 0.05
         }
@@ -483,16 +483,16 @@
         "RULE_SUDDEN_DEATH"
       ],
       "fetishesCards": [
-        63,
-        56,
-        49
+        319,
+        312,
+        305
       ],
       "cards": [
-        66,
-        65,
-        31,
-        30,
-        55
+        322,
+        321,
+        287,
+        286,
+        311
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -508,12 +508,12 @@
           "rate": 0.125
         },
         {
-          "card": 49,
+          "card": 305,
           "type": "card",
           "rate": 0.125
         },
         {
-          "card": 56,
+          "card": 312,
           "type": "card",
           "rate": 0.1
         }
@@ -529,14 +529,14 @@
         "RULE_RANDOM"
       ],
       "fetishesCards": [
-        36,
-        7,
-        10
+        292,
+        263,
+        266
       ],
       "cards": [
-        24,
-        16,
-        8
+        280,
+        272,
+        264
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 10,
@@ -547,17 +547,17 @@
       },
       "itemRewards": [
         {
-          "card": 8,
+          "card": 264,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 12,
+          "card": 268,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 16,
+          "card": 272,
           "type": "card",
           "rate": 0.2
         }
@@ -572,15 +572,15 @@
         "RULE_ALL_OPEN"
       ],
       "fetishesCards": [
-        26,
-        9,
-        13
+        282,
+        265,
+        269
       ],
       "cards": [
-        25,
-        15,
-        6,
-        5
+        281,
+        271,
+        262,
+        261
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 10,
@@ -591,12 +591,12 @@
       },
       "itemRewards": [
         {
-          "card": 5,
+          "card": 261,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 9,
+          "card": 265,
           "type": "card",
           "rate": 0.25
         }
@@ -612,16 +612,16 @@
         "RULE_REVERSE"
       ],
       "fetishesCards": [
-        30,
-        29,
-        28
+        286,
+        285,
+        284
       ],
       "cards": [
-        48,
-        12,
-        35,
-        11,
-        5
+        304,
+        268,
+        291,
+        267,
+        261
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 15,
@@ -637,17 +637,17 @@
           "rate": 0.05
         },
         {
-          "card": 12,
+          "card": 268,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 16,
+          "card": 272,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 30,
+          "card": 286,
           "type": "card",
           "rate": 0.125
         }
@@ -662,16 +662,16 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        45,
-        36,
-        14
+        301,
+        292,
+        270
       ],
       "cards": [
-        23,
-        25,
-        5,
-        34,
-        6
+        279,
+        281,
+        261,
+        290,
+        262
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 15,
@@ -682,7 +682,7 @@
       },
       "itemRewards": [
         {
-          "card": 36,
+          "card": 292,
           "type": "card",
           "rate": 0.125
         }
@@ -697,16 +697,16 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        22,
-        28,
-        31
+        278,
+        284,
+        287
       ],
       "cards": [
-        40,
-        26,
-        8,
-        4,
-        7
+        296,
+        282,
+        264,
+        260,
+        263
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 15,
@@ -717,12 +717,12 @@
       },
       "itemRewards": [
         {
-          "card": 8,
+          "card": 264,
           "type": "card",
           "rate": 0.5
         },
         {
-          "card": 141,
+          "card": 397,
           "type": "card",
           "rate": 0.1
         }
@@ -737,16 +737,16 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        28,
-        29,
-        30
+        284,
+        285,
+        286
       ],
       "cards": [
-        46,
-        8,
-        36,
-        13,
-        10
+        302,
+        264,
+        292,
+        269,
+        266
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 15,
@@ -757,17 +757,17 @@
       },
       "itemRewards": [
         {
-          "card": 12,
+          "card": 268,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 28,
+          "card": 284,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 29,
+          "card": 285,
           "type": "card",
           "rate": 0.1
         }
@@ -785,19 +785,19 @@
       ],
       "fetishesCards": [],
       "cards": [
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        20,
-        43
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        276,
+        299
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 15,
@@ -813,12 +813,12 @@
           "rate": 0.05
         },
         {
-          "card": 20,
+          "card": 276,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 43,
+          "card": 299,
           "type": "card",
           "rate": 0.125
         }
@@ -835,12 +835,12 @@
       ],
       "fetishesCards": [],
       "cards": [
-        60,
-        45,
-        34,
-        41,
-        27,
-        22
+        316,
+        301,
+        290,
+        297,
+        283,
+        278
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -851,12 +851,12 @@
       },
       "itemRewards": [
         {
-          "card": 22,
+          "card": 278,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 34,
+          "card": 290,
           "type": "card",
           "rate": 0.25
         }
@@ -876,16 +876,16 @@
         "RULE_PLUS"
       ],
       "fetishesCards": [
-        38,
-        33,
-        27
+        294,
+        289,
+        283
       ],
       "cards": [
-        50,
-        26,
-        42,
-        15,
-        59
+        306,
+        282,
+        298,
+        271,
+        315
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -901,12 +901,12 @@
           "rate": 0.05
         },
         {
-          "card": 15,
+          "card": 271,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 59,
+          "card": 315,
           "type": "card",
           "rate": 0.1
         }
@@ -921,15 +921,15 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        46,
-        28,
-        33
+        302,
+        284,
+        289
       ],
       "cards": [
-        20,
-        19,
-        67,
-        13
+        276,
+        275,
+        323,
+        269
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -940,12 +940,12 @@
       },
       "itemRewards": [
         {
-          "card": 25,
+          "card": 281,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 46,
+          "card": 302,
           "type": "card",
           "rate": 0.2
         }
@@ -960,15 +960,15 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        56,
-        44,
-        48
+        312,
+        300,
+        304
       ],
       "cards": [
-        38,
-        24,
-        35,
-        30
+        294,
+        280,
+        291,
+        286
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 20,
@@ -979,12 +979,12 @@
       },
       "itemRewards": [
         {
-          "card": 24,
+          "card": 280,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 35,
+          "card": 291,
           "type": "card",
           "rate": 0.125
         }
@@ -1004,14 +1004,14 @@
         "RULE_PLUS"
       ],
       "fetishesCards": [
-        58,
-        51,
-        33
+        314,
+        307,
+        289
       ],
       "cards": [
-        45,
-        47,
-        38
+        301,
+        303,
+        294
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 25,
@@ -1022,17 +1022,17 @@
       },
       "itemRewards": [
         {
-          "card": 33,
+          "card": 289,
           "type": "card",
           "rate": 0.15
         },
         {
-          "card": 38,
+          "card": 294,
           "type": "card",
           "rate": 0.15
         },
         {
-          "card": 58,
+          "card": 314,
           "type": "card",
           "rate": 0.05
         }
@@ -1049,14 +1049,14 @@
       ],
       "fetishesCards": [],
       "cards": [
-        52,
-        41,
-        34,
-        61,
-        40,
-        45,
-        32,
-        13
+        308,
+        297,
+        290,
+        317,
+        296,
+        301,
+        288,
+        269
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 25,
@@ -1072,12 +1072,12 @@
           "rate": 0.05
         },
         {
-          "card": 41,
+          "card": 297,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 52,
+          "card": 308,
           "type": "card",
           "rate": 0.125
         }
@@ -1092,15 +1092,15 @@
         "RULE_ORDER"
       ],
       "fetishesCards": [
-        66,
-        52,
-        43
+        322,
+        308,
+        299
       ],
       "cards": [
-        44,
-        48,
-        39,
-        42
+        300,
+        304,
+        295,
+        298
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 25,
@@ -1111,17 +1111,17 @@
       },
       "itemRewards": [
         {
-          "card": 23,
+          "card": 279,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 48,
+          "card": 304,
           "type": "card",
           "rate": 0.18
         },
         {
-          "card": 44,
+          "card": 300,
           "type": "card",
           "rate": 0.2
         }
@@ -1136,15 +1136,15 @@
         "RULE_ORDER"
       ],
       "fetishesCards": [
-        55,
-        51,
-        50
+        311,
+        307,
+        306
       ],
       "cards": [
-        44,
-        26,
-        38,
-        33
+        300,
+        282,
+        294,
+        289
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 25,
@@ -1155,17 +1155,17 @@
       },
       "itemRewards": [
         {
-          "card": 11,
+          "card": 267,
           "type": "card",
           "rate": 0.5
         },
         {
-          "card": 26,
+          "card": 282,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 38,
+          "card": 294,
           "type": "card",
           "rate": 0.3
         }
@@ -1180,16 +1180,16 @@
         "RULE_CHAOS"
       ],
       "fetishesCards": [
-        52,
-        53,
-        57
+        308,
+        309,
+        313
       ],
       "cards": [
-        47,
-        38,
-        44,
-        35,
-        42
+        303,
+        294,
+        300,
+        291,
+        298
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 25,
@@ -1200,12 +1200,12 @@
       },
       "itemRewards": [
         {
-          "card": 35,
+          "card": 291,
           "type": "card",
           "rate": 0.3
         },
         {
-          "card": 42,
+          "card": 298,
           "type": "card",
           "rate": 0.2
         }
@@ -1224,15 +1224,15 @@
         "RULE_DESCENSION"
       ],
       "fetishesCards": [
-        62,
-        45
+        318,
+        301
       ],
       "cards": [
-        67,
-        52,
-        46,
-        34,
-        3
+        323,
+        308,
+        302,
+        290,
+        259
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -1248,17 +1248,17 @@
           "rate": 1.0
         },
         {
-          "card": 45,
+          "card": 301,
           "type": "card",
           "rate": 0.125
         },
         {
-          "card": 46,
+          "card": 302,
           "type": "card",
           "rate": 0.125
         },
         {
-          "card": 62,
+          "card": 318,
           "type": "card",
           "rate": 0.05
         }
@@ -1273,16 +1273,16 @@
         "RULE_ASCENSION"
       ],
       "fetishesCards": [
-        66,
-        56,
-        53
+        322,
+        312,
+        309
       ],
       "cards": [
-        63,
-        58,
-        43,
-        48,
-        20
+        319,
+        314,
+        299,
+        304,
+        276
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -1298,22 +1298,22 @@
           "rate": 1.0
         },
         {
-          "card": 43,
+          "card": 299,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 48,
+          "card": 304,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 53,
+          "card": 309,
           "type": "card",
           "rate": 0.05
         },
         {
-          "card": 66,
+          "card": 322,
           "type": "card",
           "rate": 0.05
         }
@@ -1332,15 +1332,15 @@
         "RULE_CHAOS"
       ],
       "fetishesCards": [
-        67,
-        60,
-        55
+        323,
+        316,
+        311
       ],
       "cards": [
-        63,
-        59,
-        46,
-        40
+        319,
+        315,
+        302,
+        296
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -1351,22 +1351,22 @@
       },
       "itemRewards": [
         {
-          "card": 40,
+          "card": 296,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 59,
+          "card": 315,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 67,
+          "card": 323,
           "type": "card",
           "rate": 0.05
         },
         {
-          "card": 113,
+          "card": 369,
           "type": "card",
           "rate": 0.05
         }
@@ -1387,14 +1387,14 @@
       ],
       "fetishesCards": [],
       "cards": [
-        47,
-        46,
-        50,
-        34,
-        29,
-        61,
-        60,
-        45
+        303,
+        302,
+        306,
+        290,
+        285,
+        317,
+        316,
+        301
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -1405,12 +1405,12 @@
       },
       "itemRewards": [
         {
-          "card": 34,
+          "card": 290,
           "type": "card",
           "rate": 0.5
         },
         {
-          "card": 60,
+          "card": 316,
           "type": "card",
           "rate": 0.125
         }
@@ -1425,16 +1425,16 @@
         "RULE_ASCENSION"
       ],
       "fetishesCards": [
-        64,
-        61,
-        47
+        320,
+        317,
+        303
       ],
       "cards": [
-        42,
-        37,
-        27,
-        32,
-        31
+        298,
+        293,
+        283,
+        288,
+        287
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -1445,22 +1445,22 @@
       },
       "itemRewards": [
         {
-          "card": 31,
+          "card": 287,
           "type": "card",
           "rate": 0.16
         },
         {
-          "card": 32,
+          "card": 288,
           "type": "card",
           "rate": 0.22
         },
         {
-          "card": 47,
+          "card": 303,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 64,
+          "card": 320,
           "type": "card",
           "rate": 0.05
         }
@@ -1477,13 +1477,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        19,
-        33,
-        46,
-        49,
-        50,
-        62,
-        80
+        275,
+        289,
+        302,
+        305,
+        306,
+        318,
+        336
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 35,
@@ -1494,17 +1494,17 @@
       },
       "itemRewards": [
         {
-          "card": 19,
+          "card": 275,
           "type": "card",
           "rate": 0.4
         },
         {
-          "card": 50,
+          "card": 306,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 80,
+          "card": 336,
           "type": "card",
           "rate": 0.01
         }
@@ -1522,18 +1522,18 @@
       ],
       "fetishesCards": [],
       "cards": [
-        21,
-        25,
-        28,
-        29,
-        30,
-        44,
-        45,
-        46,
-        48,
-        49,
-        50,
-        78
+        277,
+        281,
+        284,
+        285,
+        286,
+        300,
+        301,
+        302,
+        304,
+        305,
+        306,
+        334
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 35,
@@ -1544,17 +1544,17 @@
       },
       "itemRewards": [
         {
-          "card": 21,
+          "card": 277,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 25,
+          "card": 281,
           "type": "card",
           "rate": 0.2
         },
         {
-          "card": 78,
+          "card": 334,
           "type": "card",
           "rate": 0.01
         }
@@ -1570,15 +1570,15 @@
         "RULE_CHAOS"
       ],
       "fetishesCards": [
-        40,
-        41,
-        42,
-        52
+        296,
+        297,
+        298,
+        308
       ],
       "cards": [
-        70,
-        73,
-        74
+        326,
+        329,
+        330
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 40,
@@ -1594,17 +1594,17 @@
           "rate": 0.25
         },
         {
-          "card": 70,
+          "card": 326,
           "type": "card",
           "rate": 0.05
         },
         {
-          "card": 72,
+          "card": 328,
           "type": "card",
           "rate": 0.05
         },
         {
-          "card": 73,
+          "card": 329,
           "type": "card",
           "rate": 0.05
         }
@@ -1625,11 +1625,11 @@
       ],
       "fetishesCards": [],
       "cards": [
-        12,
-        54,
-        65,
-        144,
-        149
+        268,
+        310,
+        321,
+        400,
+        405
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 20,
@@ -1645,12 +1645,12 @@
           "rate": 0.25
         },
         {
-          "card": 65,
+          "card": 321,
           "type": "card",
           "rate": 0.05
         },
         {
-          "card": 144,
+          "card": 400,
           "type": "card",
           "rate": 0.05
         }
@@ -1671,13 +1671,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        65,
-        54,
-        149,
-        145,
-        126,
-        29,
-        7
+        321,
+        310,
+        405,
+        401,
+        382,
+        285,
+        263
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 20,
@@ -1693,12 +1693,12 @@
           "rate": 0.25
         },
         {
-          "card": 65,
+          "card": 321,
           "type": "card",
           "rate": 0.05
         },
         {
-          "card": 145,
+          "card": 401,
           "type": "card",
           "rate": 0.05
         }
@@ -1718,16 +1718,16 @@
         "RULE_CHAOS"
       ],
       "fetishesCards": [
-        63,
-        49,
-        28
+        319,
+        305,
+        284
       ],
       "cards": [
-        48,
-        89,
-        42,
-        73,
-        75
+        304,
+        345,
+        298,
+        329,
+        331
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 25,
@@ -1743,7 +1743,7 @@
           "rate": 0.25
         },
         {
-          "card": 89,
+          "card": 345,
           "type": "card",
           "rate": 0.05
         }
@@ -1763,15 +1763,15 @@
         "RULE_RANDOM"
       ],
       "fetishesCards": [
-        42,
-        52
+        298,
+        308
       ],
       "cards": [
-        36,
-        81,
-        35,
-        43,
-        30
+        292,
+        337,
+        291,
+        299,
+        286
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 25,
@@ -1787,7 +1787,7 @@
           "rate": 0.25
         },
         {
-          "card": 81,
+          "card": 337,
           "type": "card",
           "rate": 0.25
         }
@@ -1807,15 +1807,15 @@
         "RULE_ROULETTE"
       ],
       "fetishesCards": [
-        55,
-        61
+        311,
+        317
       ],
       "cards": [
-        22,
-        40,
-        46,
-        81,
-        96
+        278,
+        296,
+        302,
+        337,
+        352
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -1831,7 +1831,7 @@
           "rate": 0.25
         },
         {
-          "card": 96,
+          "card": 352,
           "type": "card",
           "rate": 0.25
         }
@@ -1852,14 +1852,14 @@
       ],
       "fetishesCards": [],
       "cards": [
-        29,
-        32,
-        34,
-        55,
-        64,
-        77,
-        81,
-        84
+        285,
+        288,
+        290,
+        311,
+        320,
+        333,
+        337,
+        340
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 25,
@@ -1875,7 +1875,7 @@
           "rate": 0.25
         },
         {
-          "card": 84,
+          "card": 340,
           "type": "card",
           "rate": 0.1
         }
@@ -1896,12 +1896,12 @@
       ],
       "fetishesCards": [],
       "cards": [
-        93,
-        95,
-        116,
-        121,
-        133,
-        134
+        349,
+        351,
+        372,
+        377,
+        389,
+        390
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 25,
@@ -1917,17 +1917,17 @@
           "rate": 0.25
         },
         {
-          "card": 121,
+          "card": 377,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 133,
+          "card": 389,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 134,
+          "card": 390,
           "type": "card",
           "rate": 0.1
         }
@@ -1947,13 +1947,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        89,
-        56,
-        88,
-        62,
-        58,
-        50,
-        19
+        345,
+        312,
+        344,
+        318,
+        314,
+        306,
+        275
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
@@ -1969,7 +1969,7 @@
           "rate": 0.25
         },
         {
-          "card": 88,
+          "card": 344,
           "type": "card",
           "rate": 0.1
         }
@@ -1990,12 +1990,12 @@
       ],
       "fetishesCards": [],
       "cards": [
-        91,
-        67,
-        65,
-        66,
-        63,
-        102
+        347,
+        323,
+        321,
+        322,
+        319,
+        358
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
@@ -2011,12 +2011,12 @@
           "rate": 0.25
         },
         {
-          "card": 102,
+          "card": 358,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 142,
+          "card": 398,
           "type": "card",
           "rate": 0.1
         }
@@ -2035,15 +2035,15 @@
         "RULE_ORDER"
       ],
       "fetishesCards": [
-        101,
-        96
+        357,
+        352
       ],
       "cards": [
-        93,
-        89,
-        86,
-        88,
-        38
+        349,
+        345,
+        342,
+        344,
+        294
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2059,7 +2059,7 @@
           "rate": 0.25
         },
         {
-          "card": 101,
+          "card": 357,
           "type": "card",
           "rate": 0.1
         }
@@ -2080,12 +2080,12 @@
       ],
       "fetishesCards": [],
       "cards": [
-        140,
-        132,
-        135,
-        47,
-        33,
-        58
+        396,
+        388,
+        391,
+        303,
+        289,
+        314
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2101,22 +2101,22 @@
           "rate": 0.25
         },
         {
-          "card": 132,
+          "card": 388,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 135,
+          "card": 391,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 140,
+          "card": 396,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 150,
+          "card": 406,
           "type": "card",
           "rate": 0.1
         }
@@ -2137,13 +2137,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        98,
-        81,
-        82,
-        123,
-        104,
-        86,
-        103
+        354,
+        337,
+        338,
+        379,
+        360,
+        342,
+        359
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 0,
@@ -2154,12 +2154,12 @@
       },
       "itemRewards": [
         {
-          "card": 98,
+          "card": 354,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 123,
+          "card": 379,
           "type": "card",
           "rate": 0.1
         }
@@ -2179,15 +2179,15 @@
         "RULE_PLUS"
       ],
       "fetishesCards": [
-        98,
-        103
+        354,
+        359
       ],
       "cards": [
-        58,
-        104,
-        93,
-        89,
-        96
+        314,
+        360,
+        349,
+        345,
+        352
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2198,12 +2198,12 @@
       },
       "itemRewards": [
         {
-          "card": 103,
+          "card": 359,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 104,
+          "card": 360,
           "type": "card",
           "rate": 0.1
         }
@@ -2223,11 +2223,11 @@
       ],
       "fetishesCards": [],
       "cards": [
-        63,
-        86,
-        65,
-        93,
-        96
+        319,
+        342,
+        321,
+        349,
+        352
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2238,12 +2238,12 @@
       },
       "itemRewards": [
         {
-          "card": 93,
+          "card": 349,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 143,
+          "card": 399,
           "type": "card",
           "rate": 0.1
         }
@@ -2264,13 +2264,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        91,
-        92,
-        47,
-        83,
-        97,
-        40,
-        32
+        347,
+        348,
+        303,
+        339,
+        353,
+        296,
+        288
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2281,17 +2281,17 @@
       },
       "itemRewards": [
         {
-          "card": 91,
+          "card": 347,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 119,
+          "card": 375,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 151,
+          "card": 407,
           "type": "card",
           "rate": 0.1
         }
@@ -2311,13 +2311,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        88,
-        90,
-        97,
-        59,
-        83,
-        105,
-        109
+        344,
+        346,
+        353,
+        315,
+        339,
+        361,
+        365
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
@@ -2328,17 +2328,17 @@
       },
       "itemRewards": [
         {
-          "card": 97,
+          "card": 353,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 109,
+          "card": 365,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 85,
+          "card": 341,
           "type": "card",
           "rate": 0.1
         }
@@ -2355,11 +2355,11 @@
       ],
       "fetishesCards": [],
       "cards": [
-        136,
-        117,
-        49,
-        107,
-        106
+        392,
+        373,
+        305,
+        363,
+        362
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
@@ -2370,12 +2370,12 @@
       },
       "itemRewards": [
         {
-          "card": 117,
+          "card": 373,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 136,
+          "card": 392,
           "type": "card",
           "rate": 0.1
         }
@@ -2395,16 +2395,16 @@
         "RULE_ASCENSION"
       ],
       "fetishesCards": [
-        105,
-        97
+        361,
+        353
       ],
       "cards": [
-        87,
-        109,
-        88,
-        90,
-        55,
-        59
+        343,
+        365,
+        344,
+        346,
+        311,
+        315
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2415,12 +2415,12 @@
       },
       "itemRewards": [
         {
-          "card": 117,
+          "card": 373,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 136,
+          "card": 392,
           "type": "card",
           "rate": 0.1
         }
@@ -2441,13 +2441,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        90,
-        153,
-        20,
-        124,
-        43,
-        99,
-        108
+        346,
+        409,
+        276,
+        380,
+        299,
+        355,
+        364
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2458,17 +2458,17 @@
       },
       "itemRewards": [
         {
-          "card": 43,
+          "card": 299,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 146,
+          "card": 402,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 153,
+          "card": 409,
           "type": "card",
           "rate": 0.1
         }
@@ -2489,13 +2489,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        81,
-        45,
-        55,
-        84,
-        14,
-        90,
-        3
+        337,
+        301,
+        311,
+        340,
+        270,
+        346,
+        259
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2506,7 +2506,7 @@
       },
       "itemRewards": [
         {
-          "card": 90,
+          "card": 346,
           "type": "card",
           "rate": 0.1
         }
@@ -2526,15 +2526,15 @@
         "RULE_ROULETTE"
       ],
       "fetishesCards": [
-        66,
-        98,
-        83
+        322,
+        354,
+        339
       ],
       "cards": [
-        100,
-        43,
-        97,
-        82
+        356,
+        299,
+        353,
+        338
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2545,22 +2545,22 @@
       },
       "itemRewards": [
         {
-          "card": 82,
+          "card": 338,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 83,
+          "card": 339,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 108,
+          "card": 364,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 115,
+          "card": 371,
           "type": "card",
           "rate": 0.1
         }
@@ -2576,15 +2576,15 @@
         "RULE_RANDOM"
       ],
       "fetishesCards": [
-        88,
-        100,
-        86
+        344,
+        356,
+        342
       ],
       "cards": [
-        97,
-        99,
-        92,
-        49
+        353,
+        355,
+        348,
+        305
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 30,
@@ -2595,7 +2595,7 @@
       },
       "itemRewards": [
         {
-          "card": 92,
+          "card": 348,
           "type": "card",
           "rate": 0.1
         }
@@ -2612,13 +2612,13 @@
       ],
       "fetishesCards": [],
       "cards": [
-        18,
-        107,
-        14,
-        106,
-        117,
-        15,
-        17
+        274,
+        363,
+        270,
+        362,
+        373,
+        271,
+        273
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 35,
@@ -2629,17 +2629,17 @@
       },
       "itemRewards": [
         {
-          "card": 106,
+          "card": 362,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 107,
+          "card": 363,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 117,
+          "card": 373,
           "type": "card",
           "rate": 0.1
         }
@@ -2656,159 +2656,159 @@
       ],
       "fetishesCards": [],
       "cards": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        58,
-        59,
-        60,
-        61,
-        62,
-        63,
-        64,
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74,
-        75,
-        76,
-        77,
-        78,
-        79,
-        80,
-        81,
-        82,
-        83,
-        84,
-        85,
-        86,
-        87,
-        88,
-        89,
-        90,
-        91,
-        92,
-        93,
-        94,
-        95,
-        96,
-        97,
-        98,
-        99,
-        100,
-        101,
-        102,
-        103,
-        104,
-        105,
-        106,
-        107,
-        108,
-        109,
-        110,
-        111,
-        112,
-        113,
-        114,
-        115,
-        116,
-        117,
-        118,
-        119,
-        120,
-        121,
-        122,
-        123,
-        124,
-        125,
-        126,
-        127,
-        128,
-        129,
-        130,
-        131,
-        132,
-        133,
-        134,
-        135,
-        136,
-        137,
-        138,
-        139,
-        140,
-        141,
-        142,
-        143,
-        144,
-        145,
-        146,
-        147,
-        148,
-        149,
-        150,
-        151,
-        152,
-        153
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        278,
+        279,
+        280,
+        281,
+        282,
+        283,
+        284,
+        285,
+        286,
+        287,
+        288,
+        289,
+        290,
+        291,
+        292,
+        293,
+        294,
+        295,
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303,
+        304,
+        305,
+        306,
+        307,
+        308,
+        309,
+        310,
+        311,
+        312,
+        313,
+        314,
+        315,
+        316,
+        317,
+        318,
+        319,
+        320,
+        321,
+        322,
+        323,
+        324,
+        325,
+        326,
+        327,
+        328,
+        329,
+        330,
+        331,
+        332,
+        333,
+        334,
+        335,
+        336,
+        337,
+        338,
+        339,
+        340,
+        341,
+        342,
+        343,
+        344,
+        345,
+        346,
+        347,
+        348,
+        349,
+        350,
+        351,
+        352,
+        353,
+        354,
+        355,
+        356,
+        357,
+        358,
+        359,
+        360,
+        361,
+        362,
+        363,
+        364,
+        365,
+        366,
+        367,
+        368,
+        369,
+        370,
+        371,
+        372,
+        373,
+        374,
+        375,
+        376,
+        377,
+        378,
+        379,
+        380,
+        381,
+        382,
+        383,
+        384,
+        385,
+        386,
+        387,
+        388,
+        389,
+        390,
+        391,
+        392,
+        393,
+        394,
+        395,
+        396,
+        397,
+        398,
+        399,
+        400,
+        401,
+        402,
+        403,
+        404,
+        405,
+        406,
+        407,
+        408,
+        409
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 40,
@@ -2824,7 +2824,7 @@
           "rate": 1.0
         },
         {
-          "card": 77,
+          "card": 333,
           "type": "card",
           "rate": 0.01
         }
@@ -2842,28 +2842,28 @@
       ],
       "fetishesCards": [],
       "cards": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        81
+        513,
+        514,
+        515,
+        516,
+        517,
+        518,
+        519,
+        520,
+        521,
+        522,
+        523,
+        524,
+        525,
+        526,
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        593
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
@@ -2874,17 +2874,17 @@
       },
       "itemRewards": [
         {
-          "card": 10,
+          "card": 522,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 13,
+          "card": 525,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 81,
+          "card": 593,
           "type": "card",
           "rate": 0.08
         }
@@ -2900,29 +2900,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        78,
-        82
+        513,
+        514,
+        515,
+        516,
+        517,
+        518,
+        519,
+        520,
+        521,
+        522,
+        523,
+        524,
+        525,
+        526,
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        590,
+        594
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
@@ -2933,22 +2933,22 @@
       },
       "itemRewards": [
         {
-          "card": 16,
+          "card": 528,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 20,
+          "card": 532,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 78,
+          "card": 590,
           "type": "card",
           "rate": 0.08
         },
         {
-          "card": 82,
+          "card": 594,
           "type": "card",
           "rate": 0.08
         }
@@ -2965,30 +2965,30 @@
         "RULE_THREE_OPEN"
       ],
       "fetishesCards": [
-        48
+        560
       ],
       "cards": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21
+        513,
+        514,
+        515,
+        516,
+        517,
+        518,
+        519,
+        520,
+        521,
+        522,
+        523,
+        524,
+        525,
+        526,
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
@@ -3004,17 +3004,17 @@
           "rate": 1.0
         },
         {
-          "card": 11,
+          "card": 523,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 21,
+          "card": 533,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 48,
+          "card": 560,
           "type": "card",
           "rate": 0.05
         }
@@ -3031,20 +3031,20 @@
       ],
       "fetishesCards": [],
       "cards": [
-        8,
-        11,
-        15,
-        17,
-        18,
-        19,
-        20,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        85
+        520,
+        523,
+        527,
+        529,
+        530,
+        531,
+        532,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        597
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 10,
@@ -3055,17 +3055,17 @@
       },
       "itemRewards": [
         {
-          "card": 29,
+          "card": 541,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 30,
+          "card": 542,
           "type": "card",
           "rate": 0.25
         },
         {
-          "card": 85,
+          "card": 597,
           "type": "card",
           "rate": 0.01
         }
@@ -3082,20 +3082,20 @@
       ],
       "fetishesCards": [],
       "cards": [
-        8,
-        11,
-        15,
-        17,
-        18,
-        19,
-        20,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        86
+        520,
+        523,
+        527,
+        529,
+        530,
+        531,
+        532,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        598
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 10,
@@ -3106,17 +3106,17 @@
       },
       "itemRewards": [
         {
-          "card": 26,
+          "card": 538,
           "type": "card",
           "rate": 0.33
         },
         {
-          "card": 27,
+          "card": 539,
           "type": "card",
           "rate": 0.33
         },
         {
-          "card": 86,
+          "card": 598,
           "type": "card",
           "rate": 0.02
         }
@@ -3134,22 +3134,22 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        106
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        618
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 10,
@@ -3165,17 +3165,17 @@
           "rate": 1.0
         },
         {
-          "card": 26,
+          "card": 538,
           "type": "card",
           "rate": 0.33
         },
         {
-          "card": 27,
+          "card": 539,
           "type": "card",
           "rate": 0.33
         },
         {
-          "card": 106,
+          "card": 618,
           "type": "card",
           "rate": 0.005
         }
@@ -3191,22 +3191,22 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        79
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        591
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3217,7 +3217,7 @@
       },
       "itemRewards": [
         {
-          "card": 79,
+          "card": 591,
           "type": "card",
           "rate": 0.02
         }
@@ -3233,22 +3233,22 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        84
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        596
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3259,7 +3259,7 @@
       },
       "itemRewards": [
         {
-          "card": 84,
+          "card": 596,
           "type": "card",
           "rate": 0.02
         }
@@ -3276,21 +3276,21 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3306,12 +3306,12 @@
           "rate": 1.0
         },
         {
-          "card": 67,
+          "card": 579,
           "type": "card",
           "rate": 0.1
         },
         {
-          "card": 68,
+          "card": 580,
           "type": "card",
           "rate": 0.1
         }
@@ -3328,22 +3328,22 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        98
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        610
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3354,7 +3354,7 @@
       },
       "itemRewards": [
         {
-          "card": 98,
+          "card": 610,
           "type": "card",
           "rate": 0.01
         }
@@ -3372,22 +3372,22 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        104
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        616
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3398,7 +3398,7 @@
       },
       "itemRewards": [
         {
-          "card": 104,
+          "card": 616,
           "type": "card",
           "rate": 0.01
         }
@@ -3416,22 +3416,22 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30,
-        107
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542,
+        619
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3442,7 +3442,7 @@
       },
       "itemRewards": [
         {
-          "card": 107,
+          "card": 619,
           "type": "card",
           "rate": 0.01
         }
@@ -3459,21 +3459,21 @@
       ],
       "fetishesCards": [],
       "cards": [
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        29,
-        30
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        541,
+        542
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 15,
@@ -3498,29 +3498,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        95
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        607
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 20,
@@ -3531,7 +3531,7 @@
       },
       "itemRewards": [
         {
-          "card": 95,
+          "card": 607,
           "type": "card",
           "rate": 0.01
         }
@@ -3549,29 +3549,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        100
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        612
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 20,
@@ -3582,7 +3582,7 @@
       },
       "itemRewards": [
         {
-          "card": 100,
+          "card": 612,
           "type": "card",
           "rate": 0.01
         }
@@ -3602,29 +3602,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        91
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        603
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 20,
@@ -3640,7 +3640,7 @@
           "rate": 1.0
         },
         {
-          "card": 91,
+          "card": 603,
           "type": "card",
           "rate": 0.01
         }
@@ -3658,29 +3658,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        105
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        617
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 20,
@@ -3691,7 +3691,7 @@
       },
       "itemRewards": [
         {
-          "card": 105,
+          "card": 617,
           "type": "card",
           "rate": 0.01
         }
@@ -3709,29 +3709,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        83
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        595
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
       "matchFee": 20,
@@ -3742,7 +3742,7 @@
       },
       "itemRewards": [
         {
-          "card": 83,
+          "card": 595,
           "type": "card",
           "rate": 0.02
         }
@@ -3760,29 +3760,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        108
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        620
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -3793,7 +3793,7 @@
       },
       "itemRewards": [
         {
-          "card": 108,
+          "card": 620,
           "type": "card",
           "rate": 0.01
         }
@@ -3812,29 +3812,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        108
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        620
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -3850,7 +3850,7 @@
           "rate": 1.0
         },
         {
-          "card": 108,
+          "card": 620,
           "type": "card",
           "rate": 0.01
         }
@@ -3868,29 +3868,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        109
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        621
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -3901,7 +3901,7 @@
       },
       "itemRewards": [
         {
-          "card": 109,
+          "card": 621,
           "type": "card",
           "rate": 0.01
         }
@@ -3919,29 +3919,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        89
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        601
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -3957,7 +3957,7 @@
           "rate": 1.0
         },
         {
-          "card": 89,
+          "card": 601,
           "type": "card",
           "rate": 0.01
         }
@@ -3977,29 +3977,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        102
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        614
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -4010,7 +4010,7 @@
       },
       "itemRewards": [
         {
-          "card": 102,
+          "card": 614,
           "type": "card",
           "rate": 0.01
         }
@@ -4028,29 +4028,29 @@
       ],
       "fetishesCards": [],
       "cards": [
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        110
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        622
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -4061,7 +4061,7 @@
       },
       "itemRewards": [
         {
-          "card": 110,
+          "card": 622,
           "type": "card",
           "rate": 0.01
         }
@@ -4078,105 +4078,105 @@
       ],
       "fetishesCards": [],
       "cards": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        58,
-        59,
-        60,
-        61,
-        62,
-        63,
-        64,
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74,
-        75,
-        76,
-        77,
-        78,
-        79,
-        80,
-        81,
-        82,
-        83,
-        84,
-        85,
-        86,
-        87,
-        88,
-        89,
-        90,
-        91,
-        92,
-        93,
-        94,
-        95,
-        96,
-        97,
-        98,
-        99
+        513,
+        514,
+        515,
+        516,
+        517,
+        518,
+        519,
+        520,
+        521,
+        522,
+        523,
+        524,
+        525,
+        526,
+        527,
+        528,
+        529,
+        530,
+        531,
+        532,
+        533,
+        534,
+        535,
+        536,
+        537,
+        538,
+        539,
+        540,
+        541,
+        542,
+        543,
+        544,
+        545,
+        546,
+        547,
+        548,
+        549,
+        550,
+        551,
+        552,
+        553,
+        554,
+        555,
+        556,
+        557,
+        558,
+        559,
+        560,
+        561,
+        562,
+        563,
+        564,
+        565,
+        566,
+        567,
+        568,
+        569,
+        570,
+        571,
+        572,
+        573,
+        574,
+        575,
+        576,
+        577,
+        578,
+        579,
+        580,
+        581,
+        582,
+        583,
+        584,
+        585,
+        586,
+        587,
+        588,
+        589,
+        590,
+        591,
+        592,
+        593,
+        594,
+        595,
+        596,
+        597,
+        598,
+        599,
+        600,
+        601,
+        602,
+        603,
+        604,
+        605,
+        606,
+        607,
+        608,
+        609,
+        610,
+        611
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
       "matchFee": 30,
@@ -4187,7 +4187,7 @@
       },
       "itemRewards": [
         {
-          "card": 110,
+          "card": 622,
           "type": "card",
           "rate": 0.01
         }

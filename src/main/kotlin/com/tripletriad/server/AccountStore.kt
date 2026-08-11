@@ -331,7 +331,7 @@ class AccountStore(
         id = getLong("id"),
         playedAt = getTimestamp("played_at").time,
         opponentIconId = getString("opponent_icon_id"),
-        collection = CardCollection.forPrefix(getString("collection"))
+        collection = CardCollection.forStorageKey(getString("collection"))
             ?: CardCollection.FF14,
         seed = getInt("seed"),
         blue = getInt("blue"),

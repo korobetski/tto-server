@@ -144,7 +144,7 @@ class AccountFlowTest {
 
         val session = register(Postgres.freshAccount("borrowed"))
         val rich = session.player.save.let { save ->
-            val extra = Catalogs.cards.collection(save.mode.prefix)
+            val extra = Catalogs.cards.collection(save.mode)
                 .map { it.id }
                 .filterNot { save.ownsCard(it) }
                 .take(DECK_SIZE)

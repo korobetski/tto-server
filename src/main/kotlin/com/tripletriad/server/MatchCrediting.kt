@@ -95,7 +95,7 @@ object MatchCrediting {
 
         val recorded = RecordedMatch(
             opponentIconId = transcript.opponentIconId,
-            collection = transcript.collection.prefix,
+            collection = transcript.collection.storageKey,
             seed = transcript.seed,
             blue = verdict.blue,
             red = verdict.red,
@@ -151,7 +151,7 @@ object MatchCrediting {
         val canonical = buildString {
             append(transcript.version).append('|')
             append(transcript.seed).append('|')
-            append(transcript.collection.prefix).append('|')
+            append(transcript.collection.storageKey).append('|')
             append(transcript.opponentIconId).append('|')
             transcript.deck.joinTo(this, ",")
             append('|')
