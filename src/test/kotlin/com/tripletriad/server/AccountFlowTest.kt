@@ -144,11 +144,14 @@ class AccountFlowTest {
 
         val session = register(Postgres.freshAccount("borrowed"))
         val rich = session.player.save.let { save ->
-            val extra = Catalogs.cards.collection(save.mode.prefix)
+            val extra = Catalogs.cards.collection(save.mode)
                 .map { it.id }
-                .filterNot { it in save.cards }
+                .filterNot { save.ownsCard(it) }
                 .take(DECK_SIZE)
-            save.copy(cards = save.cards + extra, decks = listOf(Deck("borrowed", extra)))
+            save.copy(
+                cards = save.cards + extra.associateWith { 1 },
+                decks = listOf(Deck("borrowed", extra)),
+            )
         }
 
         val borrowed = Transcripts.honest(rich, SEED)

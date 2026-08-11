@@ -125,10 +125,10 @@ class MatchRoutesTest {
      * happens to own.
      */
     private fun honestTranscript(seed: Int): MatchTranscript {
-        val deck = Catalogs.cards.collection(COLLECTION.prefix).take(DECK_SIZE).map { it.id }
+        val deck = Catalogs.cards.collection(COLLECTION).take(DECK_SIZE).map { it.id }
         val profile = GameSave(
             mode = COLLECTION,
-            cards = deck,
+            cards = deck.associateWith { 1 },
             decks = listOf(Deck("test", deck)),
         )
         return Transcripts.honest(profile, seed)

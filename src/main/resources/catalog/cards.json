@@ -1,8 +1,25 @@
 {
-  "ff14": [
+  "sets": [
     {
-      "id": 1,
-      "collection": "ff14_",
+      "block": 1,
+      "slug": "ff14",
+      "nameKey": "APP_SET_FF14",
+      "sortOrder": 1,
+      "released": true
+    },
+    {
+      "block": 2,
+      "slug": "ff8",
+      "nameKey": "APP_SET_FF8",
+      "sortOrder": 2,
+      "released": true
+    }
+  ],
+  "cards": [
+    {
+      "id": 257,
+      "block": 1,
+      "number": 1,
       "nameKey": "STR_FF14_CARD_1",
       "name": "Dodo",
       "top": 4,
@@ -13,8 +30,9 @@
       "type": null
     },
     {
-      "id": 2,
-      "collection": "ff14_",
+      "id": 258,
+      "block": 1,
+      "number": 2,
       "nameKey": "STR_FF14_CARD_2",
       "name": "Tonberry",
       "top": 2,
@@ -25,8 +43,9 @@
       "type": null
     },
     {
-      "id": 3,
-      "collection": "ff14_",
+      "id": 259,
+      "block": 1,
+      "number": 3,
       "nameKey": "STR_FF14_CARD_3",
       "name": "Sabotender",
       "top": 4,
@@ -37,8 +56,9 @@
       "type": null
     },
     {
-      "id": 4,
-      "collection": "ff14_",
+      "id": 260,
+      "block": 1,
+      "number": 4,
       "nameKey": "STR_FF14_CARD_4",
       "name": "Spriggan",
       "top": 2,
@@ -49,8 +69,9 @@
       "type": null
     },
     {
-      "id": 5,
-      "collection": "ff14_",
+      "id": 261,
+      "block": 1,
+      "number": 5,
       "nameKey": "STR_FF14_CARD_5",
       "name": "Pudding",
       "top": 2,
@@ -61,8 +82,9 @@
       "type": null
     },
     {
-      "id": 6,
-      "collection": "ff14_",
+      "id": 262,
+      "block": 1,
+      "number": 6,
       "nameKey": "STR_FF14_CARD_6",
       "name": "Bomb",
       "top": 3,
@@ -73,8 +95,9 @@
       "type": null
     },
     {
-      "id": 7,
-      "collection": "ff14_",
+      "id": 263,
+      "block": 1,
+      "number": 7,
       "nameKey": "STR_FF14_CARD_7",
       "name": "Mandragora",
       "top": 4,
@@ -85,8 +108,9 @@
       "type": null
     },
     {
-      "id": 8,
-      "collection": "ff14_",
+      "id": 264,
+      "block": 1,
+      "number": 8,
       "nameKey": "STR_FF14_CARD_8",
       "name": "Coblyn",
       "top": 3,
@@ -97,8 +121,9 @@
       "type": null
     },
     {
-      "id": 9,
-      "collection": "ff14_",
+      "id": 265,
+      "block": 1,
+      "number": 9,
       "nameKey": "STR_FF14_CARD_9",
       "name": "Morbol",
       "top": 5,
@@ -109,8 +134,9 @@
       "type": null
     },
     {
-      "id": 10,
-      "collection": "ff14_",
+      "id": 266,
+      "block": 1,
+      "number": 10,
       "nameKey": "STR_FF14_CARD_10",
       "name": "Coeurl",
       "top": 2,
@@ -121,8 +147,9 @@
       "type": null
     },
     {
-      "id": 11,
-      "collection": "ff14_",
+      "id": 267,
+      "block": 1,
+      "number": 11,
       "nameKey": "STR_FF14_CARD_11",
       "name": "Ahriman",
       "top": 5,
@@ -133,8 +160,9 @@
       "type": null
     },
     {
-      "id": 12,
-      "collection": "ff14_",
+      "id": 268,
+      "block": 1,
+      "number": 12,
       "nameKey": "STR_FF14_CARD_12",
       "name": "Goobbue",
       "top": 2,
@@ -145,8 +173,9 @@
       "type": null
     },
     {
-      "id": 13,
-      "collection": "ff14_",
+      "id": 269,
+      "block": 1,
+      "number": 13,
       "nameKey": "STR_FF14_CARD_13",
       "name": "Chocobo",
       "top": 3,
@@ -157,8 +186,9 @@
       "type": null
     },
     {
-      "id": 14,
-      "collection": "ff14_",
+      "id": 270,
+      "block": 1,
+      "number": 14,
       "nameKey": "STR_FF14_CARD_14",
       "name": "Amalj'aa",
       "top": 1,
@@ -169,8 +199,9 @@
       "type": "beast"
     },
     {
-      "id": 15,
-      "collection": "ff14_",
+      "id": 271,
+      "block": 1,
+      "number": 15,
       "nameKey": "STR_FF14_CARD_15",
       "name": "Ixal",
       "top": 6,
@@ -181,8 +212,9 @@
       "type": "beast"
     },
     {
-      "id": 16,
-      "collection": "ff14_",
+      "id": 272,
+      "block": 1,
+      "number": 16,
       "nameKey": "STR_FF14_CARD_16",
       "name": "Sylph",
       "top": 2,
@@ -193,8 +225,9 @@
       "type": "beast"
     },
     {
-      "id": 17,
-      "collection": "ff14_",
+      "id": 273,
+      "block": 1,
+      "number": 17,
       "nameKey": "STR_FF14_CARD_17",
       "name": "Kobold",
       "top": 2,
@@ -205,8 +238,9 @@
       "type": "beast"
     },
     {
-      "id": 18,
-      "collection": "ff14_",
+      "id": 274,
+      "block": 1,
+      "number": 18,
       "nameKey": "STR_FF14_CARD_18",
       "name": "Sahuagin",
       "top": 4,
@@ -217,8 +251,9 @@
       "type": "beast"
     },
     {
-      "id": 19,
-      "collection": "ff14_",
+      "id": 275,
+      "block": 1,
+      "number": 19,
       "nameKey": "STR_FF14_CARD_19",
       "name": "Tataru Taru",
       "top": 7,
@@ -229,8 +264,9 @@
       "type": "scions"
     },
     {
-      "id": 20,
-      "collection": "ff14_",
+      "id": 276,
+      "block": 1,
+      "number": 20,
       "nameKey": "STR_FF14_CARD_20",
       "name": "Moogle",
       "top": 2,
@@ -241,8 +277,9 @@
       "type": null
     },
     {
-      "id": 21,
-      "collection": "ff14_",
+      "id": 277,
+      "block": 1,
+      "number": 21,
       "nameKey": "STR_FF14_CARD_21",
       "name": "Siren",
       "top": 3,
@@ -253,8 +290,9 @@
       "type": null
     },
     {
-      "id": 22,
-      "collection": "ff14_",
+      "id": 278,
+      "block": 1,
+      "number": 22,
       "nameKey": "STR_FF14_CARD_22",
       "name": "Ultros & Typhon",
       "top": 2,
@@ -265,8 +303,9 @@
       "type": null
     },
     {
-      "id": 23,
-      "collection": "ff14_",
+      "id": 279,
+      "block": 1,
+      "number": 23,
       "nameKey": "STR_FF14_CARD_23",
       "name": "Demon Wall",
       "top": 6,
@@ -277,8 +316,9 @@
       "type": null
     },
     {
-      "id": 24,
-      "collection": "ff14_",
+      "id": 280,
+      "block": 1,
+      "number": 24,
       "nameKey": "STR_FF14_CARD_24",
       "name": "Succubus",
       "top": 7,
@@ -289,8 +329,9 @@
       "type": null
     },
     {
-      "id": 25,
-      "collection": "ff14_",
+      "id": 281,
+      "block": 1,
+      "number": 25,
       "nameKey": "STR_FF14_CARD_25",
       "name": "Chimera",
       "top": 7,
@@ -301,8 +342,9 @@
       "type": null
     },
     {
-      "id": 26,
-      "collection": "ff14_",
+      "id": 282,
+      "block": 1,
+      "number": 26,
       "nameKey": "STR_FF14_CARD_26",
       "name": "Blue Dragon",
       "top": 2,
@@ -313,8 +355,9 @@
       "type": null
     },
     {
-      "id": 27,
-      "collection": "ff14_",
+      "id": 283,
+      "block": 1,
+      "number": 27,
       "nameKey": "STR_FF14_CARD_27",
       "name": "Scarface Bugaal Ja",
       "top": 6,
@@ -325,8 +368,9 @@
       "type": "beast"
     },
     {
-      "id": 28,
-      "collection": "ff14_",
+      "id": 284,
+      "block": 1,
+      "number": 28,
       "nameKey": "STR_FF14_CARD_28",
       "name": "Momodi Modi",
       "top": 7,
@@ -337,8 +381,9 @@
       "type": null
     },
     {
-      "id": 29,
-      "collection": "ff14_",
+      "id": 285,
+      "block": 1,
+      "number": 29,
       "nameKey": "STR_FF14_CARD_29",
       "name": "Baderon Tenfingers",
       "top": 3,
@@ -349,8 +394,9 @@
       "type": null
     },
     {
-      "id": 30,
-      "collection": "ff14_",
+      "id": 286,
+      "block": 1,
+      "number": 30,
       "nameKey": "STR_FF14_CARD_30",
       "name": "Mother Miounne",
       "top": 5,
@@ -361,8 +407,9 @@
       "type": null
     },
     {
-      "id": 31,
-      "collection": "ff14_",
+      "id": 287,
+      "block": 1,
+      "number": 31,
       "nameKey": "STR_FF14_CARD_31",
       "name": "Livia sas Junius",
       "top": 3,
@@ -373,8 +420,9 @@
       "type": "garlean"
     },
     {
-      "id": 32,
-      "collection": "ff14_",
+      "id": 288,
+      "block": 1,
+      "number": 32,
       "nameKey": "STR_FF14_CARD_32",
       "name": "Rhitahtyna sas Arvina",
       "top": 7,
@@ -385,8 +433,9 @@
       "type": "garlean"
     },
     {
-      "id": 33,
-      "collection": "ff14_",
+      "id": 289,
+      "block": 1,
+      "number": 33,
       "nameKey": "STR_FF14_CARD_33",
       "name": "Biggs & Wedge",
       "top": 5,
@@ -397,8 +446,9 @@
       "type": null
     },
     {
-      "id": 34,
-      "collection": "ff14_",
+      "id": 290,
+      "block": 1,
+      "number": 34,
       "nameKey": "STR_FF14_CARD_34",
       "name": "Gerolt",
       "top": 1,
@@ -409,8 +459,9 @@
       "type": null
     },
     {
-      "id": 35,
-      "collection": "ff14_",
+      "id": 291,
+      "block": 1,
+      "number": 35,
       "nameKey": "STR_FF14_CARD_35",
       "name": "Frixio",
       "top": 6,
@@ -421,8 +472,9 @@
       "type": "beast"
     },
     {
-      "id": 36,
-      "collection": "ff14_",
+      "id": 292,
+      "block": 1,
+      "number": 36,
       "nameKey": "STR_FF14_CARD_36",
       "name": "Mutamix Bubblypots",
       "top": 2,
@@ -433,8 +485,9 @@
       "type": "beast"
     },
     {
-      "id": 37,
-      "collection": "ff14_",
+      "id": 293,
+      "block": 1,
+      "number": 37,
       "nameKey": "STR_FF14_CARD_37",
       "name": "Memeroon",
       "top": 6,
@@ -445,8 +498,9 @@
       "type": "beast"
     },
     {
-      "id": 38,
-      "collection": "ff14_",
+      "id": 294,
+      "block": 1,
+      "number": 38,
       "nameKey": "STR_FF14_CARD_38",
       "name": "Behemoth",
       "top": 7,
@@ -457,8 +511,9 @@
       "type": null
     },
     {
-      "id": 39,
-      "collection": "ff14_",
+      "id": 295,
+      "block": 1,
+      "number": 39,
       "nameKey": "STR_FF14_CARD_39",
       "name": "Gilgamesh & Enkidu",
       "top": 8,
@@ -469,8 +524,9 @@
       "type": null
     },
     {
-      "id": 40,
-      "collection": "ff14_",
+      "id": 296,
+      "block": 1,
+      "number": 40,
       "nameKey": "STR_FF14_CARD_40",
       "name": "Ifrit",
       "top": 7,
@@ -481,8 +537,9 @@
       "type": "primals"
     },
     {
-      "id": 41,
-      "collection": "ff14_",
+      "id": 297,
+      "block": 1,
+      "number": 41,
       "nameKey": "STR_FF14_CARD_41",
       "name": "Titan",
       "top": 1,
@@ -493,8 +550,9 @@
       "type": "primals"
     },
     {
-      "id": 42,
-      "collection": "ff14_",
+      "id": 298,
+      "block": 1,
+      "number": 42,
       "nameKey": "STR_FF14_CARD_42",
       "name": "Garuda",
       "top": 7,
@@ -505,8 +563,9 @@
       "type": "primals"
     },
     {
-      "id": 43,
-      "collection": "ff14_",
+      "id": 299,
+      "block": 1,
+      "number": 43,
       "nameKey": "STR_FF14_CARD_43",
       "name": "Good King Moggle Mog XIII",
       "top": 7,
@@ -517,8 +576,9 @@
       "type": "primals"
     },
     {
-      "id": 44,
-      "collection": "ff14_",
+      "id": 300,
+      "block": 1,
+      "number": 44,
       "nameKey": "STR_FF14_CARD_44",
       "name": "Raya-O-Senna & A-Ruhn-Senna",
       "top": 5,
@@ -529,8 +589,9 @@
       "type": null
     },
     {
-      "id": 45,
-      "collection": "ff14_",
+      "id": 301,
+      "block": 1,
+      "number": 45,
       "nameKey": "STR_FF14_CARD_45",
       "name": "Godbert Manderville",
       "top": 6,
@@ -541,8 +602,9 @@
       "type": null
     },
     {
-      "id": 46,
-      "collection": "ff14_",
+      "id": 302,
+      "block": 1,
+      "number": 46,
       "nameKey": "STR_FF14_CARD_46",
       "name": "Thancred",
       "top": 2,
@@ -553,8 +615,9 @@
       "type": "scions"
     },
     {
-      "id": 47,
-      "collection": "ff14_",
+      "id": 303,
+      "block": 1,
+      "number": 47,
       "nameKey": "STR_FF14_CARD_47",
       "name": "Nero tol Scaeva",
       "top": 4,
@@ -565,8 +628,9 @@
       "type": "garlean"
     },
     {
-      "id": 48,
-      "collection": "ff14_",
+      "id": 304,
+      "block": 1,
+      "number": 48,
       "nameKey": "STR_FF14_CARD_48",
       "name": "Papalymo & Yda",
       "top": 3,
@@ -577,8 +641,9 @@
       "type": "scions"
     },
     {
-      "id": 49,
-      "collection": "ff14_",
+      "id": 305,
+      "block": 1,
+      "number": 49,
       "nameKey": "STR_FF14_CARD_49",
       "name": "Y'shtola",
       "top": 7,
@@ -589,8 +654,9 @@
       "type": "scions"
     },
     {
-      "id": 50,
-      "collection": "ff14_",
+      "id": 306,
+      "block": 1,
+      "number": 50,
       "nameKey": "STR_FF14_CARD_50",
       "name": "Urianger",
       "top": 8,
@@ -601,8 +667,9 @@
       "type": "scions"
     },
     {
-      "id": 51,
-      "collection": "ff14_",
+      "id": 307,
+      "block": 1,
+      "number": 51,
       "nameKey": "STR_FF14_CARD_51",
       "name": "Ultima Weapon",
       "top": 7,
@@ -613,8 +680,9 @@
       "type": "garlean"
     },
     {
-      "id": 52,
-      "collection": "ff14_",
+      "id": 308,
+      "block": 1,
+      "number": 52,
       "nameKey": "STR_FF14_CARD_52",
       "name": "Odin",
       "top": 8,
@@ -625,8 +693,9 @@
       "type": "primals"
     },
     {
-      "id": 53,
-      "collection": "ff14_",
+      "id": 309,
+      "block": 1,
+      "number": 53,
       "nameKey": "STR_FF14_CARD_53",
       "name": "Ramuh",
       "top": 8,
@@ -637,8 +706,9 @@
       "type": "primals"
     },
     {
-      "id": 54,
-      "collection": "ff14_",
+      "id": 310,
+      "block": 1,
+      "number": 54,
       "nameKey": "STR_FF14_CARD_54",
       "name": "Leviathan",
       "top": 8,
@@ -649,8 +719,9 @@
       "type": "primals"
     },
     {
-      "id": 55,
-      "collection": "ff14_",
+      "id": 311,
+      "block": 1,
+      "number": 55,
       "nameKey": "STR_FF14_CARD_55",
       "name": "Shiva",
       "top": 1,
@@ -661,8 +732,9 @@
       "type": "primals"
     },
     {
-      "id": 56,
-      "collection": "ff14_",
+      "id": 312,
+      "block": 1,
+      "number": 56,
       "nameKey": "STR_FF14_CARD_56",
       "name": "Minfilia",
       "top": 9,
@@ -673,8 +745,9 @@
       "type": "scions"
     },
     {
-      "id": 57,
-      "collection": "ff14_",
+      "id": 313,
+      "block": 1,
+      "number": 57,
       "nameKey": "STR_FF14_CARD_57",
       "name": "Lahabrea",
       "top": 4,
@@ -685,8 +758,9 @@
       "type": null
     },
     {
-      "id": 58,
-      "collection": "ff14_",
+      "id": 314,
+      "block": 1,
+      "number": 58,
       "nameKey": "STR_FF14_CARD_58",
       "name": "Cid Garlond",
       "top": 5,
@@ -697,8 +771,9 @@
       "type": null
     },
     {
-      "id": 59,
-      "collection": "ff14_",
+      "id": 315,
+      "block": 1,
+      "number": 59,
       "nameKey": "STR_FF14_CARD_59",
       "name": "Alphinaud & Alisaie",
       "top": 9,
@@ -709,8 +784,9 @@
       "type": "scions"
     },
     {
-      "id": 60,
-      "collection": "ff14_",
+      "id": 316,
+      "block": 1,
+      "number": 60,
       "nameKey": "STR_FF14_CARD_60",
       "name": "Louisoix Leveilleur",
       "top": 9,
@@ -721,8 +797,9 @@
       "type": "scions"
     },
     {
-      "id": 61,
-      "collection": "ff14_",
+      "id": 317,
+      "block": 1,
+      "number": 61,
       "nameKey": "STR_FF14_CARD_61",
       "name": "Bahamut",
       "top": 9,
@@ -733,8 +810,9 @@
       "type": "primals"
     },
     {
-      "id": 62,
-      "collection": "ff14_",
+      "id": 318,
+      "block": 1,
+      "number": 62,
       "nameKey": "STR_FF14_CARD_62",
       "name": "Hildibrand & Nashu Mhakaracca",
       "top": 1,
@@ -745,8 +823,9 @@
       "type": null
     },
     {
-      "id": 63,
-      "collection": "ff14_",
+      "id": 319,
+      "block": 1,
+      "number": 63,
       "nameKey": "STR_FF14_CARD_63",
       "name": "Nanamo Ul Namo",
       "top": 10,
@@ -757,8 +836,9 @@
       "type": null
     },
     {
-      "id": 64,
-      "collection": "ff14_",
+      "id": 320,
+      "block": 1,
+      "number": 64,
       "nameKey": "STR_FF14_CARD_64",
       "name": "Gaius van Baelsar",
       "top": 4,
@@ -769,8 +849,9 @@
       "type": "garlean"
     },
     {
-      "id": 65,
-      "collection": "ff14_",
+      "id": 321,
+      "block": 1,
+      "number": 65,
       "nameKey": "STR_FF14_CARD_65",
       "name": "Merlwyb Bloefhiswyn",
       "top": 5,
@@ -781,8 +862,9 @@
       "type": null
     },
     {
-      "id": 66,
-      "collection": "ff14_",
+      "id": 322,
+      "block": 1,
+      "number": 66,
       "nameKey": "STR_FF14_CARD_66",
       "name": "Kan-E-Senna",
       "top": 9,
@@ -793,8 +875,9 @@
       "type": null
     },
     {
-      "id": 67,
-      "collection": "ff14_",
+      "id": 323,
+      "block": 1,
+      "number": 67,
       "nameKey": "STR_FF14_CARD_67",
       "name": "Raubahn Aldynn",
       "top": 6,
@@ -805,8 +888,9 @@
       "type": null
     },
     {
-      "id": 68,
-      "collection": "ff14_",
+      "id": 324,
+      "block": 1,
+      "number": 68,
       "nameKey": "STR_FF14_CARD_68",
       "name": "Warrior of Light",
       "top": 10,
@@ -817,8 +901,9 @@
       "type": null
     },
     {
-      "id": 69,
-      "collection": "ff14_",
+      "id": 325,
+      "block": 1,
+      "number": 69,
       "nameKey": "STR_FF14_CARD_69",
       "name": "Firion",
       "top": 10,
@@ -829,8 +914,9 @@
       "type": null
     },
     {
-      "id": 70,
-      "collection": "ff14_",
+      "id": 326,
+      "block": 1,
+      "number": 70,
       "nameKey": "STR_FF14_CARD_70",
       "name": "Onion Knight",
       "top": 8,
@@ -841,8 +927,9 @@
       "type": null
     },
     {
-      "id": 71,
-      "collection": "ff14_",
+      "id": 327,
+      "block": 1,
+      "number": 71,
       "nameKey": "STR_FF14_CARD_71",
       "name": "Cecil Harvey",
       "top": 4,
@@ -853,8 +940,9 @@
       "type": null
     },
     {
-      "id": 72,
-      "collection": "ff14_",
+      "id": 328,
+      "block": 1,
+      "number": 72,
       "nameKey": "STR_FF14_CARD_72",
       "name": "Bartz Klauser",
       "top": 4,
@@ -865,8 +953,9 @@
       "type": null
     },
     {
-      "id": 73,
-      "collection": "ff14_",
+      "id": 329,
+      "block": 1,
+      "number": 73,
       "nameKey": "STR_FF14_CARD_73",
       "name": "Terra Branford",
       "top": 10,
@@ -877,8 +966,9 @@
       "type": null
     },
     {
-      "id": 74,
-      "collection": "ff14_",
+      "id": 330,
+      "block": 1,
+      "number": 74,
       "nameKey": "STR_FF14_CARD_74",
       "name": "Cloud Strife",
       "top": 9,
@@ -889,8 +979,9 @@
       "type": null
     },
     {
-      "id": 75,
-      "collection": "ff14_",
+      "id": 331,
+      "block": 1,
+      "number": 75,
       "nameKey": "STR_FF14_CARD_75",
       "name": "Squall Leonhart",
       "top": 6,
@@ -901,8 +992,9 @@
       "type": null
     },
     {
-      "id": 76,
-      "collection": "ff14_",
+      "id": 332,
+      "block": 1,
+      "number": 76,
       "nameKey": "STR_FF14_CARD_76",
       "name": "Zidane Tribal",
       "top": 5,
@@ -913,8 +1005,9 @@
       "type": null
     },
     {
-      "id": 77,
-      "collection": "ff14_",
+      "id": 333,
+      "block": 1,
+      "number": 77,
       "nameKey": "STR_FF14_CARD_77",
       "name": "Tidus",
       "top": 10,
@@ -925,8 +1018,9 @@
       "type": null
     },
     {
-      "id": 78,
-      "collection": "ff14_",
+      "id": 334,
+      "block": 1,
+      "number": 78,
       "nameKey": "STR_FF14_CARD_78",
       "name": "Shantotto",
       "top": 4,
@@ -937,8 +1031,9 @@
       "type": null
     },
     {
-      "id": 79,
-      "collection": "ff14_",
+      "id": 335,
+      "block": 1,
+      "number": 79,
       "nameKey": "STR_FF14_CARD_79",
       "name": "Vaan",
       "top": 1,
@@ -949,8 +1044,9 @@
       "type": null
     },
     {
-      "id": 80,
-      "collection": "ff14_",
+      "id": 336,
+      "block": 1,
+      "number": 80,
       "nameKey": "STR_FF14_CARD_80",
       "name": "Lightning",
       "top": 9,
@@ -961,8 +1057,9 @@
       "type": null
     },
     {
-      "id": 81,
-      "collection": "ff14_",
+      "id": 337,
+      "block": 1,
+      "number": 81,
       "nameKey": "STR_FF14_CARD_81",
       "name": "Gaelicat",
       "top": 4,
@@ -973,8 +1070,9 @@
       "type": null
     },
     {
-      "id": 82,
-      "collection": "ff14_",
+      "id": 338,
+      "block": 1,
+      "number": 82,
       "nameKey": "STR_FF14_CARD_82",
       "name": "Vanu Vanu",
       "top": 2,
@@ -985,8 +1083,9 @@
       "type": "beast"
     },
     {
-      "id": 83,
-      "collection": "ff14_",
+      "id": 339,
+      "block": 1,
+      "number": 83,
       "nameKey": "STR_FF14_CARD_83",
       "name": "Gnath",
       "top": 6,
@@ -997,8 +1096,9 @@
       "type": "beast"
     },
     {
-      "id": 84,
-      "collection": "ff14_",
+      "id": 340,
+      "block": 1,
+      "number": 84,
       "nameKey": "STR_FF14_CARD_84",
       "name": "Yugiri Mistwalker",
       "top": 7,
@@ -1009,8 +1109,9 @@
       "type": null
     },
     {
-      "id": 85,
-      "collection": "ff14_",
+      "id": 341,
+      "block": 1,
+      "number": 85,
       "nameKey": "STR_FF14_CARD_85",
       "name": "Fat Chocobo",
       "top": 5,
@@ -1021,8 +1122,9 @@
       "type": null
     },
     {
-      "id": 86,
-      "collection": "ff14_",
+      "id": 342,
+      "block": 1,
+      "number": 86,
       "nameKey": "STR_FF14_CARD_86",
       "name": "Griffin",
       "top": 5,
@@ -1033,8 +1135,9 @@
       "type": null
     },
     {
-      "id": 87,
-      "collection": "ff14_",
+      "id": 343,
+      "block": 1,
+      "number": 87,
       "nameKey": "STR_FF14_CARD_87",
       "name": "Tioman",
       "top": 1,
@@ -1045,8 +1148,9 @@
       "type": null
     },
     {
-      "id": 88,
-      "collection": "ff14_",
+      "id": 344,
+      "block": 1,
+      "number": 88,
       "nameKey": "STR_FF14_CARD_88",
       "name": "Estinien",
       "top": 8,
@@ -1057,8 +1161,9 @@
       "type": null
     },
     {
-      "id": 89,
-      "collection": "ff14_",
+      "id": 345,
+      "block": 1,
+      "number": 89,
       "nameKey": "STR_FF14_CARD_89",
       "name": "Lucia goe Junius",
       "top": 8,
@@ -1069,8 +1174,9 @@
       "type": null
     },
     {
-      "id": 90,
-      "collection": "ff14_",
+      "id": 346,
+      "block": 1,
+      "number": 90,
       "nameKey": "STR_FF14_CARD_90",
       "name": "Ysayle",
       "top": 4,
@@ -1081,8 +1187,9 @@
       "type": null
     },
     {
-      "id": 91,
-      "collection": "ff14_",
+      "id": 347,
+      "block": 1,
+      "number": 91,
       "nameKey": "STR_FF14_CARD_91",
       "name": "Hilda",
       "top": 1,
@@ -1093,8 +1200,9 @@
       "type": null
     },
     {
-      "id": 92,
-      "collection": "ff14_",
+      "id": 348,
+      "block": 1,
+      "number": 92,
       "nameKey": "STR_FF14_CARD_92",
       "name": "Matoya",
       "top": 8,
@@ -1105,8 +1213,9 @@
       "type": null
     },
     {
-      "id": 93,
-      "collection": "ff14_",
+      "id": 349,
+      "block": 1,
+      "number": 93,
       "nameKey": "STR_FF14_CARD_93",
       "name": "Count Edmont de Fortemps",
       "top": 1,
@@ -1117,8 +1226,9 @@
       "type": null
     },
     {
-      "id": 94,
-      "collection": "ff14_",
+      "id": 350,
+      "block": 1,
+      "number": 94,
       "nameKey": "STR_FF14_CARD_94",
       "name": "Byblos",
       "top": 8,
@@ -1129,8 +1239,9 @@
       "type": null
     },
     {
-      "id": 95,
-      "collection": "ff14_",
+      "id": 351,
+      "block": 1,
+      "number": 95,
       "nameKey": "STR_FF14_CARD_95",
       "name": "Haurchefant",
       "top": 7,
@@ -1141,8 +1252,9 @@
       "type": null
     },
     {
-      "id": 96,
-      "collection": "ff14_",
+      "id": 352,
+      "block": 1,
+      "number": 96,
       "nameKey": "STR_FF14_CARD_96",
       "name": "Aymeric",
       "top": 1,
@@ -1153,8 +1265,9 @@
       "type": null
     },
     {
-      "id": 97,
-      "collection": "ff14_",
+      "id": 353,
+      "block": 1,
+      "number": 97,
       "nameKey": "STR_FF14_CARD_97",
       "name": "Ravana",
       "top": 9,
@@ -1165,8 +1278,9 @@
       "type": "primals"
     },
     {
-      "id": 98,
-      "collection": "ff14_",
+      "id": 354,
+      "block": 1,
+      "number": 98,
       "nameKey": "STR_FF14_CARD_98",
       "name": "Bismarck",
       "top": 1,
@@ -1177,8 +1291,9 @@
       "type": "primals"
     },
     {
-      "id": 99,
-      "collection": "ff14_",
+      "id": 355,
+      "block": 1,
+      "number": 99,
       "nameKey": "STR_FF14_CARD_99",
       "name": "Nidhogg",
       "top": 10,
@@ -1189,8 +1304,9 @@
       "type": null
     },
     {
-      "id": 100,
-      "collection": "ff14_",
+      "id": 356,
+      "block": 1,
+      "number": 100,
       "nameKey": "STR_FF14_CARD_100",
       "name": "Midgardsormr",
       "top": 3,
@@ -1201,8 +1317,9 @@
       "type": null
     },
     {
-      "id": 101,
-      "collection": "ff14_",
+      "id": 357,
+      "block": 1,
+      "number": 101,
       "nameKey": "STR_FF14_CARD_101",
       "name": "Deepeye",
       "top": 1,
@@ -1213,8 +1330,9 @@
       "type": null
     },
     {
-      "id": 102,
-      "collection": "ff14_",
+      "id": 358,
+      "block": 1,
+      "number": 102,
       "nameKey": "STR_FF14_CARD_102",
       "name": "Archaeornis",
       "top": 5,
@@ -1225,8 +1343,9 @@
       "type": null
     },
     {
-      "id": 103,
-      "collection": "ff14_",
+      "id": 359,
+      "block": 1,
+      "number": 103,
       "nameKey": "STR_FF14_CARD_103",
       "name": "Paissa",
       "top": 4,
@@ -1237,8 +1356,9 @@
       "type": null
     },
     {
-      "id": 104,
-      "collection": "ff14_",
+      "id": 360,
+      "block": 1,
+      "number": 104,
       "nameKey": "STR_FF14_CARD_104",
       "name": "Dhalmel",
       "top": 6,
@@ -1249,8 +1369,9 @@
       "type": null
     },
     {
-      "id": 105,
-      "collection": "ff14_",
+      "id": 361,
+      "block": 1,
+      "number": 105,
       "nameKey": "STR_FF14_CARD_105",
       "name": "Bandersnatch",
       "top": 6,
@@ -1261,8 +1382,9 @@
       "type": null
     },
     {
-      "id": 106,
-      "collection": "ff14_",
+      "id": 362,
+      "block": 1,
+      "number": 106,
       "nameKey": "STR_FF14_CARD_106",
       "name": "Crawler",
       "top": 7,
@@ -1273,8 +1395,9 @@
       "type": null
     },
     {
-      "id": 107,
-      "collection": "ff14_",
+      "id": 363,
+      "block": 1,
+      "number": 107,
       "nameKey": "STR_FF14_CARD_107",
       "name": "Poroggo",
       "top": 6,
@@ -1285,8 +1408,9 @@
       "type": null
     },
     {
-      "id": 108,
-      "collection": "ff14_",
+      "id": 364,
+      "block": 1,
+      "number": 108,
       "nameKey": "STR_FF14_CARD_108",
       "name": "Vedrfolnir",
       "top": 8,
@@ -1297,8 +1421,9 @@
       "type": null
     },
     {
-      "id": 109,
-      "collection": "ff14_",
+      "id": 365,
+      "block": 1,
+      "number": 109,
       "nameKey": "STR_FF14_CARD_109",
       "name": "Coeurlregina",
       "top": 5,
@@ -1309,8 +1434,9 @@
       "type": null
     },
     {
-      "id": 110,
-      "collection": "ff14_",
+      "id": 366,
+      "block": 1,
+      "number": 110,
       "nameKey": "STR_FF14_CARD_110",
       "name": "Progenitrix",
       "top": 6,
@@ -1321,8 +1447,9 @@
       "type": null
     },
     {
-      "id": 111,
-      "collection": "ff14_",
+      "id": 367,
+      "block": 1,
+      "number": 111,
       "nameKey": "STR_FF14_CARD_111",
       "name": "Belladonna",
       "top": 3,
@@ -1333,8 +1460,9 @@
       "type": null
     },
     {
-      "id": 112,
-      "collection": "ff14_",
+      "id": 368,
+      "block": 1,
+      "number": 112,
       "nameKey": "STR_FF14_CARD_112",
       "name": "Echidna",
       "top": 6,
@@ -1345,8 +1473,9 @@
       "type": null
     },
     {
-      "id": 113,
-      "collection": "ff14_",
+      "id": 369,
+      "block": 1,
+      "number": 113,
       "nameKey": "STR_FF14_CARD_113",
       "name": "Pipin Tarupin",
       "top": 6,
@@ -1357,8 +1486,9 @@
       "type": null
     },
     {
-      "id": 114,
-      "collection": "ff14_",
+      "id": 370,
+      "block": 1,
+      "number": 114,
       "nameKey": "STR_FF14_CARD_114",
       "name": "Julyan Manderville",
       "top": 6,
@@ -1369,8 +1499,9 @@
       "type": null
     },
     {
-      "id": 115,
-      "collection": "ff14_",
+      "id": 371,
+      "block": 1,
+      "number": 115,
       "nameKey": "STR_FF14_CARD_115",
       "name": "Moglin",
       "top": 8,
@@ -1381,8 +1512,9 @@
       "type": null
     },
     {
-      "id": 116,
-      "collection": "ff14_",
+      "id": 372,
+      "block": 1,
+      "number": 116,
       "nameKey": "STR_FF14_CARD_116",
       "name": "Charibert",
       "top": 7,
@@ -1393,8 +1525,9 @@
       "type": null
     },
     {
-      "id": 117,
-      "collection": "ff14_",
+      "id": 373,
+      "block": 1,
+      "number": 117,
       "nameKey": "STR_FF14_CARD_117",
       "name": "Roundrox",
       "top": 2,
@@ -1405,8 +1538,9 @@
       "type": "beast"
     },
     {
-      "id": 118,
-      "collection": "ff14_",
+      "id": 374,
+      "block": 1,
+      "number": 118,
       "nameKey": "STR_FF14_CARD_118",
       "name": "Senor Sabotender",
       "top": 9,
@@ -1417,8 +1551,9 @@
       "type": null
     },
     {
-      "id": 119,
-      "collection": "ff14_",
+      "id": 375,
+      "block": 1,
+      "number": 119,
       "nameKey": "STR_FF14_CARD_119",
       "name": "Regula van Hydrus",
       "top": 8,
@@ -1429,8 +1564,9 @@
       "type": "garlean"
     },
     {
-      "id": 120,
-      "collection": "ff14_",
+      "id": 376,
+      "block": 1,
+      "number": 120,
       "nameKey": "STR_FF14_CARD_120",
       "name": "Archbishop Thordan VII",
       "top": 7,
@@ -1441,8 +1577,9 @@
       "type": null
     },
     {
-      "id": 121,
-      "collection": "ff14_",
+      "id": 377,
+      "block": 1,
+      "number": 121,
       "nameKey": "STR_FF14_CARD_121",
       "name": "Honoroit",
       "top": 7,
@@ -1453,8 +1590,9 @@
       "type": null
     },
     {
-      "id": 122,
-      "collection": "ff14_",
+      "id": 378,
+      "block": 1,
+      "number": 122,
       "nameKey": "STR_FF14_CARD_122",
       "name": "Hoary Boulder & Coultenet",
       "top": 2,
@@ -1465,8 +1603,9 @@
       "type": "scions"
     },
     {
-      "id": 123,
-      "collection": "ff14_",
+      "id": 379,
+      "block": 1,
+      "number": 123,
       "nameKey": "STR_FF14_CARD_123",
       "name": "Brachiosaur",
       "top": 8,
@@ -1477,8 +1616,9 @@
       "type": null
     },
     {
-      "id": 124,
-      "collection": "ff14_",
+      "id": 380,
+      "block": 1,
+      "number": 124,
       "nameKey": "STR_FF14_CARD_124",
       "name": "Darkscale",
       "top": 2,
@@ -1489,8 +1629,9 @@
       "type": null
     },
     {
-      "id": 125,
-      "collection": "ff14_",
+      "id": 381,
+      "block": 1,
+      "number": 125,
       "nameKey": "STR_FF14_CARD_125",
       "name": "Fenrir",
       "top": 7,
@@ -1501,8 +1642,9 @@
       "type": null
     },
     {
-      "id": 126,
-      "collection": "ff14_",
+      "id": 382,
+      "block": 1,
+      "number": 126,
       "nameKey": "STR_FF14_CARD_126",
       "name": "Kraken",
       "top": 3,
@@ -1513,8 +1655,9 @@
       "type": null
     },
     {
-      "id": 127,
-      "collection": "ff14_",
+      "id": 383,
+      "block": 1,
+      "number": 127,
       "nameKey": "STR_FF14_CARD_127",
       "name": "Vicegerent to the Warden",
       "top": 7,
@@ -1525,8 +1668,9 @@
       "type": null
     },
     {
-      "id": 128,
-      "collection": "ff14_",
+      "id": 384,
+      "block": 1,
+      "number": 128,
       "nameKey": "STR_FF14_CARD_128",
       "name": "Manxome Molaa Ja Ja",
       "top": 3,
@@ -1537,8 +1681,9 @@
       "type": "beast"
     },
     {
-      "id": 129,
-      "collection": "ff14_",
+      "id": 385,
+      "block": 1,
+      "number": 129,
       "nameKey": "STR_FF14_CARD_129",
       "name": "Ferdiad",
       "top": 4,
@@ -1549,8 +1694,9 @@
       "type": null
     },
     {
-      "id": 130,
-      "collection": "ff14_",
+      "id": 386,
+      "block": 1,
+      "number": 130,
       "nameKey": "STR_FF14_CARD_130",
       "name": "Calcabrina",
       "top": 6,
@@ -1561,8 +1707,9 @@
       "type": null
     },
     {
-      "id": 131,
-      "collection": "ff14_",
+      "id": 387,
+      "block": 1,
+      "number": 131,
       "nameKey": "STR_FF14_CARD_131",
       "name": "Kuribu",
       "top": 8,
@@ -1573,8 +1720,9 @@
       "type": null
     },
     {
-      "id": 132,
-      "collection": "ff14_",
+      "id": 388,
+      "block": 1,
+      "number": 132,
       "nameKey": "STR_FF14_CARD_132",
       "name": "Phlegethon",
       "top": 1,
@@ -1585,8 +1733,9 @@
       "type": null
     },
     {
-      "id": 133,
-      "collection": "ff14_",
+      "id": 389,
+      "block": 1,
+      "number": 133,
       "nameKey": "STR_FF14_CARD_133",
       "name": "Artoirel de Fortemps",
       "top": 4,
@@ -1597,8 +1746,9 @@
       "type": null
     },
     {
-      "id": 134,
-      "collection": "ff14_",
+      "id": 390,
+      "block": 1,
+      "number": 134,
       "nameKey": "STR_FF14_CARD_134",
       "name": "Emmanellain de Fortemps",
       "top": 7,
@@ -1609,8 +1759,9 @@
       "type": null
     },
     {
-      "id": 135,
-      "collection": "ff14_",
+      "id": 391,
+      "block": 1,
+      "number": 135,
       "nameKey": "STR_FF14_CARD_135",
       "name": "Xande",
       "top": 9,
@@ -1621,8 +1772,9 @@
       "type": null
     },
     {
-      "id": 136,
-      "collection": "ff14_",
+      "id": 392,
+      "block": 1,
+      "number": 136,
       "nameKey": "STR_FF14_CARD_136",
       "name": "Brute Justice",
       "top": 7,
@@ -1633,8 +1785,9 @@
       "type": null
     },
     {
-      "id": 137,
-      "collection": "ff14_",
+      "id": 393,
+      "block": 1,
+      "number": 137,
       "nameKey": "STR_FF14_CARD_137",
       "name": "Sephirot",
       "top": 6,
@@ -1645,8 +1798,9 @@
       "type": "primals"
     },
     {
-      "id": 138,
-      "collection": "ff14_",
+      "id": 394,
+      "block": 1,
+      "number": 138,
       "nameKey": "STR_FF14_CARD_138",
       "name": "F'lhaminn",
       "top": 9,
@@ -1657,8 +1811,9 @@
       "type": "scions"
     },
     {
-      "id": 139,
-      "collection": "ff14_",
+      "id": 395,
+      "block": 1,
+      "number": 139,
       "nameKey": "STR_FF14_CARD_139",
       "name": "Vidofnir",
       "top": 8,
@@ -1669,8 +1824,9 @@
       "type": null
     },
     {
-      "id": 140,
-      "collection": "ff14_",
+      "id": 396,
+      "block": 1,
+      "number": 140,
       "nameKey": "STR_FF14_CARD_140",
       "name": "Cloud of Darkness",
       "top": 7,
@@ -1681,8 +1837,9 @@
       "type": null
     },
     {
-      "id": 141,
-      "collection": "ff14_",
+      "id": 397,
+      "block": 1,
+      "number": 141,
       "nameKey": "STR_FF14_CARD_141",
       "name": "Lolorito Nanarito",
       "top": 4,
@@ -1693,8 +1850,9 @@
       "type": null
     },
     {
-      "id": 142,
-      "collection": "ff14_",
+      "id": 398,
+      "block": 1,
+      "number": 142,
       "nameKey": "STR_FF14_CARD_142",
       "name": "Gibrillont",
       "top": 2,
@@ -1705,8 +1863,9 @@
       "type": null
     },
     {
-      "id": 143,
-      "collection": "ff14_",
+      "id": 399,
+      "block": 1,
+      "number": 143,
       "nameKey": "STR_FF14_CARD_143",
       "name": "Laniaitte de Haillenarte",
       "top": 7,
@@ -1717,8 +1876,9 @@
       "type": null
     },
     {
-      "id": 144,
-      "collection": "ff14_",
+      "id": 400,
+      "block": 1,
+      "number": 144,
       "nameKey": "STR_FF14_CARD_144",
       "name": "Rhoswen",
       "top": 5,
@@ -1729,8 +1889,9 @@
       "type": null
     },
     {
-      "id": 145,
-      "collection": "ff14_",
+      "id": 401,
+      "block": 1,
+      "number": 145,
       "nameKey": "STR_FF14_CARD_145",
       "name": "Carvallain de Gorgagne",
       "top": 2,
@@ -1741,8 +1902,9 @@
       "type": null
     },
     {
-      "id": 146,
-      "collection": "ff14_",
+      "id": 402,
+      "block": 1,
+      "number": 146,
       "nameKey": "STR_FF14_CARD_146",
       "name": "Kal Myhk",
       "top": 1,
@@ -1753,8 +1915,9 @@
       "type": null
     },
     {
-      "id": 147,
-      "collection": "ff14_",
+      "id": 403,
+      "block": 1,
+      "number": 147,
       "nameKey": "STR_FF14_CARD_147",
       "name": "Waukkeon",
       "top": 1,
@@ -1765,8 +1928,9 @@
       "type": null
     },
     {
-      "id": 148,
-      "collection": "ff14_",
+      "id": 404,
+      "block": 1,
+      "number": 148,
       "nameKey": "STR_FF14_CARD_148",
       "name": "Curator",
       "top": 4,
@@ -1777,8 +1941,9 @@
       "type": null
     },
     {
-      "id": 149,
-      "collection": "ff14_",
+      "id": 405,
+      "block": 1,
+      "number": 149,
       "nameKey": "STR_FF14_CARD_149",
       "name": "Mistbeard",
       "top": 5,
@@ -1789,8 +1954,9 @@
       "type": null
     },
     {
-      "id": 150,
-      "collection": "ff14_",
+      "id": 406,
+      "block": 1,
+      "number": 150,
       "nameKey": "STR_FF14_CARD_150",
       "name": "Unei & Doga",
       "top": 6,
@@ -1801,8 +1967,9 @@
       "type": null
     },
     {
-      "id": 151,
-      "collection": "ff14_",
+      "id": 407,
+      "block": 1,
+      "number": 151,
       "nameKey": "STR_FF14_CARD_151",
       "name": "Tiamat",
       "top": 9,
@@ -1813,8 +1980,9 @@
       "type": null
     },
     {
-      "id": 152,
-      "collection": "ff14_",
+      "id": 408,
+      "block": 1,
+      "number": 152,
       "nameKey": "STR_FF14_CARD_152",
       "name": "Calofisteri",
       "top": 5,
@@ -1825,8 +1993,9 @@
       "type": null
     },
     {
-      "id": 153,
-      "collection": "ff14_",
+      "id": 409,
+      "block": 1,
+      "number": 153,
       "nameKey": "STR_FF14_CARD_153",
       "name": "Hraesvelgr",
       "top": 7,
@@ -1835,12 +2004,11 @@
       "left": 6,
       "rarity": 5,
       "type": null
-    }
-  ],
-  "ff8": [
+    },
     {
-      "id": 1,
-      "collection": "ff8_",
+      "id": 513,
+      "block": 2,
+      "number": 1,
       "nameKey": "STR_FF8_CARD_1",
       "name": "Geezard",
       "top": 1,
@@ -1851,8 +2019,9 @@
       "type": null
     },
     {
-      "id": 2,
-      "collection": "ff8_",
+      "id": 514,
+      "block": 2,
+      "number": 2,
       "nameKey": "STR_FF8_CARD_2",
       "name": "Funguar",
       "top": 5,
@@ -1863,8 +2032,9 @@
       "type": null
     },
     {
-      "id": 3,
-      "collection": "ff8_",
+      "id": 515,
+      "block": 2,
+      "number": 3,
       "nameKey": "STR_FF8_CARD_3",
       "name": "Bite Bug",
       "top": 1,
@@ -1875,8 +2045,9 @@
       "type": null
     },
     {
-      "id": 4,
-      "collection": "ff8_",
+      "id": 516,
+      "block": 2,
+      "number": 4,
       "nameKey": "STR_FF8_CARD_4",
       "name": "Red Bat",
       "top": 6,
@@ -1887,8 +2058,9 @@
       "type": null
     },
     {
-      "id": 5,
-      "collection": "ff8_",
+      "id": 517,
+      "block": 2,
+      "number": 5,
       "nameKey": "STR_FF8_CARD_5",
       "name": "Blobra",
       "top": 2,
@@ -1899,8 +2071,9 @@
       "type": null
     },
     {
-      "id": 6,
-      "collection": "ff8_",
+      "id": 518,
+      "block": 2,
+      "number": 6,
       "nameKey": "STR_FF8_CARD_6",
       "name": "Gayla",
       "top": 2,
@@ -1911,8 +2084,9 @@
       "type": "lightning"
     },
     {
-      "id": 7,
-      "collection": "ff8_",
+      "id": 519,
+      "block": 2,
+      "number": 7,
       "nameKey": "STR_FF8_CARD_7",
       "name": "Gesper",
       "top": 1,
@@ -1923,8 +2097,9 @@
       "type": null
     },
     {
-      "id": 8,
-      "collection": "ff8_",
+      "id": 520,
+      "block": 2,
+      "number": 8,
       "nameKey": "STR_FF8_CARD_8",
       "name": "Fastitocalon-F",
       "top": 3,
@@ -1935,8 +2110,9 @@
       "type": "earth"
     },
     {
-      "id": 9,
-      "collection": "ff8_",
+      "id": 521,
+      "block": 2,
+      "number": 9,
       "nameKey": "STR_FF8_CARD_9",
       "name": "Blood Soul",
       "top": 2,
@@ -1947,8 +2123,9 @@
       "type": null
     },
     {
-      "id": 10,
-      "collection": "ff8_",
+      "id": 522,
+      "block": 2,
+      "number": 10,
       "nameKey": "STR_FF8_CARD_10",
       "name": "Caterchipillar",
       "top": 4,
@@ -1959,8 +2136,9 @@
       "type": null
     },
     {
-      "id": 11,
-      "collection": "ff8_",
+      "id": 523,
+      "block": 2,
+      "number": 11,
       "nameKey": "STR_FF8_CARD_11",
       "name": "Cockatrice",
       "top": 2,
@@ -1971,8 +2149,9 @@
       "type": "lightning"
     },
     {
-      "id": 12,
-      "collection": "ff8_",
+      "id": 524,
+      "block": 2,
+      "number": 12,
       "nameKey": "STR_FF8_CARD_12",
       "name": "Grat",
       "top": 7,
@@ -1983,8 +2162,9 @@
       "type": null
     },
     {
-      "id": 13,
-      "collection": "ff8_",
+      "id": 525,
+      "block": 2,
+      "number": 13,
       "nameKey": "STR_FF8_CARD_13",
       "name": "Buel",
       "top": 6,
@@ -1995,8 +2175,9 @@
       "type": null
     },
     {
-      "id": 14,
-      "collection": "ff8_",
+      "id": 526,
+      "block": 2,
+      "number": 14,
       "nameKey": "STR_FF8_CARD_14",
       "name": "Mesmerize",
       "top": 5,
@@ -2007,8 +2188,9 @@
       "type": null
     },
     {
-      "id": 15,
-      "collection": "ff8_",
+      "id": 527,
+      "block": 2,
+      "number": 15,
       "nameKey": "STR_FF8_CARD_15",
       "name": "Glacial Eye",
       "top": 6,
@@ -2019,8 +2201,9 @@
       "type": "ice"
     },
     {
-      "id": 16,
-      "collection": "ff8_",
+      "id": 528,
+      "block": 2,
+      "number": 16,
       "nameKey": "STR_FF8_CARD_16",
       "name": "Belhelmel",
       "top": 3,
@@ -2031,8 +2214,9 @@
       "type": null
     },
     {
-      "id": 17,
-      "collection": "ff8_",
+      "id": 529,
+      "block": 2,
+      "number": 17,
       "nameKey": "STR_FF8_CARD_17",
       "name": "Thrustaevis",
       "top": 5,
@@ -2043,8 +2227,9 @@
       "type": "wind"
     },
     {
-      "id": 18,
-      "collection": "ff8_",
+      "id": 530,
+      "block": 2,
+      "number": 18,
       "nameKey": "STR_FF8_CARD_18",
       "name": "Anacondaur",
       "top": 5,
@@ -2055,8 +2240,9 @@
       "type": "poison"
     },
     {
-      "id": 19,
-      "collection": "ff8_",
+      "id": 531,
+      "block": 2,
+      "number": 19,
       "nameKey": "STR_FF8_CARD_19",
       "name": "Creeps",
       "top": 5,
@@ -2067,8 +2253,9 @@
       "type": "lightning"
     },
     {
-      "id": 20,
-      "collection": "ff8_",
+      "id": 532,
+      "block": 2,
+      "number": 20,
       "nameKey": "STR_FF8_CARD_20",
       "name": "Grendel",
       "top": 4,
@@ -2079,8 +2266,9 @@
       "type": "lightning"
     },
     {
-      "id": 21,
-      "collection": "ff8_",
+      "id": 533,
+      "block": 2,
+      "number": 21,
       "nameKey": "STR_FF8_CARD_21",
       "name": "Jelleye",
       "top": 3,
@@ -2091,8 +2279,9 @@
       "type": null
     },
     {
-      "id": 22,
-      "collection": "ff8_",
+      "id": 534,
+      "block": 2,
+      "number": 22,
       "nameKey": "STR_FF8_CARD_22",
       "name": "Grand Mantis",
       "top": 5,
@@ -2103,8 +2292,9 @@
       "type": null
     },
     {
-      "id": 23,
-      "collection": "ff8_",
+      "id": 535,
+      "block": 2,
+      "number": 23,
       "nameKey": "STR_FF8_CARD_23",
       "name": "Forbidden",
       "top": 6,
@@ -2115,8 +2305,9 @@
       "type": null
     },
     {
-      "id": 24,
-      "collection": "ff8_",
+      "id": 536,
+      "block": 2,
+      "number": 24,
       "nameKey": "STR_FF8_CARD_24",
       "name": "Armadodo",
       "top": 6,
@@ -2127,8 +2318,9 @@
       "type": "earth"
     },
     {
-      "id": 25,
-      "collection": "ff8_",
+      "id": 537,
+      "block": 2,
+      "number": 25,
       "nameKey": "STR_FF8_CARD_25",
       "name": "Tri-Face",
       "top": 3,
@@ -2139,8 +2331,9 @@
       "type": "poison"
     },
     {
-      "id": 26,
-      "collection": "ff8_",
+      "id": 538,
+      "block": 2,
+      "number": 26,
       "nameKey": "STR_FF8_CARD_26",
       "name": "Fastitocalon",
       "top": 7,
@@ -2151,8 +2344,9 @@
       "type": "earth"
     },
     {
-      "id": 27,
-      "collection": "ff8_",
+      "id": 539,
+      "block": 2,
+      "number": 27,
       "nameKey": "STR_FF8_CARD_27",
       "name": "Snow Lion",
       "top": 7,
@@ -2163,8 +2357,9 @@
       "type": "ice"
     },
     {
-      "id": 28,
-      "collection": "ff8_",
+      "id": 540,
+      "block": 2,
+      "number": 28,
       "nameKey": "STR_FF8_CARD_28",
       "name": "Ochu",
       "top": 5,
@@ -2175,8 +2370,9 @@
       "type": null
     },
     {
-      "id": 29,
-      "collection": "ff8_",
+      "id": 541,
+      "block": 2,
+      "number": 29,
       "nameKey": "STR_FF8_CARD_29",
       "name": "SAM08G",
       "top": 5,
@@ -2187,8 +2383,9 @@
       "type": "fire"
     },
     {
-      "id": 30,
-      "collection": "ff8_",
+      "id": 542,
+      "block": 2,
+      "number": 30,
       "nameKey": "STR_FF8_CARD_30",
       "name": "Death Claw",
       "top": 4,
@@ -2199,8 +2396,9 @@
       "type": "fire"
     },
     {
-      "id": 31,
-      "collection": "ff8_",
+      "id": 543,
+      "block": 2,
+      "number": 31,
       "nameKey": "STR_FF8_CARD_31",
       "name": "Cactuar",
       "top": 6,
@@ -2211,8 +2409,9 @@
       "type": null
     },
     {
-      "id": 32,
-      "collection": "ff8_",
+      "id": 544,
+      "block": 2,
+      "number": 32,
       "nameKey": "STR_FF8_CARD_32",
       "name": "Tonberry",
       "top": 3,
@@ -2223,8 +2422,9 @@
       "type": null
     },
     {
-      "id": 33,
-      "collection": "ff8_",
+      "id": 545,
+      "block": 2,
+      "number": 33,
       "nameKey": "STR_FF8_CARD_33",
       "name": "Abyss Worm",
       "top": 7,
@@ -2235,8 +2435,9 @@
       "type": "earth"
     },
     {
-      "id": 34,
-      "collection": "ff8_",
+      "id": 546,
+      "block": 2,
+      "number": 34,
       "nameKey": "STR_FF8_CARD_34",
       "name": "Turtapod",
       "top": 2,
@@ -2247,8 +2448,9 @@
       "type": null
     },
     {
-      "id": 35,
-      "collection": "ff8_",
+      "id": 547,
+      "block": 2,
+      "number": 35,
       "nameKey": "STR_FF8_CARD_35",
       "name": "Vysage",
       "top": 6,
@@ -2259,8 +2461,9 @@
       "type": null
     },
     {
-      "id": 36,
-      "collection": "ff8_",
+      "id": 548,
+      "block": 2,
+      "number": 36,
       "nameKey": "STR_FF8_CARD_36",
       "name": "T-Rexaur",
       "top": 4,
@@ -2271,8 +2474,9 @@
       "type": null
     },
     {
-      "id": 37,
-      "collection": "ff8_",
+      "id": 549,
+      "block": 2,
+      "number": 37,
       "nameKey": "STR_FF8_CARD_37",
       "name": "Bomb",
       "top": 2,
@@ -2283,8 +2487,9 @@
       "type": "fire"
     },
     {
-      "id": 38,
-      "collection": "ff8_",
+      "id": 550,
+      "block": 2,
+      "number": 38,
       "nameKey": "STR_FF8_CARD_38",
       "name": "Blitz",
       "top": 1,
@@ -2295,8 +2500,9 @@
       "type": "lightning"
     },
     {
-      "id": 39,
-      "collection": "ff8_",
+      "id": 551,
+      "block": 2,
+      "number": 39,
       "nameKey": "STR_FF8_CARD_39",
       "name": "Wendingo",
       "top": 7,
@@ -2307,8 +2513,9 @@
       "type": null
     },
     {
-      "id": 40,
-      "collection": "ff8_",
+      "id": 552,
+      "block": 2,
+      "number": 40,
       "nameKey": "STR_FF8_CARD_40",
       "name": "Torama",
       "top": 7,
@@ -2319,8 +2526,9 @@
       "type": null
     },
     {
-      "id": 41,
-      "collection": "ff8_",
+      "id": 553,
+      "block": 2,
+      "number": 41,
       "nameKey": "STR_FF8_CARD_41",
       "name": "Imp",
       "top": 3,
@@ -2331,8 +2539,9 @@
       "type": null
     },
     {
-      "id": 42,
-      "collection": "ff8_",
+      "id": 554,
+      "block": 2,
+      "number": 42,
       "nameKey": "STR_FF8_CARD_42",
       "name": "Blue Dragon",
       "top": 6,
@@ -2343,8 +2552,9 @@
       "type": "poison"
     },
     {
-      "id": 43,
-      "collection": "ff8_",
+      "id": 555,
+      "block": 2,
+      "number": 43,
       "nameKey": "STR_FF8_CARD_43",
       "name": "Adamantoise",
       "top": 4,
@@ -2355,8 +2565,9 @@
       "type": "earth"
     },
     {
-      "id": 44,
-      "collection": "ff8_",
+      "id": 556,
+      "block": 2,
+      "number": 44,
       "nameKey": "STR_FF8_CARD_44",
       "name": "Hexadragon",
       "top": 7,
@@ -2367,8 +2578,9 @@
       "type": "fire"
     },
     {
-      "id": 45,
-      "collection": "ff8_",
+      "id": 557,
+      "block": 2,
+      "number": 45,
       "nameKey": "STR_FF8_CARD_45",
       "name": "Iron Giant",
       "top": 6,
@@ -2379,8 +2591,9 @@
       "type": null
     },
     {
-      "id": 46,
-      "collection": "ff8_",
+      "id": 558,
+      "block": 2,
+      "number": 46,
       "nameKey": "STR_FF8_CARD_46",
       "name": "Behemoth",
       "top": 3,
@@ -2391,8 +2604,9 @@
       "type": null
     },
     {
-      "id": 47,
-      "collection": "ff8_",
+      "id": 559,
+      "block": 2,
+      "number": 47,
       "nameKey": "STR_FF8_CARD_47",
       "name": "Chimera",
       "top": 7,
@@ -2403,8 +2617,9 @@
       "type": "water"
     },
     {
-      "id": 48,
-      "collection": "ff8_",
+      "id": 560,
+      "block": 2,
+      "number": 48,
       "nameKey": "STR_FF8_CARD_48",
       "name": "Pupu",
       "top": 3,
@@ -2415,8 +2630,9 @@
       "type": null
     },
     {
-      "id": 49,
-      "collection": "ff8_",
+      "id": 561,
+      "block": 2,
+      "number": 49,
       "nameKey": "STR_FF8_CARD_49",
       "name": "Elastoid",
       "top": 6,
@@ -2427,8 +2643,9 @@
       "type": null
     },
     {
-      "id": 50,
-      "collection": "ff8_",
+      "id": 562,
+      "block": 2,
+      "number": 50,
       "nameKey": "STR_FF8_CARD_50",
       "name": "GIM47N",
       "top": 5,
@@ -2439,8 +2656,9 @@
       "type": null
     },
     {
-      "id": 51,
-      "collection": "ff8_",
+      "id": 563,
+      "block": 2,
+      "number": 51,
       "nameKey": "STR_FF8_CARD_51",
       "name": "Malboro",
       "top": 7,
@@ -2451,8 +2669,9 @@
       "type": "poison"
     },
     {
-      "id": 52,
-      "collection": "ff8_",
+      "id": 564,
+      "block": 2,
+      "number": 52,
       "nameKey": "STR_FF8_CARD_52",
       "name": "Ruby Dragon",
       "top": 7,
@@ -2463,8 +2682,9 @@
       "type": "fire"
     },
     {
-      "id": 53,
-      "collection": "ff8_",
+      "id": 565,
+      "block": 2,
+      "number": 53,
       "nameKey": "STR_FF8_CARD_53",
       "name": "Elnoyle",
       "top": 5,
@@ -2475,8 +2695,9 @@
       "type": null
     },
     {
-      "id": 54,
-      "collection": "ff8_",
+      "id": 566,
+      "block": 2,
+      "number": 54,
       "nameKey": "STR_FF8_CARD_54",
       "name": "Tonberry King",
       "top": 4,
@@ -2487,8 +2708,9 @@
       "type": null
     },
     {
-      "id": 55,
-      "collection": "ff8_",
+      "id": 567,
+      "block": 2,
+      "number": 55,
       "nameKey": "STR_FF8_CARD_55",
       "name": "Biggs, Wedge",
       "top": 6,
@@ -2499,8 +2721,9 @@
       "type": null
     },
     {
-      "id": 56,
-      "collection": "ff8_",
+      "id": 568,
+      "block": 2,
+      "number": 56,
       "nameKey": "STR_FF8_CARD_56",
       "name": "Fujin, Raijin",
       "top": 2,
@@ -2511,8 +2734,9 @@
       "type": null
     },
     {
-      "id": 57,
-      "collection": "ff8_",
+      "id": 569,
+      "block": 2,
+      "number": 57,
       "nameKey": "STR_FF8_CARD_57",
       "name": "Elvoret",
       "top": 7,
@@ -2523,8 +2747,9 @@
       "type": "wind"
     },
     {
-      "id": 58,
-      "collection": "ff8_",
+      "id": 570,
+      "block": 2,
+      "number": 58,
       "nameKey": "STR_FF8_CARD_58",
       "name": "X-ATM092",
       "top": 4,
@@ -2535,8 +2760,9 @@
       "type": null
     },
     {
-      "id": 59,
-      "collection": "ff8_",
+      "id": 571,
+      "block": 2,
+      "number": 59,
       "nameKey": "STR_FF8_CARD_59",
       "name": "Granaldo",
       "top": 7,
@@ -2547,8 +2773,9 @@
       "type": null
     },
     {
-      "id": 60,
-      "collection": "ff8_",
+      "id": 572,
+      "block": 2,
+      "number": 60,
       "nameKey": "STR_FF8_CARD_60",
       "name": "Gerogero",
       "top": 1,
@@ -2559,8 +2786,9 @@
       "type": "poison"
     },
     {
-      "id": 61,
-      "collection": "ff8_",
+      "id": 573,
+      "block": 2,
+      "number": 61,
       "nameKey": "STR_FF8_CARD_61",
       "name": "Iguion",
       "top": 8,
@@ -2571,8 +2799,9 @@
       "type": null
     },
     {
-      "id": 62,
-      "collection": "ff8_",
+      "id": 574,
+      "block": 2,
+      "number": 62,
       "nameKey": "STR_FF8_CARD_62",
       "name": "Abadon",
       "top": 6,
@@ -2583,8 +2812,9 @@
       "type": null
     },
     {
-      "id": 63,
-      "collection": "ff8_",
+      "id": 575,
+      "block": 2,
+      "number": 63,
       "nameKey": "STR_FF8_CARD_63",
       "name": "Trauma",
       "top": 4,
@@ -2595,8 +2825,9 @@
       "type": null
     },
     {
-      "id": 64,
-      "collection": "ff8_",
+      "id": 576,
+      "block": 2,
+      "number": 64,
       "nameKey": "STR_FF8_CARD_64",
       "name": "Oilboyle",
       "top": 1,
@@ -2607,8 +2838,9 @@
       "type": null
     },
     {
-      "id": 65,
-      "collection": "ff8_",
+      "id": 577,
+      "block": 2,
+      "number": 65,
       "nameKey": "STR_FF8_CARD_65",
       "name": "Shumi Tribe",
       "top": 6,
@@ -2619,8 +2851,9 @@
       "type": null
     },
     {
-      "id": 66,
-      "collection": "ff8_",
+      "id": 578,
+      "block": 2,
+      "number": 66,
       "nameKey": "STR_FF8_CARD_66",
       "name": "Krysta",
       "top": 7,
@@ -2631,8 +2864,9 @@
       "type": null
     },
     {
-      "id": 67,
-      "collection": "ff8_",
+      "id": 579,
+      "block": 2,
+      "number": 67,
       "nameKey": "STR_FF8_CARD_67",
       "name": "Propagator",
       "top": 8,
@@ -2643,8 +2877,9 @@
       "type": null
     },
     {
-      "id": 68,
-      "collection": "ff8_",
+      "id": 580,
+      "block": 2,
+      "number": 68,
       "nameKey": "STR_FF8_CARD_68",
       "name": "Jumbo Cactuar",
       "top": 8,
@@ -2655,8 +2890,9 @@
       "type": null
     },
     {
-      "id": 69,
-      "collection": "ff8_",
+      "id": 581,
+      "block": 2,
+      "number": 69,
       "nameKey": "STR_FF8_CARD_69",
       "name": "Tri-Point",
       "top": 8,
@@ -2667,8 +2903,9 @@
       "type": "lightning"
     },
     {
-      "id": 70,
-      "collection": "ff8_",
+      "id": 582,
+      "block": 2,
+      "number": 70,
       "nameKey": "STR_FF8_CARD_70",
       "name": "Gargantua",
       "top": 5,
@@ -2679,8 +2916,9 @@
       "type": null
     },
     {
-      "id": 71,
-      "collection": "ff8_",
+      "id": 583,
+      "block": 2,
+      "number": 71,
       "nameKey": "STR_FF8_CARD_71",
       "name": "Mobile Type 8",
       "top": 8,
@@ -2691,8 +2929,9 @@
       "type": null
     },
     {
-      "id": 72,
-      "collection": "ff8_",
+      "id": 584,
+      "block": 2,
+      "number": 72,
       "nameKey": "STR_FF8_CARD_72",
       "name": "Sphinxara",
       "top": 8,
@@ -2703,8 +2942,9 @@
       "type": null
     },
     {
-      "id": 73,
-      "collection": "ff8_",
+      "id": 585,
+      "block": 2,
+      "number": 73,
       "nameKey": "STR_FF8_CARD_73",
       "name": "Tiamat",
       "top": 8,
@@ -2715,8 +2955,9 @@
       "type": null
     },
     {
-      "id": 74,
-      "collection": "ff8_",
+      "id": 586,
+      "block": 2,
+      "number": 74,
       "nameKey": "STR_FF8_CARD_74",
       "name": "BGH251F2",
       "top": 5,
@@ -2727,8 +2968,9 @@
       "type": null
     },
     {
-      "id": 75,
-      "collection": "ff8_",
+      "id": 587,
+      "block": 2,
+      "number": 75,
       "nameKey": "STR_FF8_CARD_75",
       "name": "Red Giant",
       "top": 6,
@@ -2739,8 +2981,9 @@
       "type": null
     },
     {
-      "id": 76,
-      "collection": "ff8_",
+      "id": 588,
+      "block": 2,
+      "number": 76,
       "nameKey": "STR_FF8_CARD_76",
       "name": "Catoblepas",
       "top": 1,
@@ -2751,8 +2994,9 @@
       "type": null
     },
     {
-      "id": 77,
-      "collection": "ff8_",
+      "id": 589,
+      "block": 2,
+      "number": 77,
       "nameKey": "STR_FF8_CARD_77",
       "name": "Ultima Weapon",
       "top": 7,
@@ -2763,8 +3007,9 @@
       "type": null
     },
     {
-      "id": 78,
-      "collection": "ff8_",
+      "id": 590,
+      "block": 2,
+      "number": 78,
       "nameKey": "STR_FF8_CARD_78",
       "name": "Chubby Chocobo",
       "top": 4,
@@ -2775,8 +3020,9 @@
       "type": null
     },
     {
-      "id": 79,
-      "collection": "ff8_",
+      "id": 591,
+      "block": 2,
+      "number": 79,
       "nameKey": "STR_FF8_CARD_79",
       "name": "Angelo",
       "top": 9,
@@ -2787,8 +3033,9 @@
       "type": null
     },
     {
-      "id": 80,
-      "collection": "ff8_",
+      "id": 592,
+      "block": 2,
+      "number": 80,
       "nameKey": "STR_FF8_CARD_80",
       "name": "Gilgamesh",
       "top": 3,
@@ -2799,8 +3046,9 @@
       "type": null
     },
     {
-      "id": 81,
-      "collection": "ff8_",
+      "id": 593,
+      "block": 2,
+      "number": 81,
       "nameKey": "STR_FF8_CARD_81",
       "name": "Mini Mog",
       "top": 9,
@@ -2811,8 +3059,9 @@
       "type": null
     },
     {
-      "id": 82,
-      "collection": "ff8_",
+      "id": 594,
+      "block": 2,
+      "number": 82,
       "nameKey": "STR_FF8_CARD_82",
       "name": "Chicobo",
       "top": 9,
@@ -2823,8 +3072,9 @@
       "type": null
     },
     {
-      "id": 83,
-      "collection": "ff8_",
+      "id": 595,
+      "block": 2,
+      "number": 83,
       "nameKey": "STR_FF8_CARD_83",
       "name": "Quezacotl",
       "top": 2,
@@ -2835,8 +3085,9 @@
       "type": "lightning"
     },
     {
-      "id": 84,
-      "collection": "ff8_",
+      "id": 596,
+      "block": 2,
+      "number": 84,
       "nameKey": "STR_FF8_CARD_84",
       "name": "Shiva",
       "top": 6,
@@ -2847,8 +3098,9 @@
       "type": "ice"
     },
     {
-      "id": 85,
-      "collection": "ff8_",
+      "id": 597,
+      "block": 2,
+      "number": 85,
       "nameKey": "STR_FF8_CARD_85",
       "name": "Ifrit",
       "top": 9,
@@ -2859,8 +3111,9 @@
       "type": "fire"
     },
     {
-      "id": 86,
-      "collection": "ff8_",
+      "id": 598,
+      "block": 2,
+      "number": 86,
       "nameKey": "STR_FF8_CARD_86",
       "name": "Siren",
       "top": 8,
@@ -2871,8 +3124,9 @@
       "type": null
     },
     {
-      "id": 87,
-      "collection": "ff8_",
+      "id": 599,
+      "block": 2,
+      "number": 87,
       "nameKey": "STR_FF8_CARD_87",
       "name": "Sacred",
       "top": 5,
@@ -2883,8 +3137,9 @@
       "type": "earth"
     },
     {
-      "id": 88,
-      "collection": "ff8_",
+      "id": 600,
+      "block": 2,
+      "number": 88,
       "nameKey": "STR_FF8_CARD_88",
       "name": "Minotaur",
       "top": 9,
@@ -2895,8 +3150,9 @@
       "type": "earth"
     },
     {
-      "id": 89,
-      "collection": "ff8_",
+      "id": 601,
+      "block": 2,
+      "number": 89,
       "nameKey": "STR_FF8_CARD_89",
       "name": "Carbuncle",
       "top": 8,
@@ -2907,8 +3163,9 @@
       "type": null
     },
     {
-      "id": 90,
-      "collection": "ff8_",
+      "id": 602,
+      "block": 2,
+      "number": 90,
       "nameKey": "STR_FF8_CARD_90",
       "name": "Diablos",
       "top": 5,
@@ -2919,8 +3176,9 @@
       "type": null
     },
     {
-      "id": 91,
-      "collection": "ff8_",
+      "id": 603,
+      "block": 2,
+      "number": 91,
       "nameKey": "STR_FF8_CARD_91",
       "name": "Leviathan",
       "top": 7,
@@ -2931,8 +3189,9 @@
       "type": "water"
     },
     {
-      "id": 92,
-      "collection": "ff8_",
+      "id": 604,
+      "block": 2,
+      "number": 92,
       "nameKey": "STR_FF8_CARD_92",
       "name": "Odin",
       "top": 8,
@@ -2943,8 +3202,9 @@
       "type": null
     },
     {
-      "id": 93,
-      "collection": "ff8_",
+      "id": 605,
+      "block": 2,
+      "number": 93,
       "nameKey": "STR_FF8_CARD_93",
       "name": "Pandemona",
       "top": 10,
@@ -2955,8 +3215,9 @@
       "type": "wind"
     },
     {
-      "id": 94,
-      "collection": "ff8_",
+      "id": 606,
+      "block": 2,
+      "number": 94,
       "nameKey": "STR_FF8_CARD_94",
       "name": "Cerberus",
       "top": 7,
@@ -2967,8 +3228,9 @@
       "type": null
     },
     {
-      "id": 95,
-      "collection": "ff8_",
+      "id": 607,
+      "block": 2,
+      "number": 95,
       "nameKey": "STR_FF8_CARD_95",
       "name": "Alexander",
       "top": 9,
@@ -2979,8 +3241,9 @@
       "type": "holy"
     },
     {
-      "id": 96,
-      "collection": "ff8_",
+      "id": 608,
+      "block": 2,
+      "number": 96,
       "nameKey": "STR_FF8_CARD_96",
       "name": "Phoenix",
       "top": 7,
@@ -2991,8 +3254,9 @@
       "type": "fire"
     },
     {
-      "id": 97,
-      "collection": "ff8_",
+      "id": 609,
+      "block": 2,
+      "number": 97,
       "nameKey": "STR_FF8_CARD_97",
       "name": "Bahamut",
       "top": 10,
@@ -3003,8 +3267,9 @@
       "type": null
     },
     {
-      "id": 98,
-      "collection": "ff8_",
+      "id": 610,
+      "block": 2,
+      "number": 98,
       "nameKey": "STR_FF8_CARD_98",
       "name": "Doomtrain",
       "top": 3,
@@ -3015,8 +3280,9 @@
       "type": "poison"
     },
     {
-      "id": 99,
-      "collection": "ff8_",
+      "id": 611,
+      "block": 2,
+      "number": 99,
       "nameKey": "STR_FF8_CARD_99",
       "name": "Eden",
       "top": 4,
@@ -3027,8 +3293,9 @@
       "type": null
     },
     {
-      "id": 100,
-      "collection": "ff8_",
+      "id": 612,
+      "block": 2,
+      "number": 100,
       "nameKey": "STR_FF8_CARD_100",
       "name": "Ward",
       "top": 10,
@@ -3039,8 +3306,9 @@
       "type": null
     },
     {
-      "id": 101,
-      "collection": "ff8_",
+      "id": 613,
+      "block": 2,
+      "number": 101,
       "nameKey": "STR_FF8_CARD_101",
       "name": "Kiros",
       "top": 6,
@@ -3051,8 +3319,9 @@
       "type": null
     },
     {
-      "id": 102,
-      "collection": "ff8_",
+      "id": 614,
+      "block": 2,
+      "number": 102,
       "nameKey": "STR_FF8_CARD_102",
       "name": "Laguna",
       "top": 5,
@@ -3063,8 +3332,9 @@
       "type": null
     },
     {
-      "id": 103,
-      "collection": "ff8_",
+      "id": 615,
+      "block": 2,
+      "number": 103,
       "nameKey": "STR_FF8_CARD_103",
       "name": "Selphie",
       "top": 10,
@@ -3075,8 +3345,9 @@
       "type": null
     },
     {
-      "id": 104,
-      "collection": "ff8_",
+      "id": 616,
+      "block": 2,
+      "number": 104,
       "nameKey": "STR_FF8_CARD_104",
       "name": "Quistis",
       "top": 9,
@@ -3087,8 +3358,9 @@
       "type": null
     },
     {
-      "id": 105,
-      "collection": "ff8_",
+      "id": 617,
+      "block": 2,
+      "number": 105,
       "nameKey": "STR_FF8_CARD_105",
       "name": "Irvine",
       "top": 2,
@@ -3099,8 +3371,9 @@
       "type": null
     },
     {
-      "id": 106,
-      "collection": "ff8_",
+      "id": 618,
+      "block": 2,
+      "number": 106,
       "nameKey": "STR_FF8_CARD_106",
       "name": "Zell",
       "top": 8,
@@ -3111,8 +3384,9 @@
       "type": null
     },
     {
-      "id": 107,
-      "collection": "ff8_",
+      "id": 619,
+      "block": 2,
+      "number": 107,
       "nameKey": "STR_FF8_CARD_107",
       "name": "Rinoa",
       "top": 4,
@@ -3123,8 +3397,9 @@
       "type": null
     },
     {
-      "id": 108,
-      "collection": "ff8_",
+      "id": 620,
+      "block": 2,
+      "number": 108,
       "nameKey": "STR_FF8_CARD_108",
       "name": "Edea",
       "top": 10,
@@ -3135,8 +3410,9 @@
       "type": null
     },
     {
-      "id": 109,
-      "collection": "ff8_",
+      "id": 621,
+      "block": 2,
+      "number": 109,
       "nameKey": "STR_FF8_CARD_109",
       "name": "Seifer",
       "top": 6,
@@ -3147,8 +3423,9 @@
       "type": null
     },
     {
-      "id": 110,
-      "collection": "ff8_",
+      "id": 622,
+      "block": 2,
+      "number": 110,
       "nameKey": "STR_FF8_CARD_110",
       "name": "Squall",
       "top": 10,
