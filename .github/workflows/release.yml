@@ -128,6 +128,13 @@ jobs:
   deploy:
     needs: publish
     runs-on: ubuntu-latest
+    # Because the concurrency group above never cancels, a job that hangs here does not merely fail
+    # this release — it blocks every later one for GitHub's six-hour default, until somebody cancels
+    # by hand. And a cancel is the one thing the deployment must not receive: it arrives on the VPS
+    # as a dead SSH session partway through, which is the state no code accounts for. Twenty minutes
+    # is several times the sum of the bounds inside deploy.sh, so reaching it means something
+    # outside them is stuck, and failing is then the better of the two answers.
+    timeout-minutes: 20
     # Create this environment in the repository settings and add a required reviewer to turn every
     # release into an approval prompt. Left without one it does not gate anything — it is here so
     # that the gate is a settings change rather than a workflow change, and so the deployment shows
@@ -190,6 +197,21 @@ jobs:
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_deploy ~/.ssh/known_hosts
+          # Keepalives, in the config rather than repeated as flags on the three `ssh` calls below,
+          # because leaving them off one call is the same as not having them.
+          #
+          # Without these, `ssh` has no way to tell a deployment that is working from a connection
+          # that died: TCP alone will sit on a silently dropped route for hours. Four missed probes
+          # at fifteen seconds ends a dead session in a minute, which is what turns a lost network
+          # into a failed release rather than a job that has to be cancelled by hand — and a cancel
+          # is what leaves the VPS in the state deploy.sh cannot reason about.
+          cat > ~/.ssh/config <<'EOF'
+          Host *
+            ServerAliveInterval 15
+            ServerAliveCountMax 4
+            ConnectTimeout 15
+          EOF
+          chmod 600 ~/.ssh/config
 
       # Proves the credentials before anything is sent. `BatchMode=yes` so a host key that does not
       # match the pin fails immediately instead of waiting on a prompt nobody can answer.

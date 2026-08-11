@@ -29,6 +29,21 @@ COMPOSE="docker compose -f compose.prod.yaml"
 # the connection pool, and Flyway running every migration on a database that may have been idle.
 READY_TIMEOUT="${READY_TIMEOUT:-120}"
 
+# The two steps that used to have no bound at all, and between them they are every way this script
+# could hang instead of failing. That distinction matters more than it looks: the release job calls
+# this over SSH under `concurrency: cancel-in-progress: false`, so a hang here does not fail a
+# release, it holds every later one behind it until a human cancels — and cancelling is precisely
+# what this script cannot survive, since the cancel arrives as a dead SSH session partway through.
+# A bound converts all of that into an ordinary non-zero exit with the previous version still up.
+#
+# `docker pull` is the network one: a stalled registry read on a small VPS never returns on its own.
+# `docker compose up -d` is the other, and it is not obvious — it looks instant, but `server`
+# declares `depends_on: postgres: condition: service_healthy`, so it blocks until the database is
+# healthy, and a postgres in `restart: unless-stopped` that crash-loops re-enters `starting` on
+# every cycle and never reaches the terminal `unhealthy` that would end the wait.
+PULL_TIMEOUT="${PULL_TIMEOUT:-900}"
+START_TIMEOUT="${START_TIMEOUT:-300}"
+
 cd "$(dirname "$0")/.."
 
 # Waits for the server to answer /health/ready, or gives up. Used twice — once for the release and
@@ -72,24 +87,36 @@ PREVIOUS="$(sed -n 's/^TTO_IMAGE=//p' .env | tail -n 1 || true)"
 # Pull first, and separately. A pull that fails — a bad tag, an expired registry login — must not
 # be discovered halfway through recreating the stack, with the old container already gone.
 echo "==> pulling $IMAGE"
-docker pull "$IMAGE"
+timeout "$PULL_TIMEOUT" docker pull "$IMAGE"
 
-# `.env` is the single source of truth for what this host runs, so that `docker compose up -d`
-# after a reboot brings back the deployed version rather than whatever `latest` has become.
-echo "==> pinning TTO_IMAGE"
-pin_image "$IMAGE"
+# The image comes from the environment for the attempt, and `.env` is not written until it has
+# answered /health/ready. Compose reads `.env` only as a default, so exporting the variable wins
+# for every compose call below without touching the file.
+#
+# The order used to be the other way round — pin, then start, then check — and the window that
+# opened was the one this deployment actually fell into: interrupted between the two, `.env` named
+# a version that had never served, so a reboot would have brought up the unvalidated image, and the
+# next run would have read that same value as `PREVIOUS` and found nothing to roll back to. Pinning
+# last closes it. Whatever happens from here, `.env` names a version that answered.
+export TTO_IMAGE="$IMAGE"
 
 echo "==> starting"
-$COMPOSE up -d --remove-orphans
+timeout "$START_TIMEOUT" $COMPOSE up -d --remove-orphans
 
 # ---- the gate ----------------------------------------------------------------------------------
 #
-# `up -d` returns as soon as the container is *started*, which says nothing about whether the
-# process inside it survived its own configuration. A server that exits 78 on a missing variable,
-# or 70 on a migration it cannot apply, restarts forever behind a deployment that reported success.
+# `up -d` returns once the container is *started* and its declared dependencies are healthy, which
+# says nothing about whether the process inside it survived its own configuration. A server that
+# exits 78 on a missing variable, or 70 on a migration it cannot apply, restarts forever behind a
+# deployment that reported success.
 echo "==> waiting for readiness (up to ${READY_TIMEOUT}s)"
 if await_ready; then
     echo "==> ready: $IMAGE"
+    # Now, and only now. `.env` is the single source of truth for what this host runs, so that
+    # `docker compose up -d` after a reboot brings back the deployed version rather than whatever
+    # `latest` has become — and that is only true if the version it names is one that ran.
+    echo "==> pinning TTO_IMAGE"
+    pin_image "$IMAGE"
     # Images accumulate at ~200 MB each and the smallest OVH VPS has a small disk. Dangling only:
     # every tag this host has deployed stays pullable locally, which is what makes a rollback
     # instant instead of a download.
@@ -109,8 +136,10 @@ if [ -z "$PREVIOUS" ] || [ "$PREVIOUS" = "$IMAGE" ]; then
 fi
 
 echo "==> rolling back to $PREVIOUS" >&2
-pin_image "$PREVIOUS"
-$COMPOSE up -d
+# No `pin_image` here either: `.env` was never rewritten, so it still names `PREVIOUS` and going
+# back is only a matter of pointing this shell at it again.
+export TTO_IMAGE="$PREVIOUS"
+timeout "$START_TIMEOUT" $COMPOSE up -d
 
 # The rollback is waited on too, and this is not symmetry for its own sake. `up -d` returning says
 # the previous container started, not that it recovered — and the one case where that distinction
