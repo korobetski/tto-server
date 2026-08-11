@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.tripletriad"
-version = "0.1.0-SNAPSHOT"
+version = "0.1.1"
 
 kotlin {
     // 21, not the client's 17. This is a long-lived service rather than a library: virtual threads
