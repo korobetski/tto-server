@@ -7,7 +7,24 @@ plugins {
 }
 
 group = "com.tripletriad"
-version = "0.1.1"
+
+// **The version of this service is its git tag.** There is deliberately no `version` here.
+//
+// There was one, and it said `0.1.1` while `v0.1.2`, `v0.1.3`, `v0.1.4` and `v0.2.0` had all shipped
+// — four releases of drift that nothing caught, because nothing read it. The image is tagged from
+// `github.ref_name` (`.github/workflows/release.yml`), the deployment pulls by digest, and
+// `GET /server` reports `CURRENT_VERSION`, which is the *protocol* version and lives in `:core`. So
+// the constant reached no artifact, no image and no response: it was a fourth number to keep in step
+// that only ever went out of step.
+//
+// Two of the four numbers in `tto-core/docs/RELEASING.md` § 1 are genuinely consumed — `coreVersion`
+// names a published artifact, `clientVersion` becomes the APK's `versionName` and the app's own
+// `CLIENT_VERSION` — and this one was not. Deleting it is the honest fix; bumping it would have
+// restored a habit whose only purpose was to feed a value nobody reads.
+//
+// What this costs: `installDist` names the jar `tto-server.jar` instead of `tto-server-0.1.1.jar`.
+// Nothing depends on that name — the start script it generates and the `COPY` in the Dockerfile both
+// address the distribution directory, which is named after the project.
 
 kotlin {
     // 21, not the client's 17. This is a long-lived service rather than a library: virtual threads
