@@ -59,8 +59,7 @@ data class PvpMatchRow(
         else -> null
     }
 
-    fun accountOf(side: CardColor): Long =
-        if (side == CardColor.BLUE) blueAccount else redAccount
+    fun accountOf(side: CardColor): Long = if (side == CardColor.BLUE) blueAccount else redAccount
 
     /** The card this side put up, or null when the match is played for MGP only. */
     fun stakeOf(side: CardColor): Int? = when (val wager = stake) {

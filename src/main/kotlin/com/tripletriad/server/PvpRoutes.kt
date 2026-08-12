@@ -46,7 +46,6 @@ import kotlin.random.Random
  * players alternating placements with a second or two of latency are playing Triple Triad, not a
  * shooter. `GET /pvp/match` is the whole channel.
  */
-@Suppress("LongMethod")
 fun Route.pvpRoutes(
     cards: CardCatalog,
     accounts: AccountStore,
@@ -57,133 +56,169 @@ fun Route.pvpRoutes(
     val referee = PvpReferee(cards, accounts, pvp, clock, random)
 
     route("/pvp") {
-        /**
-         * Joins the quick queue, or takes the opponent already waiting in it.
-         *
-         * One endpoint for both because they are one action from the player's side — "find me a
-         * match" — and because splitting them would make the client decide whether to queue or to
-         * pair, which is exactly the decision it cannot make without seeing the queue.
-         */
-        post("/queue") {
-            val accountId = authenticate(accounts) ?: return@post
-            val save = accounts.saveFor(accountId) ?: return@post noCharacter(accountId)
+        lobbyRoutes(referee, accounts, pvp, clock)
+        liveMatchRoutes(referee, accounts)
+    }
+}
 
-            val match = referee.quickMatch(accountId, save)
-            call.respond(
-                HttpStatusCode.OK,
-                PvpQueueState(
-                    waiting = match == null,
-                    since = clock().takeIf { match == null },
-                    matchId = match?.id,
-                ),
+/**
+ * Finding an opponent: the quick queue and the invitations.
+ *
+ * Split from [liveMatchRoutes] along the line the player experiences — before a match and during
+ * one — rather than to satisfy a complexity counter, though it does that too. Nothing here reads a
+ * board and nothing there reads the queue.
+ */
+private fun Route.lobbyRoutes(
+    referee: PvpReferee,
+    accounts: AccountStore,
+    pvp: PvpStore,
+    clock: () -> Long,
+) {
+    challengeRoutes(referee, accounts, pvp, clock)
+
+    /**
+     * Joins the quick queue, or takes the opponent already waiting in it.
+     *
+     * One endpoint for both because they are one action from the player's side — "find me a
+     * match" — and because splitting them would make the client decide whether to queue or to
+     * pair, which is exactly the decision it cannot make without seeing the queue.
+     */
+    post("/queue") {
+        val accountId = authenticate(accounts) ?: return@post
+        val save = accounts.saveFor(accountId) ?: return@post noCharacter(accountId)
+
+        val match = referee.quickMatch(accountId, save)
+        call.respond(
+            HttpStatusCode.OK,
+            PvpQueueState(
+                waiting = match == null,
+                since = clock().takeIf { match == null },
+                matchId = match?.id,
+            ),
+        )
+    }
+
+    /** Leaves the queue. Harmless if not in it — the player wanted to not be waiting. */
+    delete("/queue") {
+        val accountId = authenticate(accounts) ?: return@delete
+        pvp.dequeue(accountId)
+        call.respond(HttpStatusCode.OK, PvpQueueState(waiting = false))
+    }
+}
+
+/** Inviting a named player, and answering an invitation. */
+private fun Route.challengeRoutes(
+    referee: PvpReferee,
+    accounts: AccountStore,
+    pvp: PvpStore,
+    clock: () -> Long,
+) {
+    /** The invitations standing either way, so one screen can show both. */
+    get("/challenges") {
+        val accountId = authenticate(accounts) ?: return@get
+        call.respond(pvp.challengesFor(accountId, clock()).map { it.toWire() })
+    }
+
+    /**
+     * Invites a named player.
+     *
+     * The wager is named in full here — both cards — so the other side can see what they are
+     * risking *and* what they stand to win before agreeing. An offer naming only the
+     * challenger's card is one the recipient cannot evaluate.
+     */
+    post("/challenges") {
+        val accountId = authenticate(accounts) ?: return@post
+        val request = call.receive<ChallengeRequest>()
+
+        when (val outcome = referee.challenge(accountId, request)) {
+            is Challenged.Sent -> call.respond(HttpStatusCode.Created, outcome.challenge)
+            Challenged.NoSuchPlayer ->
+                call.respond(HttpStatusCode.NotFound, Refusal("no such player"))
+            Challenged.Yourself ->
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    Refusal("you cannot challenge yourself"),
+                )
+            Challenged.StakeNotOwned ->
+                call.respond(HttpStatusCode.Conflict, Refusal("you do not own that card"))
+        }
+    }
+
+    /** Accepts an invitation, which opens the match. */
+    post("/challenges/{id}/accept") {
+        val accountId = authenticate(accounts) ?: return@post
+        val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+
+        val match = referee.accept(id, accountId)
+        if (match == null) {
+            call.respond(HttpStatusCode.Conflict, Refusal("that invitation is no longer open"))
+        } else {
+            call.respond(HttpStatusCode.Created, PvpQueueState(false, matchId = match.id))
+        }
+    }
+
+    /** Declines an invitation, or withdraws one. */
+    delete("/challenges/{id}") {
+        val accountId = authenticate(accounts) ?: return@delete
+        val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
+        pvp.dropChallenge(id, accountId)
+        call.respond(HttpStatusCode.OK)
+    }
+}
+
+/** Playing: the match in progress, a placement, and conceding. */
+private fun Route.liveMatchRoutes(referee: PvpReferee, accounts: AccountStore) {
+    /**
+     * The match in progress, as this player may see it.
+     *
+     * Also the answer to "did my match survive the app being killed?", which is why it takes no
+     * id: the client asks who it is and the server says what it is doing. On a phone the system
+     * kills applications without asking and the player did not choose to leave.
+     *
+     * The overdue check runs here rather than on a timer, so a forfeit is settled by the first
+     * person who looks. A background sweep still exists for the case where **nobody** looks —
+     * see [PvpStore.overdue] — but the common path needs no scheduler.
+     */
+    get("/match") {
+        val accountId = authenticate(accounts) ?: return@get
+        val view = referee.currentView(accountId)
+
+        if (view == null) {
+            call.respond(HttpStatusCode.NoContent)
+        } else {
+            call.respond(HttpStatusCode.OK, view)
+        }
+    }
+
+    /** Places a card. */
+    post("/match/{id}/move") {
+        val accountId = authenticate(accounts) ?: return@post
+        val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+        val move = call.receive<PvpMove>()
+
+        when (val played = referee.play(id, accountId, move)) {
+            is Played.Accepted -> call.respond(HttpStatusCode.OK, played.view)
+            Played.NoSuchMatch -> call.respond(
+                HttpStatusCode.NotFound,
+                Refusal("no such match"),
             )
+            Played.NotYourTurn ->
+                call.respond(HttpStatusCode.Conflict, Refusal("it is not your turn"))
+            Played.IllegalMove ->
+                call.respond(HttpStatusCode.Conflict, Refusal("that move is not allowed"))
         }
+    }
 
-        /** Leaves the queue. Harmless if not in it — the player wanted to not be waiting. */
-        delete("/queue") {
-            val accountId = authenticate(accounts) ?: return@delete
-            pvp.dequeue(accountId)
-            call.respond(HttpStatusCode.OK, PvpQueueState(waiting = false))
-        }
+    /** Concedes. The same settlement a timeout produces, chosen rather than suffered. */
+    post("/match/{id}/forfeit") {
+        val accountId = authenticate(accounts) ?: return@post
+        val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
 
-        /** The invitations standing either way, so one screen can show both. */
-        get("/challenges") {
-            val accountId = authenticate(accounts) ?: return@get
-            call.respond(pvp.challengesFor(accountId, clock()).map { it.toWire() })
-        }
-
-        /**
-         * Invites a named player.
-         *
-         * The wager is named in full here — both cards — so the other side can see what they are
-         * risking *and* what they stand to win before agreeing. An offer naming only the
-         * challenger's card is one the recipient cannot evaluate.
-         */
-        post("/challenges") {
-            val accountId = authenticate(accounts) ?: return@post
-            val request = call.receive<ChallengeRequest>()
-
-            when (val outcome = referee.challenge(accountId, request)) {
-                is Challenged.Sent -> call.respond(HttpStatusCode.Created, outcome.challenge)
-                Challenged.NoSuchPlayer ->
-                    call.respond(HttpStatusCode.NotFound, Refusal("no such player"))
-                Challenged.Yourself ->
-                    call.respond(HttpStatusCode.BadRequest, Refusal("you cannot challenge yourself"))
-                Challenged.StakeNotOwned ->
-                    call.respond(HttpStatusCode.Conflict, Refusal("you do not own that card"))
-            }
-        }
-
-        /** Accepts an invitation, which opens the match. */
-        post("/challenges/{id}/accept") {
-            val accountId = authenticate(accounts) ?: return@post
-            val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-
-            val match = referee.accept(id, accountId)
-            if (match == null) {
-                call.respond(HttpStatusCode.Conflict, Refusal("that invitation is no longer open"))
-            } else {
-                call.respond(HttpStatusCode.Created, PvpQueueState(false, matchId = match.id))
-            }
-        }
-
-        /** Declines an invitation, or withdraws one. */
-        delete("/challenges/{id}") {
-            val accountId = authenticate(accounts) ?: return@delete
-            val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
-            pvp.dropChallenge(id, accountId)
-            call.respond(HttpStatusCode.OK)
-        }
-
-        /**
-         * The match in progress, as this player may see it.
-         *
-         * Also the answer to "did my match survive the app being killed?", which is why it takes no
-         * id: the client asks who it is and the server says what it is doing. On a phone the system
-         * kills applications without asking and the player did not choose to leave.
-         *
-         * The overdue check runs here rather than on a timer, so a forfeit is settled by the first
-         * person who looks. A background sweep still exists for the case where **nobody** looks —
-         * see [PvpStore.overdue] — but the common path needs no scheduler.
-         */
-        get("/match") {
-            val accountId = authenticate(accounts) ?: return@get
-            val view = referee.currentView(accountId)
-
-            if (view == null) {
-                call.respond(HttpStatusCode.NoContent)
-            } else {
-                call.respond(HttpStatusCode.OK, view)
-            }
-        }
-
-        /** Places a card. */
-        post("/match/{id}/move") {
-            val accountId = authenticate(accounts) ?: return@post
-            val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-            val move = call.receive<PvpMove>()
-
-            when (val played = referee.play(id, accountId, move)) {
-                is Played.Accepted -> call.respond(HttpStatusCode.OK, played.view)
-                Played.NoSuchMatch -> call.respond(HttpStatusCode.NotFound, Refusal("no such match"))
-                Played.NotYourTurn ->
-                    call.respond(HttpStatusCode.Conflict, Refusal("it is not your turn"))
-                Played.IllegalMove ->
-                    call.respond(HttpStatusCode.Conflict, Refusal("that move is not allowed"))
-            }
-        }
-
-        /** Concedes. The same settlement a timeout produces, chosen rather than suffered. */
-        post("/match/{id}/forfeit") {
-            val accountId = authenticate(accounts) ?: return@post
-            val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-
-            val view = referee.forfeit(id, accountId)
-            if (view == null) {
-                call.respond(HttpStatusCode.NotFound, Refusal("no such match"))
-            } else {
-                call.respond(HttpStatusCode.OK, view)
-            }
+        val view = referee.forfeit(id, accountId)
+        if (view == null) {
+            call.respond(HttpStatusCode.NotFound, Refusal("no such match"))
+        } else {
+            call.respond(HttpStatusCode.OK, view)
         }
     }
 }
@@ -224,6 +259,12 @@ private suspend fun RoutingContext.noCharacter(accountId: Long) {
  * should be testable without a request. What is left in the routes above is parsing, authenticating
  * and choosing a status code.
  */
+// Sixteen members, and the rule is aimed at a class doing too many *things*. This one does one:
+// it is the rules of a player-versus-player match with no HTTP in it. Ten of the sixteen are
+// two-line private helpers — resolving a name, building an id — that exist so the five public
+// entry points read as prose. Splitting them across two classes would mean passing the same four
+// collaborators to both.
+@Suppress("TooManyFunctions")
 class PvpReferee(
     private val cards: CardCatalog,
     private val accounts: AccountStore,
@@ -235,23 +276,13 @@ class PvpReferee(
     fun quickMatch(accountId: Long, save: GameSave): PvpMatchRow? =
         pvp.pairAndOpen(accountId, save.mode) { blue, red -> open(blue, red, PvpStake.None) }
 
-    /** Sends an invitation, refusing the three things that cannot be invitations. */
+    /** Sends an invitation, or says why it is not one. */
     fun challenge(accountId: Long, request: ChallengeRequest): Challenged {
         val target = accounts.accountIdForUsername(request.username)
             ?: return Challenged.NoSuchPlayer
-        if (target == accountId) return Challenged.Yourself
+        refuse(accountId, target, request.stake)?.let { return it }
 
-        // Both wagers are checked against what each player actually holds, and checked **now**
-        // rather than at settlement: refusing before a match is played costs nobody a game, and
-        // refusing after one costs the winner their prize.
         val stake = request.stake
-        if (stake is PvpStake.Cards) {
-            val mine = accounts.saveFor(accountId) ?: return Challenged.NoSuchPlayer
-            val theirs = accounts.saveFor(target) ?: return Challenged.NoSuchPlayer
-            if (!mine.ownsCard(stake.challengerCard)) return Challenged.StakeNotOwned
-            if (!theirs.ownsCard(stake.opponentCard)) return Challenged.StakeNotOwned
-        }
-
         val id = newId()
         val expiresAt = clock() + PvpMatchRow.CHALLENGE_MILLIS
         pvp.challenge(id, accountId, target, stake, expiresAt)
@@ -265,6 +296,23 @@ class PvpReferee(
                 expiresAt = expiresAt,
             ),
         )
+    }
+
+    /**
+     * Why this invitation cannot go out, or null when it can.
+     *
+     * The wagers are checked against what each player actually holds, and checked **now** rather
+     * than at settlement: refusing before a match is played costs nobody a game, and refusing after
+     * one costs the winner their prize.
+     */
+    private fun refuse(accountId: Long, target: Long, stake: PvpStake): Challenged? = when {
+        target == accountId -> Challenged.Yourself
+        stake !is PvpStake.Cards -> null
+        accounts.saveFor(accountId)?.ownsCard(stake.challengerCard) != true ->
+            Challenged.StakeNotOwned
+        accounts.saveFor(target)?.ownsCard(stake.opponentCard) != true ->
+            Challenged.StakeNotOwned
+        else -> null
     }
 
     /** Accepts an invitation and opens the match. The challenger plays blue. */
@@ -293,38 +341,50 @@ class PvpReferee(
     fun play(matchId: String, accountId: Long, move: PvpMove): Played {
         val row = pvp.matchById(matchId) ?: return Played.NoSuchMatch
         val side = row.sideOf(accountId) ?: return Played.NoSuchMatch
-        if (row.status != PvpMatchStatus.PLAYING) return Played.NotYourTurn
 
-        // Overdue is checked before the move, not after: a player who comes back three minutes
-        // late has already lost, and accepting the card first would credit a match twice.
-        settleIfOverdue(row)?.let { settled ->
-            return Played.Accepted(
-                settled.wireFor(side, opponentName(settled, side), cards) ?: return Played.NoSuchMatch,
-            )
+        // Overdue is settled before the move is looked at, not after: a player coming back three
+        // minutes late has already lost, and accepting the card first would credit a match twice.
+        val settled = settleIfOverdue(row)
+        val view = (settled ?: row).viewFor(side, cards) ?: return Played.NoSuchMatch
+
+        // A match that has already ended answers "not your turn", which is true: a finished
+        // `MatchView` has no current player, so one branch covers both.
+        return when {
+            settled != null -> report(settled, side)
+            row.status != PvpMatchStatus.PLAYING || !view.isMyTurn -> Played.NotYourTurn
+            !PvpMatchRow.isLegal(view, move) -> Played.IllegalMove
+            else -> record(row, side, move)
         }
+    }
 
-        val view = row.viewFor(side, cards) ?: return Played.NoSuchMatch
-        if (!view.isMyTurn) return Played.NotYourTurn
-        if (!PvpMatchRow.isLegal(view, move)) return Played.IllegalMove
-
+    /**
+     * Writes the move down and settles the match if it was the ninth.
+     *
+     * Split from [play] because the two halves fail differently: everything above is *refusing* a
+     * move, and everything here has already accepted one and is dealing with the world having
+     * moved on underneath.
+     */
+    private fun record(row: PvpMatchRow, side: CardColor, move: PvpMove): Played {
         val after = row.copy(moves = row.moves + move)
         val finished = after.replay(cards)?.isFinished == true
         val deadline = if (finished) null else clock() + PvpMatchRow.DEADLINE_MILLIS
 
-        if (!pvp.appendMove(matchId, row.moves.size, move, deadline)) {
-            // Somebody else advanced the match between the read and the write — a double tap, or a
-            // retry after a lost response. The move is already in; reporting the state is the
-            // honest answer, and it is what the client would have got had it not been refused.
-            val now = pvp.matchById(matchId) ?: return Played.NoSuchMatch
-            return Played.Accepted(
-                now.wireFor(side, opponentName(now, side), cards) ?: return Played.NoSuchMatch,
-            )
+        // A refused append means somebody advanced the match between the read and the write — a
+        // double tap, or a retry after a lost response. The move is already in, so reporting the
+        // state is the honest answer, and it is what the client would have got anyway.
+        val settled = when {
+            !pvp.appendMove(row.id, row.moves.size, move, deadline) ->
+                pvp.matchById(row.id) ?: return Played.NoSuchMatch
+            finished -> settle(after, PvpMatchStatus.FINISHED, null)
+            else -> after
         }
+        return report(settled, side)
+    }
 
-        val settled = if (finished) settle(after, PvpMatchStatus.FINISHED, null) else after
-        return Played.Accepted(
-            settled.wireFor(side, opponentName(settled, side), cards) ?: return Played.NoSuchMatch,
-        )
+    /** A row as an answer, or `NoSuchMatch` when it cannot be rendered at all. */
+    private fun report(row: PvpMatchRow, side: CardColor): Played {
+        val view = row.wireFor(side, opponentName(row, side), cards) ?: return Played.NoSuchMatch
+        return Played.Accepted(view)
     }
 
     /** Concedes: the same settlement a timeout produces. */
@@ -397,8 +457,8 @@ class PvpReferee(
     /**
      * Opens a match between two accounts.
      *
-     * Both hands come from the **server's** copy of each profile — `PveMatches.playerDeck` picks the
-     * first complete deck, or five owned cards when nothing is built — so neither client chooses
+     * Both hands come from the **server's** copy of each profile — `PveMatches.playerDeck` takes
+     * the first complete deck, or five owned cards when none is built — so neither client chooses
      * what it is dealt, and neither can name a card it does not own.
      *
      * The rules are drawn by the roulette, as a PvE match's are. Who starts is the server's toss:
@@ -451,4 +511,3 @@ class PvpReferee(
         const val ID_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789"
     }
 }
-

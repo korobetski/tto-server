@@ -94,11 +94,16 @@ fun Application.module(
     // is about there being a single place the SQL lives, not about sharing anything.
     val accounts = AccountStore(dataSource)
 
+    // Separate from `accounts` on the line the two sides of this server fall on: that one owns who
+    // a player is and what they have, this one owns what is happening right now. See [PvpStore].
+    val pvp = PvpStore(dataSource)
+
     routing {
         healthRoutes(dataSource)
         serverRoutes(identity, dataSource)
         accountRoutes(accounts)
         matchRoutes(Catalogs.cards, Catalogs.npcs, accounts)
+        pvpRoutes(Catalogs.cards, accounts, pvp)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.

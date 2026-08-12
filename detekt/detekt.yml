@@ -15,6 +15,12 @@ complexity:
     ignoreDataClasses: true
 
 style:
+  ReturnCount:
+    # A guard clause is not a return path worth counting. `val row = store.match(id) ?: return null`
+    # is the idiomatic Kotlin alternative to wrapping the rest of a function in an `if`, and
+    # counting each one pushes code towards exactly the nesting this rule exists to prevent. Returns
+    # in the *body* are still counted, which is where it earns its place.
+    excludeGuardClauses: true
   MaxLineLength:
     # Kept in step with .editorconfig so ktlint and detekt cannot disagree.
     maxLineLength: 100

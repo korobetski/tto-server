@@ -28,7 +28,12 @@ import javax.sql.DataSource
  * without a lock table: the second transaction skips the row the first is holding and looks
  * further down the queue rather than blocking on it or, worse, reading it as available.
  */
-@Suppress("TooManyFunctions")
+// Two suppressions, both for the same reason a data-access class attracts them. `TooManyFunctions`
+// counts queries, which is what this class is made of; the rule is aimed at a class doing too many
+// *things*, and this one does one. `MagicNumber` counts JDBC's positional parameter indices — the
+// `4` in `setString(4, …)` is a position in the statement three lines above, and naming it would
+// invent a concept SQL does not have.
+@Suppress("TooManyFunctions", "MagicNumber")
 class PvpStore(
     private val dataSource: DataSource,
     private val json: Json = SaveJson,
@@ -135,28 +140,23 @@ class PvpStore(
     // ---- Invitations ------------------------------------------------------
 
     /** Records an invitation from one account to another. */
-    fun challenge(
-        id: String,
-        from: Long,
-        to: Long,
-        stake: PvpStake,
-        expiresAt: Long,
-    ) = transaction { db ->
-        db.prepareStatement(
-            """
+    fun challenge(id: String, from: Long, to: Long, stake: PvpStake, expiresAt: Long) =
+        transaction { db ->
+            db.prepareStatement(
+                """
             INSERT INTO pvp_challenges (id, from_account, to_account, stake, expires_at)
             VALUES (?, ?, ?, ?::jsonb, ?)
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setString(1, id)
-            statement.setLong(2, from)
-            statement.setLong(3, to)
-            statement.setString(4, json.encodeToString(PvpStake.serializer(), stake))
-            statement.setTimestamp(5, Timestamp(expiresAt))
-            statement.executeUpdate()
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, id)
+                statement.setLong(2, from)
+                statement.setLong(3, to)
+                statement.setString(4, json.encodeToString(PvpStake.serializer(), stake))
+                statement.setTimestamp(5, Timestamp(expiresAt))
+                statement.executeUpdate()
+            }
+            Unit
         }
-        Unit
-    }
 
     /** The invitations [accountId] has been sent that are still standing. */
     fun challengesFor(accountId: Long, now: Long): List<StoredChallenge> = transaction { db ->
@@ -273,26 +273,22 @@ class PvpStore(
      * `WHERE`, so a second identical request finds the count already advanced and changes nothing.
      * Without it, two requests a few milliseconds apart would place two cards from one tap.
      */
-    fun appendMove(
-        id: String,
-        expectedMoves: Int,
-        move: PvpMove,
-        deadline: Long?,
-    ): Boolean = transaction { db ->
-        db.prepareStatement(
-            """
+    fun appendMove(id: String, expectedMoves: Int, move: PvpMove, deadline: Long?): Boolean =
+        transaction { db ->
+            db.prepareStatement(
+                """
             UPDATE pvp_matches
             SET moves = moves || ?::jsonb, turn_deadline = ?, updated_at = now()
             WHERE id = ? AND status = 'PLAYING' AND jsonb_array_length(moves) = ?
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setString(1, json.encodeToString(listOf(move)))
-            statement.setTimestamp(2, deadline?.let(::Timestamp))
-            statement.setString(3, id)
-            statement.setInt(4, expectedMoves)
-            statement.executeUpdate() > 0
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, json.encodeToString(listOf(move)))
+                statement.setTimestamp(2, deadline?.let(::Timestamp))
+                statement.setString(3, id)
+                statement.setInt(4, expectedMoves)
+                statement.executeUpdate() > 0
+            }
         }
-    }
 
     /** Ends a match. Idempotent: a match already finished is not re-ended. */
     fun finish(id: String, status: PvpMatchStatus, forfeitedBy: CardColor? = null): Boolean =
@@ -397,6 +393,10 @@ class PvpStore(
         toName = getString(8),
     )
 
+    // As wide as it can be, and for the reason `AccountStore.transaction` gives: anything at all
+    // leaving `block` — an Error, a cancellation — must not leave a transaction open, and a
+    // rollback followed by a rethrow changes nothing about what the caller sees.
+    @Suppress("TooGenericExceptionCaught")
     private fun <T> transaction(block: (Connection) -> T): T = dataSource.connection.use { db ->
         try {
             val result = block(db)
