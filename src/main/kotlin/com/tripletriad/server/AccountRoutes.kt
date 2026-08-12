@@ -124,12 +124,29 @@ fun Route.accountRoutes(store: AccountStore, clock: () -> Long = System::current
      * [AccountStore.replaceSave]: a determined player can still edit their own MGP. What it does
      * **not** cost is anything a match established — the score, the reward and the match record
      * are computed here from a replay and are not reachable from this endpoint at all.
+     *
+     * ### The fields that are the server's, and are taken back
+     *
+     * "Nothing a match established" stopped being free the moment the profile started carrying
+     * **daily quests**: a completed quest is paid on the strength of matches this server replayed,
+     * so a client asserting one would be paying itself. [GameSave.withServerOwnedFrom] names that
+     * set — once, in `:core`, where both ends can read it — and every such field is taken from the
+     * stored document rather than from the request. Everything else is still believed.
+     *
+     * Silently, and not as a refusal: an honest client sends the whole profile back including the
+     * quests it was last told about, so rejecting the request would break the ordinary case to
+     * punish nobody.
      */
     put("/me/save") {
         if (!requireCompatibleClient()) return@put
         val accountId = authenticate(store) ?: return@put
 
-        val save = call.receive<GameSave>()
+        val incoming = call.receive<GameSave>()
+        val stored = store.saveFor(accountId) ?: run {
+            call.application.environment.log.error("Account {} has no character", accountId)
+            return@put call.respond(HttpStatusCode.InternalServerError, "no character")
+        }
+        val save = incoming.withServerOwnedFrom(stored)
         if (!store.replaceSave(accountId, save)) {
             call.application.environment.log.error("Account {} has no character", accountId)
             return@put call.respond(HttpStatusCode.InternalServerError, "no character")

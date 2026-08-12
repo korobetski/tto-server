@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.DailyQuests
 import com.tripletriad.model.Deck
 import com.tripletriad.model.MatchResult
 import com.tripletriad.protocol.AccountError
@@ -18,6 +19,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -162,6 +164,48 @@ class AccountFlowTest {
         // It is not this player's game.
         val rejected = assertIs<MatchVerdict.Rejected>(submit(session.token, borrowed).verdict)
         assertEquals(RejectionReason.DECK_NOT_OWNED, rejected.reason, rejected.detail)
+    }
+
+    /**
+     * A client cannot award itself a daily quest through `PUT /me/save`.
+     *
+     * That endpoint is a blind overwrite by design — the shop and the deck editor are the client's
+     * to decide and the server has no way to recompute them. Its bargain is that nothing a *match*
+     * established goes through it, and a completed quest is exactly that: it is paid on the
+     * strength of matches this server replayed.
+     *
+     * So the quests come back off the stored document, and the rest of the profile is still
+     * believed — which the second half asserts, because a fix that dropped the whole request on the
+     * floor would pass the first half and break buying a card.
+     */
+    @Test
+    fun aFabricatedQuestCompletionIsNotStored() = testApplication {
+        application { module(Postgres.dataSource, prometheusRegistry()) }
+
+        val session = register(Postgres.freshAccount("forger"))
+        val forged = session.player.save.copy(
+            quests = DailyQuests(
+                day = "2026-08-12",
+                questIds = listOf("q-win-3"),
+                completed = mapOf("q-win-3" to 1L),
+            ),
+            avatarId = "ffxiv_twi03007",
+        )
+
+        val response = client.put("/me/save") {
+            protocolHeaders()
+            bearer(session.token)
+            setBody(json.encodeToString(forged))
+        }
+        assertEquals(HttpStatusCode.NoContent, response.status)
+
+        val stored = me(session.token).save
+        assertEquals(
+            DailyQuests(),
+            stored.quests,
+            "a client asserted a quest completion and the server kept it",
+        )
+        assertEquals("ffxiv_twi03007", stored.avatarId, "the rest of the profile is still believed")
     }
 
     /** Nothing is credited without a session, and the refusal names why. */
