@@ -99,6 +99,30 @@ class AccountStore(
         }
     }
 
+    /**
+     * The account behind [username], matched case-insensitively as sign-in matches it.
+     *
+     * Added for the PvP challenge, which is the first thing in this server that looks a player up
+     * by name for a reason other than authenticating them. Case-insensitive because that is what
+     * `username_key` exists for, and because a player typing a friend's name from memory should not
+     * have to remember its capitalisation.
+     */
+    fun accountIdForUsername(username: String): Long? = transaction { db ->
+        db.prepareStatement("SELECT id FROM accounts WHERE username_key = lower(?)")
+            .use { statement ->
+                statement.setString(1, username)
+                statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
+            }
+    }
+
+    /** The name an account goes by, for showing a player who they are up against. */
+    fun usernameFor(accountId: Long): String? = transaction { db ->
+        db.prepareStatement("SELECT username FROM accounts WHERE id = ?").use { statement ->
+            statement.setLong(1, accountId)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.getString(1) else null }
+        }
+    }
+
     /** Replaces a password digest, when [PasswordHasher.needsRehash] says the cost has risen. */
     fun updatePasswordHash(accountId: Long, passwordHash: String) = transaction { db ->
         db.prepareStatement("UPDATE accounts SET password_hash = ? WHERE id = ?").use { statement ->
@@ -388,14 +412,18 @@ data class RecordedMatch(
 )
 
 /**
- * How a [GameSave] is stored.
+ * How anything this server stores as JSONB is encoded — a [GameSave], a rule set, a move list.
  *
- * `encodeDefaults = true`, unlike the wire format: this document is read back by a future build of
- * the server, and a field omitted because it happened to equal today's default would silently take
- * tomorrow's default instead. `ignoreUnknownKeys` for the mirror image — a save written by a newer
- * build must not make an older one unable to read a profile at all.
+ * `encodeDefaults = true`, unlike the wire format: these documents are read back by a *future*
+ * build of the server, and a field omitted because it happened to equal today's default would
+ * silently take tomorrow's default instead. `ignoreUnknownKeys` for the mirror image — a document
+ * written by a newer build must not make an older one unable to read a row at all.
+ *
+ * Internal rather than private because [PvpStore] stores its rows under exactly these rules and for
+ * exactly these reasons. A second `Json` configured "the same way" would be two copies waiting to
+ * drift the first time either is tuned.
  */
-private val SaveJson = Json {
+internal val SaveJson = Json {
     encodeDefaults = true
     ignoreUnknownKeys = true
 }
