@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
+import com.tripletriad.data.FormatCatalog
 import com.tripletriad.data.NpcCatalog
 import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.MatchVerdict
@@ -34,7 +35,12 @@ import io.ktor.server.routing.route
  *   a genuine client rather than a script that computed a winning one. The replay makes that a
  *   fair fight — a forgery has to be a real, winnable match — but not an impossible one.
  */
-fun Route.matchRoutes(cards: CardCatalog, npcs: NpcCatalog, store: AccountStore) {
+fun Route.matchRoutes(
+    cards: CardCatalog,
+    npcs: NpcCatalog,
+    formats: FormatCatalog,
+    store: AccountStore,
+) {
     route("/matches") {
         /**
          * Verifies a transcript.
@@ -53,7 +59,7 @@ fun Route.matchRoutes(cards: CardCatalog, npcs: NpcCatalog, store: AccountStore)
             if (!requireCompatibleClient()) return@post
 
             val transcript = call.receive<MatchTranscript>()
-            val verdict = TranscriptVerifier.verify(transcript, cards, npcs)
+            val verdict = TranscriptVerifier.verify(transcript, cards, npcs, formats)
 
             if (verdict is MatchVerdict.Rejected) {
                 // Logged, because a rise in rejections is either an attack or — far more likely —
@@ -94,6 +100,7 @@ fun Route.matchRoutes(cards: CardCatalog, npcs: NpcCatalog, store: AccountStore)
                 store = store,
                 cards = cards,
                 npcs = npcs,
+                formats = formats,
                 now = System.currentTimeMillis(),
             )
 

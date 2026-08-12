@@ -2,6 +2,8 @@ package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
 import com.tripletriad.data.CardCatalogParser
+import com.tripletriad.data.FormatCatalog
+import com.tripletriad.data.FormatCatalogParser
 import com.tripletriad.data.NpcCatalog
 import com.tripletriad.data.NpcCatalogParser
 
@@ -33,6 +35,15 @@ object Catalogs {
     val npcs: NpcCatalog by lazy { NpcCatalogParser.parse(read(NPCS_RESOURCE)) }
 
     /**
+     * The match formats — which cards a match admits and which rules it may draw.
+     *
+     * The third copy of a client resource, and it earns its place the same way the other two do:
+     * the server replays transcripts with the real engine, and since `Roulette.pools` moved out of
+     * `:core` the roulette draws from *this*. A server without it could not deal a match to verify.
+     */
+    val formats: FormatCatalog by lazy { FormatCatalogParser.parse(read(FORMATS_RESOURCE)) }
+
+    /**
      * Forces both catalogs, so that a missing or malformed one fails now.
      *
      * `by lazy` alone would defer the failure to the first request that happened to need it — a
@@ -43,6 +54,7 @@ object Catalogs {
     fun preload() {
         check(cards.all.isNotEmpty()) { "$CARDS_RESOURCE parsed to an empty catalog" }
         check(npcs.all.isNotEmpty()) { "$NPCS_RESOURCE parsed to an empty catalog" }
+        check(formats.formats.isNotEmpty()) { "$FORMATS_RESOURCE parsed to an empty catalog" }
     }
 
     private fun read(resource: String): String =
@@ -52,4 +64,5 @@ object Catalogs {
 
     private const val CARDS_RESOURCE = "/catalog/cards.json"
     private const val NPCS_RESOURCE = "/catalog/npcs.json"
+    private const val FORMATS_RESOURCE = "/catalog/formats.json"
 }

@@ -1,0 +1,62 @@
+{
+  "formats": [
+    {
+      "id": "ff14-standard",
+      "nameKey": "APP_FORMAT_FF14_STANDARD",
+      "blocks": [1],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_ASCENSION",
+        "RULE_CHAOS",
+        "RULE_DESCENSION",
+        "RULE_FALLEN_ACE",
+        "RULE_ORDER",
+        "RULE_PLUS",
+        "RULE_RANDOM",
+        "RULE_REVERSE",
+        "RULE_SAME",
+        "RULE_SUDDEN_DEATH",
+        "RULE_SWAP",
+        "RULE_THREE_OPEN"
+      ]
+    },
+    {
+      "id": "ff8-standard",
+      "nameKey": "APP_FORMAT_FF8_STANDARD",
+      "blocks": [2],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_ELEMENTAL",
+        "RULE_PLUS",
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_SUDDEN_DEATH",
+        "RULE_THREE_OPEN"
+      ]
+    },
+    {
+      "_comment": "Free play: every released block, and the union of both rule pools. Decided 2026-08-12. RULE_ELEMENTAL is in here on purpose and its effect is lopsided — see FormatCatalog and document 19.",
+      "id": "free-play",
+      "nameKey": "APP_FORMAT_FREE",
+      "blocks": [1, 2],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_ASCENSION",
+        "RULE_CHAOS",
+        "RULE_DESCENSION",
+        "RULE_ELEMENTAL",
+        "RULE_FALLEN_ACE",
+        "RULE_ORDER",
+        "RULE_PLUS",
+        "RULE_RANDOM",
+        "RULE_REVERSE",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_SUDDEN_DEATH",
+        "RULE_SWAP",
+        "RULE_THREE_OPEN"
+      ]
+    }
+  ]
+}

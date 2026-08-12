@@ -1,11 +1,11 @@
 package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
+import com.tripletriad.data.FormatCatalog
 import com.tripletriad.data.MatchRewards
 import com.tripletriad.data.PveMatches
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
-import com.tripletriad.model.GameSave
 import com.tripletriad.model.Roulette
 import com.tripletriad.protocol.PvpChallenge
 import com.tripletriad.protocol.PvpMatchStatus
@@ -46,14 +46,19 @@ import kotlin.random.Random
  * players alternating placements with a second or two of latency are playing Triple Triad, not a
  * shooter. `GET /pvp/match` is the whole channel.
  */
+// Six collaborators and a clock, and they are one decision: everything a refereed match needs.
+// Bundling them behind a type would put a wrapper between `Application.module` and the routes for
+// the sake of a counter.
+@Suppress("LongParameterList")
 fun Route.pvpRoutes(
     cards: CardCatalog,
+    formats: FormatCatalog,
     accounts: AccountStore,
     pvp: PvpStore,
     clock: () -> Long = System::currentTimeMillis,
     random: () -> Random = { Random.Default },
 ) {
-    val referee = PvpReferee(cards, accounts, pvp, clock, random)
+    val referee = PvpReferee(cards, formats, accounts, pvp, clock, random)
 
     route("/pvp") {
         lobbyRoutes(referee, accounts, pvp, clock)
@@ -85,9 +90,11 @@ private fun Route.lobbyRoutes(
      */
     post("/queue") {
         val accountId = authenticate(accounts) ?: return@post
-        val save = accounts.saveFor(accountId) ?: return@post noCharacter(accountId)
+        // Read only to refuse an account with no character: `quickMatch` deals from the server's
+        // own copy of both saves, so handing it this one would hand it what it already has.
+        accounts.saveFor(accountId) ?: return@post noCharacter(accountId)
 
-        val match = referee.quickMatch(accountId, save)
+        val match = referee.quickMatch(accountId)
         call.respond(
             HttpStatusCode.OK,
             PvpQueueState(
@@ -267,14 +274,25 @@ private suspend fun RoutingContext.noCharacter(accountId: Long) {
 @Suppress("TooManyFunctions")
 class PvpReferee(
     private val cards: CardCatalog,
+    private val formats: FormatCatalog,
     private val accounts: AccountStore,
     private val pvp: PvpStore,
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: () -> Random = { Random.Default },
 ) {
-    /** Pairs with whoever is waiting, or joins the queue. Null means "queued, nothing yet". */
-    fun quickMatch(accountId: Long, save: GameSave): PvpMatchRow? =
-        pvp.pairAndOpen(accountId, save.mode) { blue, red -> open(blue, red, PvpStake.None) }
+    /**
+     * Pairs with whoever is waiting, or joins the queue. Null means "queued, nothing yet".
+     *
+     * Everyone queues in the same format. While `MODE` existed a profile was confined to one set
+     * and two players of different sets had no legal match, so the queue was split; now that a
+     * profile owns whatever it owns, splitting it would only make both halves slower to pair. The
+     * format is [FormatCatalog.default] — the widest authored one — so no card is left at home.
+     *
+     */
+    fun quickMatch(accountId: Long): PvpMatchRow? {
+        val format = formats.default ?: return null
+        return pvp.pairAndOpen(accountId, format.id) { blue, red -> open(blue, red, PvpStake.None) }
+    }
 
     /** Sends an invitation, or says why it is not one. */
     fun challenge(accountId: Long, request: ChallengeRequest): Challenged {
@@ -468,7 +486,9 @@ class PvpReferee(
     private fun open(blue: Long, red: Long, stake: PvpStake): PvpMatchRow? {
         val blueSave = accounts.saveFor(blue) ?: return null
         val redSave = accounts.saveFor(red) ?: return null
-        if (blueSave.mode != redSave.mode) return null
+        // The one format everybody plays. The two saves used to have to agree on a collection
+        // before a match was legal; there is nothing left for them to disagree about.
+        val format = formats.default ?: return null
 
         val generator = random()
         val seed = generator.nextInt()
@@ -478,8 +498,10 @@ class PvpReferee(
             id = newId(),
             blueAccount = blue,
             redAccount = red,
-            collection = blueSave.mode,
-            rules = Roulette.augment(GameRules(), blueSave.mode, settled),
+            formatId = format.id,
+            // `Roulette.pools` is gone — a rule pool is a property of the format now, and the
+            // engine is handed one rather than looking one up.
+            rules = Roulette.augment(GameRules(), format.rules, settled),
             seed = seed,
             blueHand = PveMatches.playerDeck(blueSave),
             redHand = PveMatches.playerDeck(redSave),

@@ -1,9 +1,13 @@
 {
-  "ff14": [
+  "npcs": [
     {
       "id": 1,
       "name": "STR_NPC_TT_Master",
       "iconID": "tt-master",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN"
       ],
@@ -18,9 +22,9 @@
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
       "MGPReward": {
-        "w": 10,
-        "d": 4,
-        "l": 1
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -45,6 +49,10 @@
       "id": 2,
       "name": "STR_NPC_Jonas",
       "iconID": "jonas",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_SAME"
@@ -61,10 +69,10 @@
         282
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 10,
+      "matchFee": 5,
       "MGPReward": {
-        "w": 22,
-        "d": 8,
+        "w": 25,
+        "d": 9,
         "l": 3
       },
       "itemRewards": [
@@ -79,12 +87,16 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 3,
       "name": "STR_NPC_Guhtwint",
       "iconID": "guhtwint",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN",
         "RULE_PLUS"
@@ -101,11 +113,11 @@
         267
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 15,
+      "matchFee": 17,
       "MGPReward": {
-        "w": 32,
-        "d": 12,
-        "l": 4
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -119,12 +131,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 4,
       "name": "STR_NPC_Aurifort",
       "iconID": "aurifort",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN",
         "RULE_RANDOM"
@@ -140,12 +156,12 @@
         268,
         291
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 50,
-        "d": 20,
-        "l": 7
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -159,12 +175,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 5
+      "difficulty": 4
     },
     {
       "id": 5,
       "name": "STR_NPC_Ruhtwyda",
       "iconID": "ruhtwyda",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ASCENSION",
         "RULE_SUDDEN_DEATH",
@@ -181,12 +201,12 @@
         313,
         301
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 59,
-        "d": 0,
-        "l": 8
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -200,12 +220,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 6
+      "difficulty": 8
     },
     {
       "id": 6,
       "name": "STR_NPC_King_Elmer",
       "iconID": "elmer",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_PLUS"
       ],
@@ -220,12 +244,12 @@
         305,
         297
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 117,
-        "d": 46,
-        "l": 17
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -244,12 +268,16 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 12
+      "difficulty": 5
     },
     {
       "id": 7,
       "name": "STR_NPC_Memeroon",
       "iconID": "memeroon",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_SAME"
@@ -266,9 +294,9 @@
         258
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 10,
+      "matchFee": 5,
       "MGPReward": {
-        "w": 23,
+        "w": 25,
         "d": 9,
         "l": 3
       },
@@ -289,12 +317,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 8,
       "name": "STR_NPC_Trachtoum",
       "iconID": "tratchoum",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -309,12 +341,12 @@
         303,
         276
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
       "MGPReward": {
-        "w": 47,
+        "w": 50,
         "d": 18,
-        "l": 7
+        "l": 6
       },
       "itemRewards": [
         {
@@ -328,7 +360,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 5,
+      "difficulty": 2,
       "availability": {
         "begins": 20,
         "ends": 8
@@ -338,6 +370,10 @@
       "id": 9,
       "name": "STR_NPC_Baderon",
       "iconID": "baderon",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -353,12 +389,12 @@
         283,
         277
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
       "MGPReward": {
-        "w": 49,
-        "d": 19,
-        "l": 7
+        "w": 50,
+        "d": 18,
+        "l": 6
       },
       "itemRewards": [
         {
@@ -372,12 +408,16 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 5
+      "difficulty": 2
     },
     {
       "id": 10,
       "name": "STR_NPC_Mimidoa",
       "iconID": "mimidoa",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN",
         "RULE_ASCENSION"
@@ -392,12 +432,12 @@
         283,
         281
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 47,
-        "d": 19,
-        "l": 7
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -416,12 +456,16 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 11,
       "name": "STR_NPC_Rashaht_Rhiki",
       "iconID": "rashaht-rhiki",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS"
@@ -439,12 +483,12 @@
         286,
         280
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 110,
-        "d": 44,
-        "l": 16
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -468,7 +512,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 11,
+      "difficulty": 6,
       "availability": {
         "begins": 14,
         "ends": 19
@@ -478,6 +522,10 @@
       "id": 12,
       "name": "STR_NPC_Gegeruju",
       "iconID": "gegeruju",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SWAP",
         "RULE_SUDDEN_DEATH"
@@ -494,12 +542,12 @@
         286,
         311
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 116,
-        "d": 0,
-        "l": 17
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -518,12 +566,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12
+      "difficulty": 6
     },
     {
       "id": 13,
       "name": "STR_NPC_Maisenta",
       "iconID": "maisenta",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_RANDOM"
@@ -539,10 +591,10 @@
         264
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 10,
+      "matchFee": 5,
       "MGPReward": {
-        "w": 22,
-        "d": 8,
+        "w": 25,
+        "d": 9,
         "l": 3
       },
       "itemRewards": [
@@ -562,12 +614,16 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 14,
       "name": "STR_NPC_Roger",
       "iconID": "roger",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN"
       ],
@@ -583,10 +639,10 @@
         261
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 10,
+      "matchFee": 5,
       "MGPReward": {
-        "w": 22,
-        "d": 8,
+        "w": 25,
+        "d": 9,
         "l": 3
       },
       "itemRewards": [
@@ -601,12 +657,16 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 15,
       "name": "STR_NPC_Mother_Miounne",
       "iconID": "miounne",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN",
         "RULE_REVERSE"
@@ -624,11 +684,11 @@
         261
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 15,
+      "matchFee": 17,
       "MGPReward": {
-        "w": 32,
-        "d": 12,
-        "l": 4
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -652,12 +712,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 16,
       "name": "STR_NPC_Fhobhas",
       "iconID": "fhobhas",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -673,12 +737,12 @@
         290,
         262
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
       "MGPReward": {
-        "w": 33,
-        "d": 13,
-        "l": 4
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -687,12 +751,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 17,
       "name": "STR_NPC_Wymond",
       "iconID": "wymond",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -708,12 +776,12 @@
         260,
         263
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
       "MGPReward": {
-        "w": 33,
-        "d": 13,
-        "l": 4
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -727,12 +795,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 18,
       "name": "STR_NPC_Momodi",
       "iconID": "momodi",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -748,12 +820,12 @@
         269,
         266
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
       "MGPReward": {
-        "w": 33,
-        "d": 13,
-        "l": 4
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -772,12 +844,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 19,
       "name": "STR_NPC_Momo",
       "iconID": "momo",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -800,11 +876,11 @@
         299
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 15,
+      "matchFee": 13,
       "MGPReward": {
-        "w": 33,
-        "d": 13,
-        "l": 4
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -823,12 +899,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 20,
       "name": "STR_NPC_Helmhart",
       "iconID": "helmhart",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_THREE_OPEN"
@@ -843,11 +923,11 @@
         278
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 48,
-        "d": 19,
-        "l": 7
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -871,6 +951,10 @@
       "id": 21,
       "name": "STR_NPC_Joellaut",
       "iconID": "joellaut",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN",
         "RULE_PLUS"
@@ -887,12 +971,12 @@
         271,
         315
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 48,
-        "d": 19,
-        "l": 7
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -911,12 +995,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 22,
       "name": "STR_NPC_Fufulupa",
       "iconID": "fufulupa",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -931,12 +1019,12 @@
         323,
         269
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 48,
-        "d": 19,
-        "l": 7
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -950,12 +1038,16 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 24,
       "name": "STR_NPC_Piralnaut",
       "iconID": "piralnaut",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -970,12 +1062,12 @@
         291,
         286
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 50,
-        "d": 20,
-        "l": 7
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -989,7 +1081,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 5,
+      "difficulty": 3,
       "availability": {
         "begins": 12,
         "ends": 20
@@ -999,6 +1091,10 @@
       "id": 25,
       "name": "STR_NPC_Sezul_Totoloc",
       "iconID": "sezul-totoloc",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS"
@@ -1013,12 +1109,12 @@
         303,
         294
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
+      "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
       "MGPReward": {
-        "w": 52,
-        "d": 20,
-        "l": 7
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1037,12 +1133,16 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 5
+      "difficulty": 6
     },
     {
       "id": 26,
       "name": "STR_NPC_Landenel",
       "iconID": "landenel",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_FALLEN_ACE",
         "RULE_RANDOM"
@@ -1058,12 +1158,12 @@
         288,
         269
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 53,
-        "d": 21,
-        "l": 7
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -1088,6 +1188,10 @@
       "id": 27,
       "name": "STR_NPC_Buscarron",
       "iconID": "buscarron",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ORDER"
       ],
@@ -1102,12 +1206,12 @@
         295,
         298
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 59,
-        "d": 23,
-        "l": 8
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -1126,12 +1230,16 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 28,
       "name": "STR_NPC_Ourdilic",
       "iconID": "ourdilic",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ORDER"
       ],
@@ -1146,12 +1254,12 @@
         294,
         289
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
+      "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
       "MGPReward": {
-        "w": 60,
-        "d": 24,
-        "l": 9
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1176,6 +1284,10 @@
       "id": 29,
       "name": "STR_NPC_Marcette",
       "iconID": "marcette",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_CHAOS"
       ],
@@ -1191,12 +1303,12 @@
         291,
         298
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
+      "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
       "MGPReward": {
-        "w": 60,
-        "d": 24,
-        "l": 9
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1220,6 +1332,10 @@
       "id": 30,
       "name": "STR_NPC_Hab",
       "iconID": "hab",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_DESCENSION"
       ],
@@ -1234,12 +1350,12 @@
         290,
         259
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 104,
-        "d": 41,
-        "l": 15
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -1263,12 +1379,16 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 10
+      "difficulty": 4
     },
     {
       "id": 31,
       "name": "STR_NPC_Vorsaile_Heuloix",
       "iconID": "vorsaile-heuloix",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ASCENSION"
       ],
@@ -1284,12 +1404,12 @@
         304,
         276
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 110,
-        "d": 44,
-        "l": 16
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -1318,7 +1438,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 11,
+      "difficulty": 8,
       "availability": {
         "begins": 22,
         "ends": 3
@@ -1328,6 +1448,10 @@
       "id": 32,
       "name": "STR_NPC_Swift",
       "iconID": "swift",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_CHAOS"
       ],
@@ -1342,12 +1466,12 @@
         302,
         296
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 110,
-        "d": 44,
-        "l": 16
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -1371,7 +1495,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 11,
+      "difficulty": 8,
       "availability": {
         "begins": 6,
         "ends": 11
@@ -1381,6 +1505,10 @@
       "id": 33,
       "name": "STR_NPC_Rowena",
       "iconID": "rowena",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_ROULETTE"
@@ -1396,12 +1524,12 @@
         316,
         301
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 118,
-        "d": 48,
-        "l": 17
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1415,12 +1543,16 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 12
+      "difficulty": 6
     },
     {
       "id": 34,
       "name": "STR_NPC_Indolent_Imperial",
       "iconID": "indolent-imperial",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ASCENSION"
       ],
@@ -1437,11 +1569,11 @@
         287
       ],
       "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "matchFee": 37,
       "MGPReward": {
-        "w": 120,
-        "d": 48,
-        "l": 18
+        "w": 225,
+        "d": 79,
+        "l": 27
       },
       "itemRewards": [
         {
@@ -1465,12 +1597,16 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 12
+      "difficulty": 9
     },
     {
       "id": 35,
       "name": "STR_NPC_Tataru",
       "iconID": "tataru",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_ROULETTE"
@@ -1485,12 +1621,12 @@
         318,
         336
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 35,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 165,
-        "d": 66,
-        "l": 24
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1509,12 +1645,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 16
+      "difficulty": 6
     },
     {
       "id": 36,
       "name": "STR_NPC_PAPALYMO",
       "iconID": "papalymo",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -1535,12 +1675,12 @@
         306,
         334
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 35,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 165,
-        "d": 66,
-        "l": 24
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -1559,12 +1699,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 16
+      "difficulty": 5
     },
     {
       "id": 37,
       "name": "STR_NPC_Lewena",
       "iconID": "lewena",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_CHAOS"
@@ -1580,12 +1724,12 @@
         329,
         330
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 40,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 182,
-        "d": 72,
-        "l": 27
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -1609,7 +1753,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 18,
+      "difficulty": 7,
       "availability": {
         "begins": 21,
         "ends": 7
@@ -1619,6 +1763,10 @@
       "id": 38,
       "name": "STR_NPC_Okalkaya",
       "iconID": "okalkaya",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ROULETTE",
         "RULE_PLUS"
@@ -1631,12 +1779,12 @@
         400,
         405
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 67,
-        "d": 27,
-        "l": 10
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1655,7 +1803,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 7,
+      "difficulty": 6,
       "availability": {
         "begins": 19,
         "ends": 23
@@ -1665,6 +1813,10 @@
       "id": 39,
       "name": "STR_NPC_Mordyn",
       "iconID": "mordyn",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SWAP",
         "RULE_SAME"
@@ -1679,12 +1831,12 @@
         285,
         263
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 73,
-        "d": 29,
-        "l": 10
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -1703,7 +1855,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 7,
+      "difficulty": 3,
       "availability": {
         "begins": 19,
         "ends": 23
@@ -1713,6 +1865,10 @@
       "id": 40,
       "name": "STR_NPC_Wawalago",
       "iconID": "wawalago",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SWAP",
         "RULE_CHAOS"
@@ -1729,12 +1885,12 @@
         329,
         331
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
+      "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
       "MGPReward": {
-        "w": 64,
-        "d": 25,
-        "l": 9
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1758,6 +1914,10 @@
       "id": 41,
       "name": "STR_NPC_Noes",
       "iconID": "noes",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_DESCENSION",
         "RULE_RANDOM"
@@ -1773,12 +1933,12 @@
         299,
         286
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
       "MGPReward": {
-        "w": 64,
-        "d": 25,
-        "l": 9
+        "w": 50,
+        "d": 18,
+        "l": 6
       },
       "itemRewards": [
         {
@@ -1792,7 +1952,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 6,
+      "difficulty": 2,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -1802,6 +1962,10 @@
       "id": 42,
       "name": "STR_NPC_Yayake",
       "iconID": "yayake",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_CHAOS",
         "RULE_ROULETTE"
@@ -1817,11 +1981,11 @@
         337,
         352
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 123,
-        "d": 49,
+        "w": 150,
+        "d": 53,
         "l": 18
       },
       "itemRewards": [
@@ -1836,7 +2000,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 12,
+      "difficulty": 6,
       "availability": {
         "begins": 9,
         "ends": 20
@@ -1846,6 +2010,10 @@
       "id": 43,
       "name": "STR_NPC_Yellow_Moon",
       "iconID": "yellow-moon",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ASCENSION",
         "RULE_RANDOM"
@@ -1861,12 +2029,12 @@
         337,
         340
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
+      "level": "STR_NPC_LEVEL_AVERAGE",
       "matchFee": 25,
       "MGPReward": {
-        "w": 64,
-        "d": 25,
-        "l": 9
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1890,6 +2058,10 @@
       "id": 44,
       "name": "STR_NPC_House_Fortemps_Manservant",
       "iconID": "manservant",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_PLUS"
@@ -1903,12 +2075,12 @@
         389,
         390
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 48,
-        "d": 19,
-        "l": 7
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -1932,7 +2104,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 5,
+      "difficulty": 3,
       "availability": {
         "begins": 2,
         "ends": 9
@@ -1942,6 +2114,10 @@
       "id": 45,
       "name": "STR_NPC_Gibrillont",
       "iconID": "gibrillont",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ROULETTE"
       ],
@@ -1956,11 +2132,11 @@
         275
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 64,
-        "d": 25,
-        "l": 9
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -1974,7 +2150,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6,
+      "difficulty": 5,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -1984,6 +2160,10 @@
       "id": 46,
       "name": "STR_NPC_Elaisse",
       "iconID": "elaisse",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_PLUS",
         "RULE_CHAOS"
@@ -1997,12 +2177,12 @@
         319,
         358
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 112,
-        "d": 44,
-        "l": 16
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2021,7 +2201,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 11,
+      "difficulty": 7,
       "availability": {
         "begins": 2,
         "ends": 6
@@ -2031,6 +2211,10 @@
       "id": 47,
       "name": "STR_NPC_Dominiac",
       "iconID": "dominiac",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ORDER"
       ],
@@ -2046,11 +2230,11 @@
         294
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "matchFee": 25,
       "MGPReward": {
-        "w": 73,
-        "d": 29,
-        "l": 10
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -2064,7 +2248,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 7,
+      "difficulty": 6,
       "availability": {
         "begins": 16,
         "ends": 20
@@ -2074,6 +2258,10 @@
       "id": 48,
       "name": "STR_NPC_Klynthota",
       "iconID": "klynthota",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS"
@@ -2088,11 +2276,11 @@
         314
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "matchFee": 25,
       "MGPReward": {
-        "w": 93,
-        "d": 37,
-        "l": 13
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -2121,7 +2309,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 9,
+      "difficulty": 6,
       "availability": {
         "begins": 23,
         "ends": 4
@@ -2131,6 +2319,10 @@
       "id": 49,
       "name": "STR_NPC_Linu_Vali",
       "iconID": "linu-vali",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_REVERSE",
         "RULE_CHAOS"
@@ -2146,11 +2338,11 @@
         359
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 0,
+      "matchFee": 25,
       "MGPReward": {
-        "w": 0,
-        "d": 0,
-        "l": 0
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -2164,7 +2356,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 4,
+      "difficulty": 6,
       "availability": {
         "begins": 17,
         "ends": 23
@@ -2174,6 +2366,10 @@
       "id": 50,
       "name": "STR_NPC_Laniaitte",
       "iconID": "laniaitte",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS"
@@ -2190,11 +2386,11 @@
         352
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "matchFee": 25,
       "MGPReward": {
-        "w": 110,
-        "d": 44,
-        "l": 16
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -2208,7 +2404,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 11,
+      "difficulty": 6,
       "availability": {
         "begins": 23,
         "ends": 2
@@ -2218,6 +2414,10 @@
       "id": 51,
       "name": "STR_NPC_Marielle",
       "iconID": "marielle",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ORDER"
       ],
@@ -2229,12 +2429,12 @@
         349,
         352
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 124,
-        "d": 49,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2248,7 +2448,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12,
+      "difficulty": 8,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2258,6 +2458,10 @@
       "id": 52,
       "name": "STR_NPC_Idle_Imperial",
       "iconID": "idle-imperial",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ASCENSION",
         "RULE_RANDOM"
@@ -2272,12 +2476,12 @@
         296,
         288
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 124,
-        "d": 49,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2296,7 +2500,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12,
+      "difficulty": 7,
       "availability": {
         "begins": 21,
         "ends": 8
@@ -2306,6 +2510,10 @@
       "id": 53,
       "name": "STR_NPC_Vath_Deftarm",
       "iconID": "vath-deftarm",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ROULETTE"
       ],
@@ -2320,11 +2528,11 @@
         365
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 86,
-        "d": 34,
-        "l": 12
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -2343,12 +2551,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 9
+      "difficulty": 5
     },
     {
       "id": 54,
       "name": "STR_NPC_Tapklix",
       "iconID": "tapklix",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SWAP",
         "RULE_SAME"
@@ -2361,11 +2573,11 @@
         363,
         362
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 86,
-        "d": 34,
+        "w": 100,
+        "d": 35,
         "l": 12
       },
       "itemRewards": [
@@ -2380,7 +2592,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 9,
+      "difficulty": 4,
       "availability": {
         "begins": 14,
         "ends": 18
@@ -2390,6 +2602,10 @@
       "id": 55,
       "name": "STR_NPC_Voracious_Vath",
       "iconID": "voracious-vath",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SWAP",
         "RULE_ASCENSION"
@@ -2406,12 +2622,12 @@
         311,
         315
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 98,
-        "d": 39,
-        "l": 14
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2425,7 +2641,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 10,
+      "difficulty": 7,
       "availability": {
         "begins": 6,
         "ends": 24
@@ -2435,6 +2651,10 @@
       "id": 56,
       "name": "STR_NPC_Master_Mogzin",
       "iconID": "mogzin",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS"
@@ -2450,11 +2670,11 @@
         364
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 120,
-        "d": 48,
-        "l": 18
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -2473,7 +2693,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12,
+      "difficulty": 5,
       "availability": {
         "begins": 21,
         "ends": 3
@@ -2483,6 +2703,10 @@
       "id": 57,
       "name": "STR_NPC_Marcechamp",
       "iconID": "marcechamp",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_REVERSE",
         "RULE_RANDOM"
@@ -2497,12 +2721,12 @@
         346,
         259
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 124,
-        "d": 49,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2511,7 +2735,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12,
+      "difficulty": 8,
       "availability": {
         "begins": 19,
         "ends": 5
@@ -2521,6 +2745,10 @@
       "id": 58,
       "name": "STR_NPC_Mogmill",
       "iconID": "mogmill",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ROULETTE",
         "RULE_ROULETTE"
@@ -2537,10 +2765,10 @@
         338
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "matchFee": 25,
       "MGPReward": {
-        "w": 124,
-        "d": 49,
+        "w": 150,
+        "d": 53,
         "l": 18
       },
       "itemRewards": [
@@ -2565,12 +2793,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12
+      "difficulty": 6
     },
     {
       "id": 59,
       "name": "STR_NPC_Midnight_Dew",
       "iconID": "midnight-dew",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ROULETTE",
         "RULE_RANDOM"
@@ -2586,12 +2818,12 @@
         348,
         305
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 124,
-        "d": 49,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2600,12 +2832,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 12
+      "difficulty": 7
     },
     {
       "id": 60,
       "name": "STR_NPC_Seika",
       "iconID": "seika",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_REVERSE",
         "RULE_CHAOS"
@@ -2620,12 +2856,12 @@
         271,
         273
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 35,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 82,
-        "d": 32,
-        "l": 12
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2650,6 +2886,10 @@
       "id": 99,
       "name": "STR_NPC_QUEEN_OF_CARDS",
       "iconID": "queen-of-cards",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_ROULETTE"
@@ -2810,12 +3050,12 @@
         408,
         409
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 40,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 182,
-        "d": 72,
-        "l": 27
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -2829,14 +3069,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 19
-    }
-  ],
-  "ff8": [
+      "difficulty": 5
+    },
     {
       "id": 1,
       "name": "STR_NPC_KID",
       "iconID": "kid",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN"
       ],
@@ -2868,9 +3110,9 @@
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
       "MGPReward": {
-        "w": 15,
-        "d": 7,
-        "l": 2
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -2889,12 +3131,16 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 0
+      "difficulty": 1
     },
     {
       "id": 2,
       "name": "STR_NPC_CHOCOBOY",
       "iconID": "chocoboy",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_THREE_OPEN"
       ],
@@ -2927,8 +3173,8 @@
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
       "MGPReward": {
-        "w": 16,
-        "d": 8,
+        "w": 25,
+        "d": 9,
         "l": 3
       },
       "itemRewards": [
@@ -2953,12 +3199,16 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 0
+      "difficulty": 1
     },
     {
       "id": 2,
       "name": "STR_NPC_UFO",
       "iconID": "ufo",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME_WALL",
@@ -2993,9 +3243,9 @@
       "level": "STR_NPC_LEVEL_NOVICE",
       "matchFee": 5,
       "MGPReward": {
-        "w": 18,
+        "w": 25,
         "d": 9,
-        "l": 4
+        "l": 3
       },
       "itemRewards": [
         {
@@ -3019,12 +3269,16 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 0
+      "difficulty": 1
     },
     {
       "id": 3,
       "name": "STR_NPC_JACK",
       "iconID": "jack",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_ELEMENTAL"
@@ -3046,12 +3300,12 @@
         542,
         597
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 10,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
       "MGPReward": {
-        "w": 20,
-        "d": 11,
-        "l": 5
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -3070,12 +3324,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 1
     },
     {
       "id": 4,
       "name": "STR_NPC_CLUB",
       "iconID": "club",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_ELEMENTAL"
@@ -3097,11 +3355,11 @@
         542,
         598
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 10,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
       "MGPReward": {
-        "w": 25,
-        "d": 13,
+        "w": 50,
+        "d": 18,
         "l": 6
       },
       "itemRewards": [
@@ -3121,12 +3379,16 @@
           "rate": 0.02
         }
       ],
-      "difficulty": 0
+      "difficulty": 2
     },
     {
       "id": 5,
       "name": "STR_NPC_MA_DINCHT",
       "iconID": "ma-dincht",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_RANDOM",
@@ -3151,11 +3413,11 @@
         542,
         618
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 10,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
       "MGPReward": {
-        "w": 25,
-        "d": 13,
+        "w": 50,
+        "d": 18,
         "l": 6
       },
       "itemRewards": [
@@ -3180,12 +3442,16 @@
           "rate": 0.005
         }
       ],
-      "difficulty": 0
+      "difficulty": 2
     },
     {
       "id": 6,
       "name": "STR_NPC_WATTS",
       "iconID": "watts",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_PLUS"
       ],
@@ -3208,12 +3474,12 @@
         542,
         591
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 32,
-        "d": 16,
-        "l": 8
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -3222,12 +3488,16 @@
           "rate": 0.02
         }
       ],
-      "difficulty": 0
+      "difficulty": 3
     },
     {
       "id": 7,
       "name": "STR_NPC_ZONE",
       "iconID": "zone",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME"
       ],
@@ -3250,12 +3520,12 @@
         542,
         596
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
       "MGPReward": {
-        "w": 32,
-        "d": 16,
-        "l": 8
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [
         {
@@ -3264,12 +3534,16 @@
           "rate": 0.02
         }
       ],
-      "difficulty": 0
+      "difficulty": 1
     },
     {
       "id": 8,
       "name": "STR_NPC_DIAMOND",
       "iconID": "diamond",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS"
@@ -3292,11 +3566,11 @@
         541,
         542
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 36,
-        "d": 18,
+        "w": 75,
+        "d": 26,
         "l": 9
       },
       "itemRewards": [
@@ -3316,12 +3590,16 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 0
+      "difficulty": 3
     },
     {
       "id": 9,
       "name": "STR_NPC_SPADE",
       "iconID": "spade",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_PLUS"
@@ -3345,12 +3623,12 @@
         542,
         610
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 40,
-        "d": 20,
-        "l": 10
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -3359,12 +3637,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 3
     },
     {
       "id": 10,
       "name": "STR_NPC_TREPIES",
       "iconID": "trepies",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_RANDOM",
@@ -3389,12 +3671,12 @@
         542,
         616
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 44,
-        "d": 22,
-        "l": 11
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -3403,12 +3685,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 3
     },
     {
       "id": 11,
       "name": "STR_NPC_CARAWAY",
       "iconID": "caraway",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ELEMENTAL",
         "RULE_SAME",
@@ -3433,12 +3719,12 @@
         542,
         619
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 48,
-        "d": 24,
-        "l": 12
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -3447,12 +3733,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 3
     },
     {
       "id": 12,
       "name": "STR_NPC_MARTINE",
       "iconID": "martine",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ELEMENTAL",
         "RULE_SUDDEN_DEATH"
@@ -3475,20 +3765,24 @@
         541,
         542
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 15,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
       "MGPReward": {
-        "w": 48,
-        "d": 24,
-        "l": 12
+        "w": 25,
+        "d": 9,
+        "l": 3
       },
       "itemRewards": [],
-      "difficulty": 0
+      "difficulty": 1
     },
     {
       "id": 13,
       "name": "STR_NPC_PIET",
       "iconID": "piet",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -3522,12 +3816,12 @@
         566,
         607
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 54,
-        "d": 27,
-        "l": 13
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -3536,12 +3830,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 5
     },
     {
       "id": 13,
       "name": "STR_NPC_ODINE",
       "iconID": "odine",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ELEMENTAL",
         "RULE_SAME_WALL",
@@ -3573,12 +3871,12 @@
         566,
         612
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 54,
-        "d": 27,
-        "l": 13
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -3587,12 +3885,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 3
     },
     {
       "id": 14,
       "name": "STR_NPC_JOCKER",
       "iconID": "jocker",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -3626,12 +3928,12 @@
         566,
         603
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 54,
-        "d": 27,
-        "l": 13
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3645,12 +3947,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 15,
       "name": "STR_NPC_FLO",
       "iconID": "flo",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS",
@@ -3682,12 +3988,12 @@
         566,
         617
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 54,
-        "d": 27,
-        "l": 13
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3696,12 +4002,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 16,
       "name": "STR_NPC_DOBE",
       "iconID": "dobe",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_SAME",
         "RULE_PLUS",
@@ -3733,12 +4043,12 @@
         566,
         595
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 20,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 54,
-        "d": 27,
-        "l": 13
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3747,12 +4057,16 @@
           "rate": 0.02
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 17,
       "name": "STR_NPC_EDEA",
       "iconID": "edea",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -3784,12 +4098,12 @@
         566,
         620
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 110,
-        "d": 40,
-        "l": 20
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3798,12 +4112,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 18,
       "name": "STR_NPC_KING",
       "iconID": "king",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -3836,12 +4154,12 @@
         566,
         620
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 110,
-        "d": 40,
-        "l": 20
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3855,12 +4173,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 19,
       "name": "STR_NPC_CID",
       "iconID": "cid",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -3892,12 +4214,12 @@
         566,
         621
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 110,
-        "d": 40,
-        "l": 20
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3906,12 +4228,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 20,
       "name": "STR_NPC_HEART",
       "iconID": "heart",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -3943,12 +4269,12 @@
         566,
         601
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 110,
-        "d": 40,
-        "l": 20
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3962,12 +4288,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 21,
       "name": "STR_NPC_ELLONE",
       "iconID": "ellone",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_RANDOM",
         "RULE_SAME",
@@ -4001,12 +4331,12 @@
         566,
         614
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 110,
-        "d": 40,
-        "l": 20
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -4015,12 +4345,16 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
+      "difficulty": 4
     },
     {
       "id": 22,
       "name": "STR_NPC_LAGUNA",
       "iconID": "laguna",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
       "rules": [
         "RULE_ELEMENTAL",
         "RULE_SAME_WALL",
@@ -4052,12 +4386,12 @@
         566,
         622
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
       "MGPReward": {
-        "w": 110,
-        "d": 40,
-        "l": 20
+        "w": 50,
+        "d": 18,
+        "l": 6
       },
       "itemRewards": [
         {
@@ -4066,133 +4400,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 0
-    },
-    {
-      "id": 99,
-      "name": "STR_NPC_QUEEN_OF_CARDS",
-      "iconID": "queen-of-cards",
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_ROULETTE"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        513,
-        514,
-        515,
-        516,
-        517,
-        518,
-        519,
-        520,
-        521,
-        522,
-        523,
-        524,
-        525,
-        526,
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        540,
-        541,
-        542,
-        543,
-        544,
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        567,
-        568,
-        569,
-        570,
-        571,
-        572,
-        573,
-        574,
-        575,
-        576,
-        577,
-        578,
-        579,
-        580,
-        581,
-        582,
-        583,
-        584,
-        585,
-        586,
-        587,
-        588,
-        589,
-        590,
-        591,
-        592,
-        593,
-        594,
-        595,
-        596,
-        597,
-        598,
-        599,
-        600,
-        601,
-        602,
-        603,
-        604,
-        605,
-        606,
-        607,
-        608,
-        609,
-        610,
-        611
-      ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 30,
-      "MGPReward": {
-        "w": 128,
-        "d": 56,
-        "l": 28
-      },
-      "itemRewards": [
-        {
-          "card": 622,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 0
+      "difficulty": 2
     }
   ]
 }

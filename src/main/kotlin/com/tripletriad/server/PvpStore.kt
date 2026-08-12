@@ -1,6 +1,5 @@
 package com.tripletriad.server
 
-import com.tripletriad.model.CardCollection
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
 import com.tripletriad.protocol.PvpChallenge
@@ -42,15 +41,15 @@ class PvpStore(
     // ---- The quick queue --------------------------------------------------
 
     /** Puts [accountId] in the queue, or refreshes their place if they are already in it. */
-    fun enqueue(accountId: Long, collection: CardCollection) = transaction { db ->
+    fun enqueue(accountId: Long, formatId: String) = transaction { db ->
         db.prepareStatement(
             """
-            INSERT INTO pvp_queue (account_id, collection) VALUES (?, ?)
-            ON CONFLICT (account_id) DO UPDATE SET collection = EXCLUDED.collection
+            INSERT INTO pvp_queue (account_id, format) VALUES (?, ?)
+            ON CONFLICT (account_id) DO UPDATE SET format = EXCLUDED.format
             """.trimIndent(),
         ).use { statement ->
             statement.setLong(1, accountId)
-            statement.setString(2, collection.name)
+            statement.setString(2, formatId)
             statement.executeUpdate()
         }
         Unit
@@ -72,17 +71,17 @@ class PvpStore(
      * handed to anybody else. A caller that then fails to create a match has taken two players out
      * of the queue for nothing — which is why [pairAndOpen] does both in one call.
      */
-    private fun takeOpponent(db: Connection, accountId: Long, collection: CardCollection): Long? {
+    private fun takeOpponent(db: Connection, accountId: Long, formatId: String): Long? {
         val opponent = db.prepareStatement(
             """
             SELECT account_id FROM pvp_queue
-            WHERE collection = ? AND account_id <> ?
+            WHERE format = ? AND account_id <> ?
             ORDER BY since
             LIMIT 1
             FOR UPDATE SKIP LOCKED
             """.trimIndent(),
         ).use { statement ->
-            statement.setString(1, collection.name)
+            statement.setString(1, formatId)
             statement.setLong(2, accountId)
             statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
         } ?: return null
@@ -105,18 +104,18 @@ class PvpStore(
      */
     fun pairAndOpen(
         accountId: Long,
-        collection: CardCollection,
+        formatId: String,
         open: (blue: Long, red: Long) -> PvpMatchRow?,
     ): PvpMatchRow? = transaction { db ->
-        val opponent = takeOpponent(db, accountId, collection) ?: run {
+        val opponent = takeOpponent(db, accountId, formatId) ?: run {
             db.prepareStatement(
                 """
-                INSERT INTO pvp_queue (account_id, collection) VALUES (?, ?)
-                ON CONFLICT (account_id) DO UPDATE SET collection = EXCLUDED.collection
+                INSERT INTO pvp_queue (account_id, format) VALUES (?, ?)
+                ON CONFLICT (account_id) DO UPDATE SET format = EXCLUDED.format
                 """.trimIndent(),
             ).use { statement ->
                 statement.setLong(1, accountId)
-                statement.setString(2, collection.name)
+                statement.setString(2, formatId)
                 statement.executeUpdate()
             }
             return@transaction null
@@ -343,7 +342,7 @@ class PvpStore(
         db.prepareStatement(
             """
             INSERT INTO pvp_matches
-                (id, blue_account, red_account, collection, rules, seed, blue_hand, red_hand,
+                (id, blue_account, red_account, format, rules, seed, blue_hand, red_hand,
                  first_player, moves, stake, status, turn_deadline)
             VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?)
             """.trimIndent(),
@@ -351,7 +350,7 @@ class PvpStore(
             statement.setString(1, row.id)
             statement.setLong(2, row.blueAccount)
             statement.setLong(3, row.redAccount)
-            statement.setString(4, row.collection.name)
+            statement.setString(4, row.formatId)
             statement.setString(5, json.encodeToString(GameRules.serializer(), row.rules))
             statement.setInt(6, row.seed)
             statement.setString(7, json.encodeToString(row.blueHand))
@@ -369,7 +368,7 @@ class PvpStore(
         id = getString("id"),
         blueAccount = getLong("blue_account"),
         redAccount = getLong("red_account"),
-        collection = CardCollection.valueOf(getString("collection")),
+        formatId = getString("format"),
         rules = json.decodeFromString(GameRules.serializer(), getString("rules")),
         seed = getInt("seed"),
         blueHand = json.decodeFromString(getString("blue_hand")),

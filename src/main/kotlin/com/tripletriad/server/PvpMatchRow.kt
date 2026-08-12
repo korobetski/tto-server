@@ -2,7 +2,6 @@ package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
 import com.tripletriad.model.Card
-import com.tripletriad.model.CardCollection
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
 import com.tripletriad.model.MatchPreparation
@@ -39,7 +38,8 @@ data class PvpMatchRow(
     val id: String,
     val blueAccount: Long,
     val redAccount: Long,
-    val collection: CardCollection,
+    /** The format both sides are playing — an id into `formats.json`. */
+    val formatId: String,
     val rules: GameRules,
     val seed: Int,
     /** The five cards blue brought, **before** the swap. Ids; the catalogue resolves them. */
@@ -117,7 +117,7 @@ data class PvpMatchRow(
             view = view,
             matchId = id,
             opponentName = opponentName,
-            collection = collection,
+            formatId = formatId,
             status = status,
             stake = stake,
             // Only the side that is on the clock is given one. A player who is waiting has no

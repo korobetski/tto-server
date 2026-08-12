@@ -1,6 +1,5 @@
 package com.tripletriad.server
 
-import com.tripletriad.model.CardCollection
 import com.tripletriad.model.Deck
 import com.tripletriad.model.GameSave
 import com.tripletriad.protocol.CURRENT_VERSION
@@ -125,9 +124,8 @@ class MatchRoutesTest {
      * happens to own.
      */
     private fun honestTranscript(seed: Int): MatchTranscript {
-        val deck = Catalogs.cards.collection(COLLECTION).take(DECK_SIZE).map { it.id }
+        val deck = Catalogs.cards.admittedBy(FORMAT).take(DECK_SIZE).map { it.id }
         val profile = GameSave(
-            mode = COLLECTION,
             cards = deck.associateWith { 1 },
             decks = listOf(Deck("test", deck)),
         )
@@ -143,7 +141,7 @@ class MatchRoutesTest {
         /** Nine cells, plus the card left in the winner's hand. */
         const val TOTAL_CARDS = 10
 
-        val COLLECTION = CardCollection.FF14
+        val FORMAT = requireNotNull(Catalogs.formats.default)
         val CLIENT_ERROR_RANGE = 400..499
     }
 }

@@ -31,11 +31,15 @@ object Transcripts {
      *   the **server** holds, because that is what it will replay against.
      */
     fun honest(profile: GameSave, seed: Int): MatchTranscript {
-        val opponent = Catalogs.npcs.collection(profile.mode).first()
+        // The server's own format catalogue, which is what the verifier will resolve too — a
+        // fixture that dealt under a different pool, or against an opponent from another format,
+        // would produce transcripts the server rejects.
+        val format = requireNotNull(Catalogs.formats.default) { "no format is authored" }
+        val opponent = Catalogs.npcs.playing(format.id).first()
         val deck = PveMatches.playerDeck(profile)
 
         val random = Random(seed)
-        val match = PveMatches.assemble(profile, opponent, Catalogs.cards, random)
+        val match = PveMatches.assemble(profile, opponent, Catalogs.cards, format, random)
         val ai = MatchAi()
         var state = match.setup.state
         val moves = mutableListOf<TranscriptMove>()
@@ -53,7 +57,7 @@ object Transcripts {
 
         return MatchTranscript(
             seed = seed,
-            collection = profile.mode,
+            formatId = format.id,
             opponentIconId = opponent.iconId,
             deck = deck,
             ownedCards = profile.cards,

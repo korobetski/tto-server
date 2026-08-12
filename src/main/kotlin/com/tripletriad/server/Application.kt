@@ -102,8 +102,8 @@ fun Application.module(
         healthRoutes(dataSource)
         serverRoutes(identity, dataSource)
         accountRoutes(accounts)
-        matchRoutes(Catalogs.cards, Catalogs.npcs, accounts)
-        pvpRoutes(Catalogs.cards, accounts, pvp)
+        matchRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts)
+        pvpRoutes(Catalogs.cards, Catalogs.formats, accounts, pvp)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.

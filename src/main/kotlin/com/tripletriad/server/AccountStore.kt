@@ -1,6 +1,5 @@
 package com.tripletriad.server
 
-import com.tripletriad.model.CardCollection
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchResult
 import com.tripletriad.protocol.PlayerState
@@ -261,7 +260,7 @@ class AccountStore(
         val inserted = db.prepareStatement(
             """
             INSERT INTO matches
-                (account_id, opponent_icon_id, collection, seed, blue, red, result, mgp, xp,
+                (account_id, opponent_icon_id, format, seed, blue, red, result, mgp, xp,
                  transcript_hash)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (account_id, transcript_hash) DO NOTHING
@@ -269,7 +268,7 @@ class AccountStore(
         ).use { statement ->
             statement.setLong(1, accountId)
             statement.setString(2, match.opponentIconId)
-            statement.setString(3, match.collection)
+            statement.setString(3, match.formatId)
             statement.setInt(4, match.seed)
             statement.setInt(5, match.blue)
             statement.setInt(6, match.red)
@@ -340,7 +339,7 @@ class AccountStore(
     private fun readRecent(db: Connection, accountId: Long, limit: Int): List<VerifiedMatch> =
         db.prepareStatement(
             """
-            SELECT id, played_at, opponent_icon_id, collection, seed, blue, red, result, mgp, xp
+            SELECT id, played_at, opponent_icon_id, format, seed, blue, red, result, mgp, xp
             FROM matches WHERE account_id = ? ORDER BY played_at DESC, id DESC LIMIT ?
             """.trimIndent(),
         ).use { statement ->
@@ -355,8 +354,7 @@ class AccountStore(
         id = getLong("id"),
         playedAt = getTimestamp("played_at").time,
         opponentIconId = getString("opponent_icon_id"),
-        collection = CardCollection.forStorageKey(getString("collection"))
-            ?: CardCollection.FF14,
+        formatId = getString("format"),
         seed = getInt("seed"),
         blue = getInt("blue"),
         red = getInt("red"),
@@ -402,7 +400,7 @@ data class StoredCredentials(val accountId: Long, val passwordHash: String)
 /** The columns of one `matches` row that the caller decides. */
 data class RecordedMatch(
     val opponentIconId: String,
-    val collection: String,
+    val formatId: String,
     val seed: Int,
     val blue: Int,
     val red: Int,

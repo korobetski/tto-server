@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
+import com.tripletriad.data.FormatCatalog
 import com.tripletriad.data.MatchRewards
 import com.tripletriad.data.NpcCatalog
 import com.tripletriad.data.PveMatches
@@ -51,15 +52,22 @@ object MatchCrediting {
         store: AccountStore,
         cards: CardCatalog,
         npcs: NpcCatalog,
+        formats: FormatCatalog,
         now: Long,
     ): MatchReceipt {
         val save = store.saveFor(accountId)
             ?: error("account $accountId has no character")
 
-        val verdict = TranscriptVerifier.verify(transcript, cards, npcs, owner = save)
+        val verdict = TranscriptVerifier.verify(transcript, cards, npcs, formats, owner = save)
         if (verdict !is MatchVerdict.Accepted) return MatchReceipt(verdict = verdict)
 
-        val npc = npcs.byIcon(transcript.opponentIconId, transcript.collection)
+        // The format is resolved the same way the verifier resolves it — from the transcript's own
+        // `formatId`, and then only because the verifier has already accepted it. See
+        // `TranscriptVerifier`, which is where a format a client invented is refused.
+        val format = formats[transcript.formatId]
+            ?: error("verified a transcript in a format that does not exist")
+
+        val npc = npcs.byIcon(transcript.opponentIconId, format.id)
             ?: error("verified a transcript against an opponent that does not exist")
 
         // Read off the server's own score, never off the client's claim — and derived here rather
@@ -76,7 +84,7 @@ object MatchCrediting {
         // transcript, which does not carry them. That is the same reason the score is recomputed:
         // `RULES_W` feeds achievements, so a client that could name its own rules could name the
         // ones that pay best.
-        val rules = PveMatches.rulesFor(npc, save.mode, Random(transcript.seed))
+        val rules = PveMatches.rulesFor(npc, format, Random(transcript.seed))
 
         // A generator of its own, and deliberately not the replay's. The replay's is consumed to
         // exactly the position the match ended at, which depends on how the match went — so
@@ -95,7 +103,7 @@ object MatchCrediting {
 
         val recorded = RecordedMatch(
             opponentIconId = transcript.opponentIconId,
-            collection = transcript.collection.storageKey,
+            formatId = transcript.formatId,
             seed = transcript.seed,
             blue = verdict.blue,
             red = verdict.red,
@@ -139,7 +147,7 @@ object MatchCrediting {
      * What makes two submissions "the same match".
      *
      * Over the fields that decide the game and nothing else: the seed, the opponent, the
-     * collection, the deck and the moves. Deliberately **not** the encoded JSON — a client that
+     * format, the deck and the moves. Deliberately **not** the encoded JSON — a client that
      * reorders its fields or omits a default would produce different bytes for an identical match
      * and be paid twice for it.
      *
@@ -151,7 +159,7 @@ object MatchCrediting {
         val canonical = buildString {
             append(transcript.version).append('|')
             append(transcript.seed).append('|')
-            append(transcript.collection.storageKey).append('|')
+            append(transcript.formatId).append('|')
             append(transcript.opponentIconId).append('|')
             transcript.deck.joinTo(this, ",")
             append('|')
