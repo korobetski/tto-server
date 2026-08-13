@@ -1,5 +1,7 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.GameRules
+import com.tripletriad.model.TradeRule
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.PvpChallenge
@@ -7,6 +9,9 @@ import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpMatchView
 import com.tripletriad.protocol.PvpMove
 import com.tripletriad.protocol.PvpQueueState
+import com.tripletriad.protocol.PvpStake
+import com.tripletriad.protocol.PvpTable
+import com.tripletriad.protocol.PvpTableRequest
 import com.tripletriad.protocol.Session
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.client.request.HttpRequestBuilder
@@ -46,19 +51,27 @@ import kotlin.test.assertTrue
  */
 class PvpFlowTest {
 
-    /** Two players queue, and the second to arrive goes straight into a match with the first. */
+    /**
+     * A table is listed with the terms it was opened on, and joining it opens the match.
+     *
+     * The terms are the assertion, not the pairing. A lobby that listed tables without saying what
+     * they were played for would be the queue again with more steps — the whole reason this
+     * replaced a queue is that a player can read the wager before agreeing to it.
+     */
     @Test
-    fun theSecondPlayerToQueueIsPairedWithTheFirst() = server {
-        val alice = register(Postgres.freshAccount("alice"))
+    fun aTableIsListedWithItsTermsAndJoiningItOpensTheMatch() = server {
+        val aliceName = Postgres.freshAccount("alice")
+        val alice = register(aliceName)
         val bob = register(Postgres.freshAccount("bob"))
+        val stake = PvpStake(mgp = WAGER, trade = TradeRule.ONE)
 
-        val waiting = queue(alice.token)
-        assertTrue(waiting.waiting, "the first player should be waiting")
-        assertNull(waiting.matchId)
+        val table = openTable(alice.token, stake)
 
-        val paired = queue(bob.token)
-        assertFalse(paired.waiting, "the second player should have been paired")
-        val matchId = assertNotNull(paired.matchId)
+        val listed = assertNotNull(tables(bob.token).firstOrNull { it.id == table.id })
+        assertEquals(stake, listed.stake, "the wager was not on the table Bob can see")
+        assertEquals(aliceName, listed.hostName, "the lobby did not name the host")
+
+        val matchId = assertNotNull(join(bob.token, table.id).matchId)
 
         // And both of them are now looking at the same match, from opposite ends.
         val fromAlice = assertNotNull(currentMatch(alice.token))
@@ -66,6 +79,103 @@ class PvpFlowTest {
         assertEquals(matchId, fromAlice.matchId)
         assertEquals(matchId, fromBob.matchId)
         assertEquals(fromAlice.side.opposite(), fromBob.side)
+        assertEquals(stake, fromAlice.stake, "the match was not opened on the table's terms")
+    }
+
+    /** A joined table stops being on offer, so nobody turns up to a match that already started. */
+    @Test
+    fun aJoinedTableLeavesTheLobby() = server {
+        val alice = register(Postgres.freshAccount("taken-a"))
+        val bob = register(Postgres.freshAccount("taken-b"))
+        val carol = register(Postgres.freshAccount("taken-c"))
+
+        val table = openTable(alice.token)
+        join(bob.token, table.id)
+
+        assertTrue(
+            tables(carol.token).none { it.id == table.id },
+            "a table somebody had already joined was still being offered",
+        )
+        val second = client.post("/pvp/tables/${table.id}/join") {
+            protocolHeaders()
+            bearer(carol.token)
+        }
+        assertEquals(HttpStatusCode.NotFound, second.status)
+    }
+
+    /** A host cannot join their own table, which would be a match against themselves. */
+    @Test
+    fun aHostCannotJoinTheirOwnTable() = server {
+        val alice = register(Postgres.freshAccount("solo"))
+
+        val table = openTable(alice.token)
+        val response = client.post("/pvp/tables/${table.id}/join") {
+            protocolHeaders()
+            bearer(alice.token)
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+        assertNull(currentMatch(alice.token))
+    }
+
+    /** One table per host: a second is refused rather than quietly replacing the first. */
+    @Test
+    fun aSecondTableIsRefused() = server {
+        val alice = register(Postgres.freshAccount("twice"))
+        openTable(alice.token)
+
+        val response = client.post("/pvp/tables") {
+            protocolHeaders()
+            bearer(alice.token)
+            setBody(json.encodeToString(PvpTableRequest(FORMAT)))
+        }
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
+    }
+
+    /**
+     * Rules the format does not allow are refused, and refused *before* anybody plays.
+     *
+     * Elemental is not in the FFXIV pool. A match opened under it would be one the format's players
+     * never agreed to, and the only cost-free moment to say so is now.
+     */
+    @Test
+    fun aTableNamingRulesOutsideTheFormatIsRefused() = server {
+        val alice = register(Postgres.freshAccount("rules"))
+
+        val response = client.post("/pvp/tables") {
+            protocolHeaders()
+            bearer(alice.token)
+            setBody(
+                json.encodeToString(
+                    PvpTableRequest(
+                        formatId = "ff14-standard",
+                        rules = GameRules().withRuleKey("RULE_ELEMENTAL"),
+                    ),
+                ),
+            )
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    /**
+     * A wager bigger than the purse is refused at the table.
+     *
+     * There is no escrow — `MatchRewards.creditPvp` floors a purse at zero — so an unaffordable
+     * stake would silently become a free one. Refusing here is what makes the wager mean anything.
+     */
+    @Test
+    fun aTableYouCannotAffordIsRefused() = server {
+        val alice = register(Postgres.freshAccount("broke"))
+
+        val response = client.post("/pvp/tables") {
+            protocolHeaders()
+            bearer(alice.token)
+            setBody(json.encodeToString(PvpTableRequest(FORMAT, stake = PvpStake(mgp = FORTUNE))))
+        }
+
+        assertEquals(HttpStatusCode.Conflict, response.status)
     }
 
     /**
@@ -83,8 +193,7 @@ class PvpFlowTest {
     fun neitherPlayerIsSentTheOthersHand() = server {
         val alice = register(Postgres.freshAccount("hidden-a"))
         val bob = register(Postgres.freshAccount("hidden-b"))
-        queue(alice.token)
-        queue(bob.token)
+        playing(alice.token, bob.token)
 
         val aliceBody = matchBody(alice.token)
         val bobBody = matchBody(bob.token)
@@ -112,8 +221,7 @@ class PvpFlowTest {
     fun theWaitingPlayerCannotMove() = server {
         val alice = register(Postgres.freshAccount("turn-a"))
         val bob = register(Postgres.freshAccount("turn-b"))
-        queue(alice.token)
-        val matchId = assertNotNull(queue(bob.token).matchId)
+        val matchId = playing(alice.token, bob.token)
 
         val aliceView = assertNotNull(currentMatch(alice.token))
         val bobView = assertNotNull(currentMatch(bob.token))
@@ -140,8 +248,7 @@ class PvpFlowTest {
     fun aPlacedCardAppearsOnBothBoards() = server {
         val alice = register(Postgres.freshAccount("board-a"))
         val bob = register(Postgres.freshAccount("board-b"))
-        queue(alice.token)
-        val matchId = assertNotNull(queue(bob.token).matchId)
+        val matchId = playing(alice.token, bob.token)
 
         val mover = if (assertNotNull(
                 currentMatch(alice.token),
@@ -176,8 +283,7 @@ class PvpFlowTest {
         val bob = register(Postgres.freshAccount("quit-b"))
         val aliceBefore = me(alice.token)
         val bobBefore = me(bob.token)
-        queue(alice.token)
-        val matchId = assertNotNull(queue(bob.token).matchId)
+        val matchId = playing(alice.token, bob.token)
 
         val response = client.post("/pvp/match/$matchId/forfeit") {
             protocolHeaders()
@@ -206,7 +312,7 @@ class PvpFlowTest {
         val sent = client.post("/pvp/challenges") {
             protocolHeaders()
             bearer(alice.token)
-            setBody(json.encodeToString(ChallengeRequest(bobName)))
+            setBody(json.encodeToString(ChallengeRequest(bobName, PvpTableRequest(FORMAT))))
         }
         assertEquals(HttpStatusCode.Created, sent.status, sent.bodyAsText())
         val challenge = json.decodeFromString<PvpChallenge>(sent.bodyAsText())
@@ -240,7 +346,7 @@ class PvpFlowTest {
         val sent = client.post("/pvp/challenges") {
             protocolHeaders()
             bearer(alice.token)
-            setBody(json.encodeToString(ChallengeRequest(bobName)))
+            setBody(json.encodeToString(ChallengeRequest(bobName, PvpTableRequest(FORMAT))))
         }
         val challenge = json.decodeFromString<PvpChallenge>(sent.bodyAsText())
 
@@ -265,27 +371,53 @@ class PvpFlowTest {
         val response = client.post("/pvp/challenges") {
             protocolHeaders()
             bearer(alice.token)
-            setBody(json.encodeToString(ChallengeRequest("nobody-at-all-$UNIQUE")))
+            setBody(
+                json.encodeToString(
+                    ChallengeRequest("nobody-at-all-$UNIQUE", PvpTableRequest(FORMAT)),
+                ),
+            )
         }
 
         assertEquals(HttpStatusCode.NotFound, response.status)
     }
 
-    /** Leaving the queue means the next player to arrive waits rather than pairing. */
+    /** Withdrawing a table takes it off the list, so nobody joins a match its host has left. */
     @Test
-    fun leavingTheQueueTakesYouOutOfIt() = server {
+    fun withdrawingATableTakesItOffTheList() = server {
         val alice = register(Postgres.freshAccount("leave-a"))
         val bob = register(Postgres.freshAccount("leave-b"))
 
-        queue(alice.token)
-        client.delete("/pvp/queue") {
+        val table = openTable(alice.token)
+        client.delete("/pvp/tables/${table.id}") {
             protocolHeaders()
             bearer(alice.token)
         }
-        val bobState = queue(bob.token)
 
-        assertTrue(bobState.waiting, "Bob was paired with somebody who had left")
+        assertTrue(tables(bob.token).none { it.id == table.id })
+        val response = client.post("/pvp/tables/${table.id}/join") {
+            protocolHeaders()
+            bearer(bob.token)
+        }
+        assertEquals(HttpStatusCode.NotFound, response.status)
         assertNull(currentMatch(alice.token))
+    }
+
+    /** And only its own host may withdraw it. */
+    @Test
+    fun somebodyElsesTableCannotBeWithdrawn() = server {
+        val alice = register(Postgres.freshAccount("mine-a"))
+        val bob = register(Postgres.freshAccount("mine-b"))
+
+        val table = openTable(alice.token)
+        client.delete("/pvp/tables/${table.id}") {
+            protocolHeaders()
+            bearer(bob.token)
+        }
+
+        assertTrue(
+            tables(bob.token).any { it.id == table.id },
+            "Bob withdrew a table that was not his",
+        )
     }
 
     /** A player in no match gets 204, which is how a client knows there is nothing to resume. */
@@ -307,10 +439,77 @@ class PvpFlowTest {
         for (response in listOf(
             client.get("/pvp/match") { protocolHeaders() },
             client.get("/pvp/challenges") { protocolHeaders() },
-            client.post("/pvp/queue") { protocolHeaders() },
+            client.get("/pvp/tables") { protocolHeaders() },
         )) {
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
+    }
+
+    /**
+     * An invitation carries its terms, and the match is opened on them.
+     *
+     * It could not before: `pvp_challenges` held a wager and nothing else, so accepting one always
+     * played the default format under whatever the roulette drew. Naming your rules was something
+     * you could do for strangers browsing the lobby and not for somebody you invited by name.
+     */
+    @Test
+    fun anInvitationCarriesItsTerms() = server {
+        val aliceName = Postgres.freshAccount("terms-a")
+        val bobName = Postgres.freshAccount("terms-b")
+        val alice = register(aliceName)
+        val bob = register(bobName)
+        val terms = PvpTableRequest(
+            formatId = "ff14-standard",
+            rules = GameRules().withRuleKey("RULE_SWAP"),
+            stake = PvpStake(mgp = WAGER, trade = TradeRule.ONE),
+        )
+
+        val sent = client.post("/pvp/challenges") {
+            protocolHeaders()
+            bearer(alice.token)
+            setBody(json.encodeToString(ChallengeRequest(bobName, terms)))
+        }
+        assertEquals(HttpStatusCode.Created, sent.status, sent.bodyAsText())
+        val challenge = json.decodeFromString<PvpChallenge>(sent.bodyAsText())
+        assertEquals(terms, challenge.terms, "the invitation dropped its terms")
+
+        client.post("/pvp/challenges/${challenge.id}/accept") {
+            protocolHeaders()
+            bearer(bob.token)
+        }
+
+        val match = assertNotNull(currentMatch(bob.token))
+        assertEquals("ff14-standard", match.formatId, "the match ignored the chosen format")
+        assertTrue(match.rules.swap, "the match ignored the chosen rules")
+        assertEquals(terms.stake, match.stake)
+    }
+
+    /** And terms nobody can play are refused, by the same check a table gets. */
+    @Test
+    fun anInvitationOnImpossibleTermsIsRefused() = server {
+        val aliceName = Postgres.freshAccount("bad-a")
+        val bobName = Postgres.freshAccount("bad-b")
+        val alice = register(aliceName)
+        register(bobName)
+
+        val sent = client.post("/pvp/challenges") {
+            protocolHeaders()
+            bearer(alice.token)
+            setBody(
+                json.encodeToString(
+                    // Elemental is not in the FFXIV pool — the same rule the lobby refuses.
+                    ChallengeRequest(
+                        bobName,
+                        PvpTableRequest(
+                            formatId = "ff14-standard",
+                            rules = GameRules().withRuleKey("RULE_ELEMENTAL"),
+                        ),
+                    ),
+                ),
+            )
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, sent.status, sent.bodyAsText())
     }
 
     // ---- Helpers ----------------------------------------------------------
@@ -329,8 +528,48 @@ class PvpFlowTest {
         return json.decodeFromString<Session>(response.bodyAsText())
     }
 
-    private suspend fun ApplicationTestBuilder.queue(token: String): PvpQueueState {
-        val response = client.post("/pvp/queue") {
+    /** Opens a table on [stake], returning it. */
+    private suspend fun ApplicationTestBuilder.openTable(
+        token: String,
+        stake: PvpStake = PvpStake.None,
+        rules: GameRules = GameRules(),
+        roulette: Boolean = false,
+    ): PvpTable {
+        val response = client.post("/pvp/tables") {
+            protocolHeaders()
+            bearer(token)
+            setBody(
+                json.encodeToString(
+                    PvpTableRequest(FORMAT, rules = rules, roulette = roulette, stake = stake),
+                ),
+            )
+        }
+        assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
+        return json.decodeFromString(response.bodyAsText())
+    }
+
+    /** Joins one, which opens the match. */
+    private suspend fun ApplicationTestBuilder.join(
+        token: String,
+        tableId: String,
+    ): PvpQueueState {
+        val response = client.post("/pvp/tables/$tableId/join") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
+        return json.decodeFromString(response.bodyAsText())
+    }
+
+    /** The two of them: the shape almost every test below opens with. */
+    private suspend fun ApplicationTestBuilder.playing(
+        host: String,
+        joiner: String,
+        stake: PvpStake = PvpStake.None,
+    ): String = join(joiner, openTable(host, stake).id).matchId.let(::assertNotNull)
+
+    private suspend fun ApplicationTestBuilder.tables(token: String): List<PvpTable> {
+        val response = client.get("/pvp/tables") {
             protocolHeaders()
             bearer(token)
         }
@@ -397,5 +636,14 @@ class PvpFlowTest {
     private companion object {
         const val PASSWORD = "not-a-real-password"
         val UNIQUE: Long = System.nanoTime()
+
+        /** The widest authored format — every block, every rule. `FormatCatalog.default`. */
+        const val FORMAT = "free-play"
+
+        /** A wager a starting purse of 100 MGP covers. */
+        const val WAGER = 50
+
+        /** More than any purse in these tests, so the refusal is what is being measured. */
+        const val FORTUNE = 1_000_000
     }
 }

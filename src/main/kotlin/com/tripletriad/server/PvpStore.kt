@@ -6,6 +6,8 @@ import com.tripletriad.protocol.PvpChallenge
 import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpMove
 import com.tripletriad.protocol.PvpStake
+import com.tripletriad.protocol.PvpTable
+import com.tripletriad.protocol.PvpTableRequest
 import kotlinx.serialization.json.Json
 import java.sql.Connection
 import java.sql.ResultSet
@@ -13,19 +15,20 @@ import java.sql.Timestamp
 import javax.sql.DataSource
 
 /**
- * The queue, the invitations and the live matches, over plain JDBC.
+ * The open tables, the invitations and the live matches, over plain JDBC.
  *
  * Separate from [AccountStore] rather than folded into it, and the line is not arbitrary: that one
  * owns *who a player is and what they have*, this one owns *what is happening right now*. The two
  * meet in exactly one place — [creditBoth] — and that meeting is a transaction, which is the whole
  * reason it is written here rather than left to a route to sequence.
  *
- * ### The pairing is the interesting query
+ * ### Joining is the interesting query
  *
- * Two players tapping "play" at the same instant must not both be handed the other *and* left in
- * the queue, and must not pair with themselves. `FOR UPDATE SKIP LOCKED` is what makes that safe
- * without a lock table: the second transaction skips the row the first is holding and looks
- * further down the queue rather than blocking on it or, worse, reading it as available.
+ * Two players tapping Join on the same table within a few milliseconds must produce **one** match,
+ * not two, and the loser of that race must be told so rather than dropped into a game their
+ * opponent is not in. `FOR UPDATE OF` on the table row plus `WHERE match_id IS NULL` on the update
+ * is what makes that safe: the second transaction blocks on the row, then finds it already claimed
+ * and rolls back — taking the match row it had optimistically inserted with it.
  */
 // Two suppressions, both for the same reason a data-access class attracts them. `TooManyFunctions`
 // counts queries, which is what this class is made of; the rule is aimed at a class doing too many
@@ -38,99 +41,122 @@ class PvpStore(
     private val json: Json = SaveJson,
 ) {
 
-    // ---- The quick queue --------------------------------------------------
+    // ---- Open tables ------------------------------------------------------
 
-    /** Puts [accountId] in the queue, or refreshes their place if they are already in it. */
-    fun enqueue(accountId: Long, formatId: String) = transaction { db ->
+    /**
+     * Opens a table, or null if this host already has one standing.
+     *
+     * The refusal comes from `pvp_tables_one_per_host`, a partial unique index, rather than from a
+     * read followed by a write — which two taps' worth of latency apart would let the same host
+     * open two. `ON CONFLICT` turns that one violation into an empty result, so the caller gets a
+     * refusal instead of an exception.
+     *
+     * The conflict target is **named**, and that is not decoration. A bare `ON CONFLICT DO NOTHING`
+     * swallows every constraint on the table, including a primary-key collision on `id` — which
+     * would then be reported to the player as "you already have a table open", a sentence with no
+     * relation to what happened. Naming the index means an id collision throws, which is right: it
+     * is a bug in whatever generated the id, not something to explain to a player.
+     */
+    fun openTable(row: PvpTableRow): Boolean = transaction { db ->
         db.prepareStatement(
             """
-            INSERT INTO pvp_queue (account_id, format) VALUES (?, ?)
-            ON CONFLICT (account_id) DO UPDATE SET format = EXCLUDED.format
+            INSERT INTO pvp_tables (id, host_account, format, rules, roulette, stake, expires_at)
+            VALUES (?, ?, ?, ?::jsonb, ?, ?::jsonb, ?)
+            ON CONFLICT (host_account) WHERE match_id IS NULL DO NOTHING
             """.trimIndent(),
         ).use { statement ->
-            statement.setLong(1, accountId)
-            statement.setString(2, formatId)
-            statement.executeUpdate()
-        }
-        Unit
-    }
-
-    fun dequeue(accountId: Long) = transaction { db -> removeFromQueue(db, accountId) }
-
-    fun isQueued(accountId: Long): Boolean = transaction { db ->
-        db.prepareStatement("SELECT 1 FROM pvp_queue WHERE account_id = ?").use { statement ->
-            statement.setLong(1, accountId)
-            statement.executeQuery().use { it.next() }
+            statement.setString(1, row.id)
+            statement.setLong(2, row.hostAccount)
+            statement.setString(3, row.formatId)
+            statement.setString(4, json.encodeToString(GameRules.serializer(), row.rules))
+            statement.setBoolean(5, row.roulette)
+            statement.setString(6, json.encodeToString(PvpStake.serializer(), row.stake))
+            statement.setTimestamp(7, Timestamp(row.expiresAt))
+            statement.executeUpdate() > 0
         }
     }
 
-    /**
-     * Takes the longest-waiting opponent for [accountId] out of the queue, or null if there is one.
-     *
-     * Removes both rows in the same transaction as the read, so the pair it returns cannot be
-     * handed to anybody else. A caller that then fails to create a match has taken two players out
-     * of the queue for nothing — which is why [pairAndOpen] does both in one call.
-     */
-    private fun takeOpponent(db: Connection, accountId: Long, formatId: String): Long? {
-        val opponent = db.prepareStatement(
+    /** Every table still open, soonest to lapse first. Includes the caller's own. */
+    fun openTables(now: Long, limit: Int = LOBBY_LIMIT): List<PvpTableRow> = transaction { db ->
+        db.prepareStatement(
             """
-            SELECT account_id FROM pvp_queue
-            WHERE format = ? AND account_id <> ?
-            ORDER BY since
-            LIMIT 1
-            FOR UPDATE SKIP LOCKED
+            SELECT t.*, a.username
+            FROM pvp_tables t
+            JOIN accounts a ON a.id = t.host_account
+            WHERE t.match_id IS NULL AND t.expires_at > ?
+            ORDER BY t.expires_at
+            LIMIT ?
             """.trimIndent(),
         ).use { statement ->
-            statement.setString(1, formatId)
-            statement.setLong(2, accountId)
-            statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
-        } ?: return null
+            statement.setTimestamp(1, Timestamp(now))
+            statement.setInt(2, limit)
+            statement.executeQuery().use { rows ->
+                buildList { while (rows.next()) add(rows.toTable()) }
+            }
+        }
+    }
 
-        removeFromQueue(db, opponent)
-        removeFromQueue(db, accountId)
-        return opponent
+    /** Withdraws a table. Only its own host may, which the `WHERE` is what enforces. */
+    fun dropTable(tableId: String, accountId: Long): Boolean = transaction { db ->
+        db.prepareStatement(
+            "DELETE FROM pvp_tables WHERE id = ? AND host_account = ? AND match_id IS NULL",
+        ).use { statement ->
+            statement.setString(1, tableId)
+            statement.setLong(2, accountId)
+            statement.executeUpdate() > 0
+        }
     }
 
     /**
-     * Pairs [accountId] with a waiting opponent and opens the match, or queues them.
+     * Claims a table and opens the match it describes, atomically.
      *
-     * One call, one transaction, because the two halves cannot be separated safely: an opponent
-     * taken out of the queue by a caller that then failed would be a player removed from the queue
-     * with no match to show for it, and no way to notice.
+     * Shaped exactly like [acceptChallenge], and for the same reason: the table is claimed with
+     * `match_id IS NULL` in the `UPDATE`, so two people tapping Join within a few milliseconds of
+     * each other settle to **one** match. The second update touches no rows, and the whole
+     * transaction rolls back — including the match row the second caller had already inserted.
      *
-     * @param open builds the match from the two account ids. Returns null when it cannot — a
-     *   profile with no legal deck, say — and the whole transaction then rolls back, leaving both
-     *   players in the queue exactly as they were.
+     * @param open builds the match, or returns null to refuse it — an unaffordable stake, a profile
+     *   with no legal deck. A null rolls everything back and leaves the table open.
      */
-    fun pairAndOpen(
+    fun claimTableAndOpen(
+        tableId: String,
         accountId: Long,
-        formatId: String,
-        open: (blue: Long, red: Long) -> PvpMatchRow?,
+        now: Long,
+        open: (table: PvpTableRow, joiner: Long) -> PvpMatchRow?,
     ): PvpMatchRow? = transaction { db ->
-        val opponent = takeOpponent(db, accountId, formatId) ?: run {
-            db.prepareStatement(
-                """
-                INSERT INTO pvp_queue (account_id, format) VALUES (?, ?)
-                ON CONFLICT (account_id) DO UPDATE SET format = EXCLUDED.format
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setLong(1, accountId)
-                statement.setString(2, formatId)
-                statement.executeUpdate()
-            }
-            return@transaction null
-        }
+        val table = db.prepareStatement(
+            """
+            SELECT t.*, a.username
+            FROM pvp_tables t
+            JOIN accounts a ON a.id = t.host_account
+            WHERE t.id = ? AND t.match_id IS NULL AND t.expires_at > ? AND t.host_account <> ?
+            FOR UPDATE OF t
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, tableId)
+            statement.setTimestamp(2, Timestamp(now))
+            statement.setLong(3, accountId)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.toTable() else null }
+        } ?: return@transaction null
 
-        // The one who was waiting plays blue. Arbitrary, and worth fixing rather than leaving to
-        // whichever account id sorted lower: who starts is decided by `first`, not by colour, so
-        // colour only decides which end of the board a player looks at.
-        val row = open(opponent, accountId) ?: return@transaction null
+        val row = open(table, accountId) ?: return@transaction null
         insertMatch(db, row)
+
+        db.prepareStatement(
+            "UPDATE pvp_tables SET match_id = ? WHERE id = ? AND match_id IS NULL",
+        ).use { statement ->
+            statement.setString(1, row.id)
+            statement.setString(2, tableId)
+            if (statement.executeUpdate() == 0) return@transaction null
+        }
         row
     }
 
-    private fun removeFromQueue(db: Connection, accountId: Long) {
-        db.prepareStatement("DELETE FROM pvp_queue WHERE account_id = ?").use { statement ->
+    /** Withdraws every table this account has open, so a match cannot start behind their back. */
+    private fun clearTables(db: Connection, accountId: Long) {
+        db.prepareStatement(
+            "DELETE FROM pvp_tables WHERE host_account = ? AND match_id IS NULL",
+        ).use { statement ->
             statement.setLong(1, accountId)
             statement.executeUpdate()
         }
@@ -139,19 +165,23 @@ class PvpStore(
     // ---- Invitations ------------------------------------------------------
 
     /** Records an invitation from one account to another. */
-    fun challenge(id: String, from: Long, to: Long, stake: PvpStake, expiresAt: Long) =
+    fun challenge(id: String, from: Long, to: Long, terms: PvpTableRequest, expiresAt: Long) =
         transaction { db ->
             db.prepareStatement(
                 """
-            INSERT INTO pvp_challenges (id, from_account, to_account, stake, expires_at)
-            VALUES (?, ?, ?, ?::jsonb, ?)
+            INSERT INTO pvp_challenges
+                (id, from_account, to_account, format, rules, roulette, stake, expires_at)
+            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?)
                 """.trimIndent(),
             ).use { statement ->
                 statement.setString(1, id)
                 statement.setLong(2, from)
                 statement.setLong(3, to)
-                statement.setString(4, json.encodeToString(PvpStake.serializer(), stake))
-                statement.setTimestamp(5, Timestamp(expiresAt))
+                statement.setString(4, terms.formatId)
+                statement.setString(5, json.encodeToString(GameRules.serializer(), terms.rules))
+                statement.setBoolean(6, terms.roulette)
+                statement.setString(7, json.encodeToString(PvpStake.serializer(), terms.stake))
+                statement.setTimestamp(8, Timestamp(expiresAt))
                 statement.executeUpdate()
             }
             Unit
@@ -162,7 +192,7 @@ class PvpStore(
         db.prepareStatement(
             """
             SELECT c.id, c.from_account, c.to_account, c.stake, c.expires_at, c.match_id,
-                   f.username, t.username
+                   f.username, t.username, c.format, c.rules, c.roulette
             FROM pvp_challenges c
             JOIN accounts f ON f.id = c.from_account
             JOIN accounts t ON t.id = c.to_account
@@ -192,12 +222,12 @@ class PvpStore(
         challengeId: String,
         accountId: Long,
         now: Long,
-        open: (challenger: Long, accepter: Long, stake: PvpStake) -> PvpMatchRow?,
+        open: (challenger: Long, accepter: Long, terms: PvpTableRequest) -> PvpMatchRow?,
     ): PvpMatchRow? = transaction { db ->
         val challenge = db.prepareStatement(
             """
             SELECT c.id, c.from_account, c.to_account, c.stake, c.expires_at, c.match_id,
-                   f.username, t.username
+                   f.username, t.username, c.format, c.rules, c.roulette
             FROM pvp_challenges c
             JOIN accounts f ON f.id = c.from_account
             JOIN accounts t ON t.id = c.to_account
@@ -211,7 +241,7 @@ class PvpStore(
             statement.executeQuery().use { rows -> if (rows.next()) rows.toChallenge() else null }
         } ?: return@transaction null
 
-        val row = open(challenge.fromAccount, accountId, challenge.stake)
+        val row = open(challenge.fromAccount, accountId, challenge.terms)
             ?: return@transaction null
         insertMatch(db, row)
 
@@ -222,9 +252,9 @@ class PvpStore(
             statement.setString(2, challengeId)
             if (statement.executeUpdate() == 0) return@transaction null
         }
-        // Neither player is left waiting in the quick queue for a match they are now in.
-        removeFromQueue(db, challenge.fromAccount)
-        removeFromQueue(db, accountId)
+        // Neither player is left advertising a table for a match they are now in.
+        clearTables(db, challenge.fromAccount)
+        clearTables(db, accountId)
         row
     }
 
@@ -247,12 +277,18 @@ class PvpStore(
      *
      * The query the client asks at every launch. It is what makes a match survive the application
      * being killed — which mobile does without asking, and which the player did not choose.
+     *
+     * `AWAITING_CLAIM` counts as being in a match, because from the player's side it is: the board
+     * is done but they are owed a card and have not taken it. Leaving it out would let a winner
+     * start a second match and lose sight of the first — the row is `ORDER BY created_at DESC
+     * LIMIT 1`, so a newer match would simply hide it. [claimsFor] is the belt to that brace.
      */
     fun liveMatchFor(accountId: Long): PvpMatchRow? = transaction { db ->
         db.prepareStatement(
             """
             SELECT * FROM pvp_matches
-            WHERE (blue_account = ? OR red_account = ?) AND status = 'PLAYING'
+            WHERE (blue_account = ? OR red_account = ?)
+              AND status IN ('PLAYING', 'AWAITING_CLAIM')
             ORDER BY created_at DESC
             LIMIT 1
             """.trimIndent(),
@@ -260,6 +296,29 @@ class PvpStore(
             statement.setLong(1, accountId)
             statement.setLong(2, accountId)
             statement.executeQuery().use { rows -> if (rows.next()) rows.toMatch() else null }
+        }
+    }
+
+    /**
+     * Every match of [accountId]'s still waiting on a choice.
+     *
+     * Not the same question as [liveMatchFor], and the difference is the one that costs somebody a
+     * card: that returns *the* match, newest first, so an unclaimed prize disappears behind the
+     * next game. This returns all of them, so a client can say "you have something to collect".
+     */
+    fun claimsFor(accountId: Long): List<PvpMatchRow> = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT * FROM pvp_matches
+            WHERE (blue_account = ? OR red_account = ?) AND status = 'AWAITING_CLAIM'
+            ORDER BY created_at
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setLong(2, accountId)
+            statement.executeQuery().use { rows ->
+                buildList { while (rows.next()) add(rows.toMatch()) }
+            }
         }
     }
 
@@ -289,23 +348,94 @@ class PvpStore(
             }
         }
 
-    /** Ends a match. Idempotent: a match already finished is not re-ended. */
-    fun finish(id: String, status: PvpMatchStatus, forfeitedBy: CardColor? = null): Boolean =
-        transaction { db ->
-            db.prepareStatement(
-                """
-                UPDATE pvp_matches
-                SET status = ?, forfeited_by = ?, turn_deadline = NULL,
-                    finished_at = now(), updated_at = now()
-                WHERE id = ? AND status = 'PLAYING'
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, status.name)
-                statement.setString(2, forfeitedBy?.name)
-                statement.setString(3, id)
-                statement.executeUpdate() > 0
+    /**
+     * Ends a match. Idempotent: a match already finished is not re-ended.
+     *
+     * `WHERE status = 'PLAYING'` is the whole of that guarantee, and it is what stops two callers
+     * racing to settle — a poll and the sweep, say — from crediting the same match twice. Only one
+     * of them updates a row; the other is told `false` and credits nothing.
+     *
+     * A match ending in [PvpMatchStatus.AWAITING_CLAIM] is **not** finished: `finished_at` stays
+     * null, because it has not been paid. [recordClaim] is what closes it.
+     */
+    fun finish(
+        id: String,
+        status: PvpMatchStatus,
+        forfeitedBy: CardColor? = null,
+        claimDeadline: Long? = null,
+    ): Boolean = transaction { db ->
+        db.prepareStatement(
+            """
+            UPDATE pvp_matches
+            SET status = ?, forfeited_by = ?, turn_deadline = NULL,
+                claim_deadline = ?,
+                finished_at = CASE WHEN ? THEN NULL ELSE now() END,
+                updated_at = now()
+            WHERE id = ? AND status = 'PLAYING'
+            """.trimIndent(),
+        ).use { statement ->
+            val awaiting = status == PvpMatchStatus.AWAITING_CLAIM
+            statement.setString(1, status.name)
+            statement.setString(2, forfeitedBy?.name)
+            statement.setTimestamp(3, claimDeadline?.let(::Timestamp))
+            statement.setBoolean(4, awaiting)
+            statement.setString(5, id)
+            statement.executeUpdate() > 0
+        }
+    }
+
+    /**
+     * Records what a winner named and closes the match, or refuses.
+     *
+     * The same `WHERE status =` gate [finish] uses, for the same reason: a double tap on the last
+     * card of a claim must credit once. `status = 'AWAITING_CLAIM'` is true for exactly one of the
+     * two requests.
+     *
+     * @param status what the match becomes — `FINISHED`, or `FORFEITED` when that is how it ended.
+     *   Carried through rather than assumed: "you won because they left" survives the claim.
+     */
+    fun recordClaim(
+        id: String,
+        claimed: Map<CardColor, List<Int>>,
+        status: PvpMatchStatus,
+    ): Boolean = transaction { db ->
+        db.prepareStatement(
+            """
+            UPDATE pvp_matches
+            SET claimed = ?::jsonb, status = ?, claim_deadline = NULL,
+                finished_at = now(), updated_at = now()
+            WHERE id = ? AND status = 'AWAITING_CLAIM'
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, json.encodeToString(claimed.mapKeys { it.key.name }))
+            statement.setString(2, status.name)
+            statement.setString(3, id)
+            statement.executeUpdate() > 0
+        }
+    }
+
+    /**
+     * Every match whose claim deadline has passed.
+     *
+     * The safety net for a winner who never came back to take their prize. Without it the loser is
+     * left holding a card that is neither theirs nor gone, on a match that is never paid.
+     */
+    fun claimOverdue(now: Long, limit: Int = SWEEP_LIMIT): List<PvpMatchRow> = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT * FROM pvp_matches
+            WHERE status = 'AWAITING_CLAIM' AND claim_deadline IS NOT NULL AND claim_deadline < ?
+            ORDER BY claim_deadline
+            LIMIT ?
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setTimestamp(1, Timestamp(now))
+            statement.setInt(2, limit)
+            statement.executeQuery().use { rows ->
+                buildList { while (rows.next()) add(rows.toMatch()) }
             }
         }
+    }
 
     /**
      * Every live match whose deadline has passed.
@@ -379,17 +509,39 @@ class PvpStore(
         status = PvpMatchStatus.valueOf(getString("status")),
         turnDeadline = getTimestamp("turn_deadline")?.time,
         forfeitedBy = getString("forfeited_by")?.let(CardColor::valueOf),
+        claimed = json
+            .decodeFromString<Map<String, List<Int>>>(getString("claimed"))
+            .mapKeys { CardColor.valueOf(it.key) },
+        claimDeadline = getTimestamp("claim_deadline")?.time,
+    )
+
+    private fun ResultSet.toTable() = PvpTableRow(
+        id = getString("id"),
+        hostAccount = getLong("host_account"),
+        hostName = getString("username"),
+        formatId = getString("format"),
+        rules = json.decodeFromString(GameRules.serializer(), getString("rules")),
+        roulette = getBoolean("roulette"),
+        stake = json.decodeFromString(PvpStake.serializer(), getString("stake")),
+        openedAt = getTimestamp("created_at").time,
+        expiresAt = getTimestamp("expires_at").time,
+        matchId = getString("match_id"),
     )
 
     private fun ResultSet.toChallenge() = StoredChallenge(
         id = getString(1),
         fromAccount = getLong(2),
         toAccount = getLong(3),
-        stake = json.decodeFromString(PvpStake.serializer(), getString(4)),
         expiresAt = getTimestamp(5).time,
         matchId = getString(6),
         fromName = getString(7),
         toName = getString(8),
+        terms = PvpTableRequest(
+            formatId = getString(9),
+            rules = json.decodeFromString(GameRules.serializer(), getString(10)),
+            roulette = getBoolean(11),
+            stake = json.decodeFromString(PvpStake.serializer(), getString(4)),
+        ),
     )
 
     // As wide as it can be, and for the reason `AccountStore.transaction` gives: anything at all
@@ -410,7 +562,47 @@ class PvpStore(
     private companion object {
         /** Enough that a sweep clears a backlog, few enough that one pass is bounded. */
         const val SWEEP_LIMIT = 50
+
+        /**
+         * How many tables one lobby page shows.
+         *
+         * A cap and not a pager, deliberately: a lobby with more than this many open tables is a
+         * problem this game does not have, and if it ever does, the answer is filtering by what a
+         * player wants to play rather than a second page of strangers.
+         */
+        const val LOBBY_LIMIT = 100
     }
+}
+
+/**
+ * One open table as stored, with the host's name resolved so a client needs no second lookup.
+ *
+ * The same shape and the same reasoning as [StoredChallenge]: the lobby lists people, and a list of
+ * account ids would be a list the client cannot render.
+ */
+data class PvpTableRow(
+    val id: String,
+    val hostAccount: Long,
+    val hostName: String,
+    val formatId: String,
+    val rules: GameRules,
+    val roulette: Boolean,
+    val stake: PvpStake,
+    val openedAt: Long,
+    val expiresAt: Long,
+    val matchId: String? = null,
+) {
+    fun toWire(): PvpTable = PvpTable(
+        id = id,
+        hostName = hostName,
+        formatId = formatId,
+        rules = rules,
+        roulette = roulette,
+        stake = stake,
+        openedAt = openedAt,
+        expiresAt = expiresAt,
+        matchId = matchId,
+    )
 }
 
 /** One invitation as stored, with both names resolved so a client needs no second lookup. */
@@ -418,18 +610,19 @@ data class StoredChallenge(
     val id: String,
     val fromAccount: Long,
     val toAccount: Long,
-    val stake: PvpStake,
     val expiresAt: Long,
     val matchId: String?,
     val fromName: String,
     val toName: String,
+    /** Everything about the match being proposed. The same shape a table states. */
+    val terms: PvpTableRequest,
 ) {
     fun toWire(): PvpChallenge = PvpChallenge(
         id = id,
         fromName = fromName,
         toName = toName,
-        stake = stake,
         expiresAt = expiresAt,
+        terms = terms,
         matchId = matchId,
     )
 }

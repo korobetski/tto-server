@@ -4,6 +4,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -37,6 +38,16 @@ class MigrationTest {
                     tableExists(pool, "flyway_schema_history"),
                     "Flyway left no history table, so nothing actually ran",
                 )
+
+                // V4 claims to have replaced the quick queue with open tables. Asserted rather
+                // than trusted, because a migration that half-ran leaves a server talking to a
+                // schema it thinks it has: `pvp_queue` still present would mean the drop was
+                // skipped, and `pvp_tables` absent would mean every lobby request is a 500.
+                assertFalse(
+                    tableExists(pool, "pvp_queue"),
+                    "the quick queue survived the migration that removes it",
+                )
+                assertTrue(tableExists(pool, "pvp_tables"), "V4 did not create pvp_tables")
             }
         }
     }
