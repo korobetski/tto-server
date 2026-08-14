@@ -13,7 +13,7 @@ serializationJson = "1.11.0"
 # than anywhere: a match is verified by replaying it with this engine, so a `verify` that resolved a
 # different one than the release did would be re-testing a server nobody deployed. The client pins
 # this same number, and the two move together — tag `tto-core`, then the client, then this line.
-core = "0.6.0"
+core = "0.7.1"
 
 # Held in step with the client's Ktor. It was pinned at 3.3.1 by the client's Kotlin — from 3.4.0
 # Ktor's Kotlin/Native klibs are compiled by Kotlin 2.3, whose ABI Kotlin 2.2.20 refused — and
@@ -60,6 +60,12 @@ ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", versio
 ktor-server-call-id = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
 ktor-server-metrics-micrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
 ktor-server-default-headers = { module = "io.ktor:ktor-server-default-headers", version.ref = "ktor" }
+# Throttling. Named here rather than left to a hand-rolled counter because the interesting part of a
+# rate limiter is the bucket refill, and a wrong one is either useless or locks out real players.
+ktor-server-rate-limit = { module = "io.ktor:ktor-server-rate-limit", version.ref = "ktor" }
+# Reads `X-Forwarded-For`, without which every request behind the reverse proxy shares one address
+# and a per-IP limit throttles the whole world as a single client. See `Observability.kt`.
+ktor-server-forwarded-header = { module = "io.ktor:ktor-server-forwarded-header", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serializationJson" }

@@ -1,0 +1,13 @@
+-- What each side was actually paid.
+--
+-- `PvpOutcome` has carried `mgp` and `xp` since PvP shipped and the server has never filled either,
+-- so an end-of-match screen could report the score, the wager and the cards — and not the one number
+-- a player looks for. The reason is that the payout is not derivable: `MatchRewards.creditPvp` adds
+-- a random top-up and spends any boons the profile was holding, so replaying the row cannot tell you
+-- what it paid. It has to be written down at the moment it is credited.
+--
+-- One JSONB column rather than four integers, shaped like `claimed` next to it:
+-- `{"BLUE":{"mgp":112,"xp":60},"RED":{"mgp":18,"xp":10}}`. Absent for every match settled before
+-- this migration, which reads back as an empty map and reports zero — the same thing those matches
+-- have always reported, rather than a number invented for them now.
+ALTER TABLE pvp_matches ADD COLUMN payout JSONB NOT NULL DEFAULT '{}'::jsonb;

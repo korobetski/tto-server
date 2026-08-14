@@ -9,6 +9,7 @@ import com.tripletriad.model.MatchResult
 import com.tripletriad.protocol.MatchReceipt
 import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.MatchVerdict
+import com.tripletriad.protocol.RejectionReason
 import com.tripletriad.protocol.RewardSummary
 import com.tripletriad.protocol.TranscriptVerifier
 import java.security.MessageDigest
@@ -43,9 +44,11 @@ object MatchCrediting {
      * @return the receipt to send back, whatever happened: a rejection, a credited match, or a
      *   duplicate. None of the three is an error, so none of them throws.
      */
-    // Four exits, all of them guard clauses: no character, rejected, duplicate, credited. Folding
-    // them into one would mean nesting the happy path three deep to save a keyword.
-    @Suppress("LongParameterList", "ReturnCount")
+    // Five exits, all of them guard clauses: no character, rejected, a seed that was not issued,
+    // a duplicate, and credited. Folding them into one would nest the happy path four deep to save
+    // a keyword. `LongMethod` for the same reason — the length is the list of things that can go
+    // wrong with a submission, and each one is three lines and a sentence saying which it is.
+    @Suppress("LongParameterList", "ReturnCount", "LongMethod")
     fun credit(
         transcript: MatchTranscript,
         accountId: Long,
@@ -112,22 +115,37 @@ object MatchCrediting {
             xp = credited.reward.xp,
         )
 
-        val player = store.creditMatch(
+        val paid = store.creditMatch(
             accountId = accountId,
             transcriptHash = fingerprint(transcript),
             match = recorded,
             save = credited.save.copy(lastSave = now, saveNumber = save.saveNumber + 1),
         )
 
-        // Null means the unique index refused it: this transcript has been credited before. The
-        // player's real state is returned with the same verdict and a flag, because an offline
-        // queue draining twice after a lost acknowledgement is careful behaviour, not cheating.
-        if (player == null) {
-            return MatchReceipt(
+        val player = when (paid) {
+            // The unique index refused it: this transcript has been credited before. The player's
+            // real state is returned with the same verdict and a flag, because an offline queue
+            // draining twice after a lost acknowledgement is careful behaviour, not cheating.
+            Credited.Duplicate -> return MatchReceipt(
                 verdict = verdict,
                 player = store.playerState(accountId),
                 duplicate = true,
             )
+
+            // The seed was never issued to this account, or has already been used. A **rejection**
+            // and emphatically not a duplicate: the two were the same `null` until this change and
+            // mean opposite things — one is a careful client, the other is a match played on a deal
+            // the player auditioned. See `RejectionReason.UNKNOWN_SEED`.
+            Credited.NoTicket -> return MatchReceipt(
+                verdict = MatchVerdict.Rejected(
+                    reason = RejectionReason.UNKNOWN_SEED,
+                    detail = "seed ${transcript.seed} was not issued to this account, " +
+                        "or has already been used",
+                ),
+                player = store.playerState(accountId),
+            )
+
+            is Credited.Paid -> paid.player
         }
 
         return MatchReceipt(

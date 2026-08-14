@@ -106,7 +106,7 @@ fun Application.module(
     routing {
         healthRoutes(dataSource)
         serverRoutes(identity, dataSource)
-        accountRoutes(accounts)
+        accountRoutes(accounts, ShopTables.shipped())
         matchRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts)
         pvpRoutes(Catalogs.cards, Catalogs.formats, accounts, pvp)
 

@@ -5,13 +5,18 @@ import com.tripletriad.data.FormatCatalog
 import com.tripletriad.data.NpcCatalog
 import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.MatchVerdict
+import com.tripletriad.protocol.SeedTickets
 import com.tripletriad.protocol.TranscriptVerifier
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.plugins.ratelimit.RateLimitName
+import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlin.random.Random
 
 /**
  * The exchange the whole design is built around: a client submits what it did, and the server
@@ -40,8 +45,11 @@ fun Route.matchRoutes(
     npcs: NpcCatalog,
     formats: FormatCatalog,
     store: AccountStore,
+    random: () -> Random = { Random.Default },
 ) {
     route("/matches") {
+        ticketRoutes(store, random)
+
         /**
          * Verifies a transcript.
          *
@@ -88,51 +96,95 @@ fun Route.matchRoutes(
          * A duplicate is likewise 200. An offline queue that drains twice after a dropped
          * acknowledgement has done nothing wrong, and telling it otherwise would make careful
          * behaviour look like an error.
+         *
+         * ### Throttled, and why this one rather than `/verify`
+         *
+         * This is the endpoint that **pays**. A transcript cannot be forged, but nothing about it
+         * is slow to produce: a bot playing real matches at machine speed earns real rewards, and
+         * no amount of replaying catches that because the matches genuinely happened. Only the
+         * cadence tells them apart. `/verify` credits nothing and is left alone.
+         *
+         * The limit has to clear an offline queue draining several matches at once, which is why it
+         * is set well above what a person could play — see `SUBMIT_LIMIT`.
          */
-        post("/submit") {
-            if (!requireCompatibleClient()) return@post
-            val accountId = authenticate(store) ?: return@post
+        rateLimit(RateLimitName(SUBMIT)) {
+            post("/submit") {
+                if (!requireCompatibleClient()) return@post
+                val accountId = authenticate(store) ?: return@post
 
-            val transcript = call.receive<MatchTranscript>()
-            val receipt = MatchCrediting.credit(
-                transcript = transcript,
-                accountId = accountId,
-                store = store,
-                cards = cards,
-                npcs = npcs,
-                formats = formats,
-                now = System.currentTimeMillis(),
-            )
+                val transcript = call.receive<MatchTranscript>()
+                val receipt = MatchCrediting.credit(
+                    transcript = transcript,
+                    accountId = accountId,
+                    store = store,
+                    cards = cards,
+                    npcs = npcs,
+                    formats = formats,
+                    now = System.currentTimeMillis(),
+                )
 
-            when {
-                receipt.verdict is MatchVerdict.Rejected -> {
-                    // At warn, unlike /verify's info: this one came from an authenticated account,
-                    // so it is either a real client disagreeing with the server about the rules —
-                    // which is a bug worth waking up for — or somebody trying it on.
-                    val rejection = receipt.verdict as MatchVerdict.Rejected
-                    call.application.environment.log.warn(
-                        "Account {} submitted a transcript against '{}' that was rejected: {} — {}",
+                when {
+                    receipt.verdict is MatchVerdict.Rejected -> {
+                        // At warn, unlike /verify's info: this one is from an authenticated
+                        // account, so it is either a real client disagreeing with the server
+                        // about the rules — a bug worth waking up for — or somebody trying it on.
+                        val rejection = receipt.verdict as MatchVerdict.Rejected
+                        call.application.environment.log.warn(
+                            "Account {} submitted a transcript against '{}': rejected {} — {}",
+                            accountId,
+                            transcript.opponentIconId,
+                            rejection.reason,
+                            rejection.detail,
+                        )
+                    }
+
+                    receipt.duplicate -> call.application.environment.log.info(
+                        "Account {} resubmitted a match already credited",
                         accountId,
+                    )
+
+                    else -> call.application.environment.log.info(
+                        "Credited account {} with a {} against '{}'",
+                        accountId,
+                        receipt.reward?.result,
                         transcript.opponentIconId,
-                        rejection.reason,
-                        rejection.detail,
                     )
                 }
 
-                receipt.duplicate -> call.application.environment.log.info(
-                    "Account {} resubmitted a match already credited",
-                    accountId,
-                )
-
-                else -> call.application.environment.log.info(
-                    "Credited account {} with a {} against '{}'",
-                    accountId,
-                    receipt.reward?.result,
-                    transcript.opponentIconId,
-                )
+                call.respond(HttpStatusCode.OK, receipt)
             }
-
-            call.respond(HttpStatusCode.OK, receipt)
         }
+    }
+}
+
+/**
+ * Handing out the seeds a match may be played on.
+ *
+ * Its own function because it is a different subject from verifying and crediting — those two
+ * are about a match that has happened, this is about one that has not — and because the file was
+ * at the length detekt allows without it.
+ */
+private fun Route.ticketRoutes(store: AccountStore, random: () -> Random) {
+    /**
+     * Tops this account's stock of unspent seeds up, and returns what it now holds.
+     *
+     * ### Why a `GET` that writes
+     *
+     * Because it is idempotent by arithmetic: it issues the *difference* between what the
+     * account holds and [SeedTickets.MAX_UNSPENT], so asking twice in a row issues nothing the
+     * second time. A client can therefore call it whenever it notices it is low, including
+     * after a response it never saw, without an operation id and without consequence.
+     *
+     * ### Why the client needs a stock at all
+     *
+     * So that a match can be played with no network. See `SeedTickets` — the alternative is a
+     * round trip at match start, which would close the same hole and end offline play with it.
+     */
+    get("/tickets") {
+        if (!requireCompatibleClient()) return@get
+        val accountId = authenticate(store) ?: return@get
+
+        val seeds = store.issueTickets(accountId) { random().nextInt() }
+        call.respond(HttpStatusCode.OK, SeedTickets(seeds))
     }
 }

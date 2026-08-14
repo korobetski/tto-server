@@ -5,10 +5,13 @@ import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.TradeRule
 import com.tripletriad.protocol.PvpClaim
+import com.tripletriad.protocol.PvpJoinRequest
 import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpMove
 import com.tripletriad.protocol.PvpStake
+import com.tripletriad.protocol.PvpTable
 import com.tripletriad.protocol.PvpTableRequest
+import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -296,6 +299,39 @@ class PvpClaimTest {
         assertEquals(best, assertNotNull(Catalogs.cards.byId[picked]).total)
     }
 
+    /**
+     * What the match paid is recorded, so an end-of-match screen has something to show.
+     *
+     * `PvpOutcome.mgp` and `.xp` shipped with PvP and were always zero: the payout is rolled inside
+     * `MatchRewards.creditPvp` — with a random top-up, and spending whatever boons the profile was
+     * holding — so it cannot be recomputed from the row afterwards. It has to be written down at
+     * the one moment it exists.
+     */
+    @Test
+    fun whatEachSideWasPaidIsRecorded() {
+        val (host, joiner) = twoPlayers("paid")
+        val before = purses(host, joiner)
+
+        val match = playOut(host, joiner, PvpStake.None)
+        val settled = assertNotNull(pvp.matchById(match))
+
+        for (side in CardColor.entries) {
+            val outcome = assertNotNull(settled.outcomeFor(side, Catalogs.cards))
+            assertTrue(outcome.mgp > 0, "$side was told it earned nothing")
+            assertTrue(outcome.xp > 0, "$side was told it gained no rank")
+
+            // And it is what actually reached the purse: the reported figure is the credited one,
+            // not an estimate of it. Quests are credited in the same call, so the purse can have
+            // risen by more — never by less.
+            val account = settled.accountOf(side)
+            val gained = save(account).mgp - before.getValue(account)
+            assertTrue(
+                gained >= outcome.mgp,
+                "$side was told ${outcome.mgp} MGP but gained $gained",
+            )
+        }
+    }
+
     /** A match played for nothing needs no claim and is finished the moment the board is. */
     @Test
     fun anUnwageredMatchNeedsNoClaim() {
@@ -306,6 +342,59 @@ class PvpClaimTest {
 
         assertEquals(PvpMatchStatus.FINISHED, settled.status)
         assertFalse(settled.awaitsClaim(Catalogs.cards))
+    }
+
+    /**
+     * Both sides are dealt the deck they named, not the first one in the save.
+     *
+     * The two decks are the same five cards in a different order, which makes the assertion about
+     * *which slot was read* rather than about which cards happen to be strong — and reordering is
+     * enough, because `playerDeck` returns the slot's list as it stands.
+     */
+    @Test
+    fun eachSideIsDealtTheDeckItNamed() {
+        val host = twoDecked("host-deck", STRONGEST)
+        val joiner = twoDecked("join-deck", WEAKEST)
+
+        val opened = referee.openTable(host, PvpTableRequest(FORMAT, deck = 1))
+        assertTrue(opened is Tabled.Opened, "the table was refused: $opened")
+        val joined = referee.joinTable(opened.table.id, joiner, deck = 1)
+        assertTrue(joined is Joined.Playing, "the join was refused: $joined")
+
+        assertContentEquals(STRONGEST.reversed(), joined.match.blueHand)
+        assertContentEquals(WEAKEST.reversed(), joined.match.redHand)
+    }
+
+    /**
+     * Saying nothing is dealt the first complete deck — what every client did before it could ask.
+     *
+     * The compatibility claim [PvpJoinRequest] makes, asserted where it is actually decided: a
+     * request that names no deck must reach the deal the server would have made on its own.
+     */
+    @Test
+    fun namingNoDeckIsDealtTheFirstOne() {
+        val host = twoDecked("host-any", STRONGEST)
+        val joiner = twoDecked("join-any", WEAKEST)
+
+        val opened = referee.openTable(host, PvpTableRequest(FORMAT))
+        assertTrue(opened is Tabled.Opened, "the table was refused: $opened")
+        val joined = referee.joinTable(opened.table.id, joiner)
+        assertTrue(joined is Joined.Playing, "the join was refused: $joined")
+
+        assertContentEquals(STRONGEST, joined.match.blueHand)
+        assertContentEquals(WEAKEST, joined.match.redHand)
+    }
+
+    /** A table's public row says nothing about the deck waiting behind it. */
+    @Test
+    fun theDeckIsNotAdvertisedWithTheTable() {
+        val host = twoDecked("host-quiet", STRONGEST)
+
+        val opened = referee.openTable(host, PvpTableRequest(FORMAT, deck = 1))
+        assertTrue(opened is Tabled.Opened, "the table was refused: $opened")
+
+        val encoded = Json.encodeToString(PvpTable.serializer(), opened.table)
+        assertFalse("deck" in encoded, "a table advertised its host's deck: $encoded")
     }
 
     // ---- Harness ----------------------------------------------------------
@@ -335,6 +424,15 @@ class PvpClaimTest {
                 profile.copy(decks = listOf(profile.decks.first().copy(cards = deck)))
             }
         return assertNotNull(accounts.register(name, "hash-$name", save))
+    }
+
+    /** [register], plus a second complete deck holding the same five in reverse. */
+    private fun twoDecked(prefix: String, deck: List<Int>): Long {
+        val accountId = register(prefix, deck)
+        val profile = save(accountId)
+        val second = profile.decks.first().copy(name = "Second", cards = deck.reversed())
+        assertTrue(accounts.replaceSave(accountId, profile.copy(decks = profile.decks + second)))
+        return accountId
     }
 
     private fun save(accountId: Long): GameSave = assertNotNull(accounts.saveFor(accountId))

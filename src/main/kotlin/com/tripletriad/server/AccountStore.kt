@@ -4,6 +4,7 @@ import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchResult
 import com.tripletriad.protocol.PlayerState
 import com.tripletriad.protocol.PlayerStats
+import com.tripletriad.protocol.SeedTickets
 import com.tripletriad.protocol.VerifiedMatch
 import kotlinx.serialization.json.Json
 import java.sql.Connection
@@ -112,6 +113,43 @@ class AccountStore(
                 statement.setString(1, username)
                 statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
             }
+    }
+
+    /** The digest to check a password against, by account rather than by name. */
+    fun passwordHashFor(accountId: Long): String? = transaction { db ->
+        db.prepareStatement("SELECT password_hash FROM accounts WHERE id = ?").use { statement ->
+            statement.setLong(1, accountId)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.getString(1) else null }
+        }
+    }
+
+    /**
+     * Deletes an account and everything that belongs to it.
+     *
+     * ### One statement, because the schema was built for this
+     *
+     * Every table that references an account does so `ON DELETE CASCADE` — the character, the
+     * matches, the sessions, the applied operations, the seed tickets, the tables and invitations
+     * and PvP rows. So this is one `DELETE` rather than a list of them, and a table added later
+     * inherits the behaviour by declaring its foreign key properly instead of by being remembered
+     * here. `docs/data-inventory.md` states the property; this is what relies on it.
+     *
+     * ### What it does not do
+     *
+     * It does not anonymise finished matches for the player's **opponents**. A PvP row names both
+     * accounts, so deleting one cascades the shared row away and takes it out of the other player's
+     * history too. That is a real consequence and the honest one to accept here: the alternative is
+     * keeping a record of somebody who asked to be forgotten, in order to preserve somebody else's
+     * statistics.
+     *
+     * @return false when there was no such account, which is not an error — a repeated request from
+     *   a client that lost the first answer has still achieved what it asked for.
+     */
+    fun deleteAccount(accountId: Long): Boolean = transaction { db ->
+        db.prepareStatement("DELETE FROM accounts WHERE id = ?").use { statement ->
+            statement.setLong(1, accountId)
+            statement.executeUpdate() > 0
+        }
     }
 
     /** The name an account goes by, for showing a player who they are up against. */
@@ -247,7 +285,8 @@ class AccountStore(
      * same transcript twice by design, and telling the player their real match was fake would be
      * the wrong answer to the client being careful.
      *
-     * @return null when this transcript had already been credited.
+     * @return which of the three things happened. Two of them used to be `null` and must not be:
+     *   a duplicate is a client being careful, and a bad ticket is a match that will not be paid.
      */
     @Suppress("LongParameterList", "MagicNumber")
     fun creditMatch(
@@ -256,7 +295,19 @@ class AccountStore(
         match: RecordedMatch,
         save: GameSave,
         recent: Int = RECENT_MATCHES,
-    ): PlayerState? = transaction { db ->
+    ): Credited = transaction { db ->
+        // **The duplicate check comes first, before the ticket is even looked at.** Two failing
+        // tests to get this order right, and the reason is the same both times: a resubmitted
+        // transcript — an offline queue draining twice after a lost acknowledgement — is played on
+        // a seed its own first submission already spent. Reaching for the ticket first finds it
+        // spent and calls a careful client a forger, which is the one thing this endpoint has
+        // always refused to do.
+        if (alreadyCredited(db, accountId, transcriptHash)) return@transaction Credited.Duplicate
+
+        // Locked rather than read, so two submissions of the same seed are ordered rather than both
+        // finding it good. Released when this transaction ends, which is when the spend commits.
+        val ticket = lockTicket(db, accountId, match.seed) ?: return@transaction Credited.NoTicket
+
         val inserted = db.prepareStatement(
             """
             INSERT INTO matches
@@ -278,7 +329,11 @@ class AccountStore(
             statement.setString(10, transcriptHash)
             statement.executeUpdate()
         }
-        if (inserted == 0) return@transaction null
+        // The racing case the check above cannot catch: two identical submissions in flight at
+        // once, both past it. The ticket is left **untouched** — the one that won spent it.
+        if (inserted == 0) return@transaction Credited.Duplicate
+
+        spend(db, accountId, ticket)
 
         db.prepareStatement(
             "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
@@ -288,7 +343,195 @@ class AccountStore(
             statement.executeUpdate()
         }
 
-        PlayerState(save = save, stats = readStats(db, accountId, recent))
+        Credited.Paid(PlayerState(save = save, stats = readStats(db, accountId, recent)))
+    }
+
+    /**
+     * Runs [perform] against the stored profile **exactly once per [operationId]**.
+     *
+     * The idempotency guarantee the intent endpoints are built on — see `Idempotent` in `:core` for
+     * why they need one. A repeat of an id already applied does not run [perform] at all; it
+     * returns the answer the first attempt was given, byte for byte.
+     *
+     * ### How the race is settled, and why the placeholder
+     *
+     * The answer cannot be written at the moment the key is claimed, because computing it is the
+     * work being guarded. So the key is claimed first with an empty response, and filled in before
+     * the transaction commits. Nothing ever observes the placeholder: it is written and overwritten
+     * inside one transaction, and a concurrent request for the same id **blocks on the insert**
+     * until that transaction settles — which is Postgres's behaviour for `ON CONFLICT DO NOTHING`
+     * against an uncommitted row, and is exactly the serialisation this needs. It then reads zero
+     * rows inserted, and the committed answer is there to return.
+     *
+     * The alternative — check, then insert — has a window between the two in which both requests
+     * see nothing and both open a pack. That window is small, which is what makes it the kind of
+     * bug that reaches production and is never reproduced.
+     *
+     * @param perform the change, as a pure function of the stored profile. Runs inside the
+     *   transaction, so it must not do I/O of its own.
+     * @param describe the response body, built from the state that was actually written. Separate
+     *   from [perform] because it needs the [PlayerState] — the match record included — which does
+     *   not exist until the profile has been stored.
+     * @return the response body, whether freshly computed or replayed, or null when the account has
+     *   no character.
+     */
+    // The indices are JDBC's parameter positions, as in `creditMatch` above and for the same
+    // reason: they are the statement's own numbering, not a quantity anyone could name better.
+    @Suppress("MagicNumber")
+    fun <T> applyOnce(
+        accountId: Long,
+        operationId: String,
+        perform: (GameSave) -> Outcome<T>,
+        describe: (PlayerState, T) -> String,
+    ): String? = transaction { db ->
+        val claimed = db.prepareStatement(
+            """
+            INSERT INTO applied_operations (account_id, operation_id, response)
+            VALUES (?, ?, '{}'::jsonb)
+            ON CONFLICT (account_id, operation_id) DO NOTHING
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, operationId)
+            statement.executeUpdate()
+        }
+
+        if (claimed == 0) return@transaction readAnswer(db, accountId, operationId)
+
+        val stored = readSave(db, accountId) ?: return@transaction null
+        val outcome = perform(stored)
+
+        db.prepareStatement(
+            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
+        ).use { statement ->
+            statement.setString(1, json.encodeToString(outcome.save))
+            statement.setLong(2, accountId)
+            statement.executeUpdate()
+        }
+
+        val player = PlayerState(
+            save = outcome.save,
+            stats = readStats(db, accountId, RECENT_MATCHES),
+        )
+        val response = describe(player, outcome.detail)
+
+        db.prepareStatement(
+            """
+            UPDATE applied_operations SET response = ?::jsonb
+            WHERE account_id = ? AND operation_id = ?
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, response)
+            statement.setLong(2, accountId)
+            statement.setString(3, operationId)
+            statement.executeUpdate()
+        }
+        response
+    }
+
+    private fun readAnswer(db: Connection, accountId: Long, operationId: String): String? =
+        db.prepareStatement(
+            "SELECT response FROM applied_operations WHERE account_id = ? AND operation_id = ?",
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, operationId)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.getString(1) else null }
+        }
+
+    /**
+     * Tops [accountId] up to [SeedTickets.MAX_UNSPENT] unspent seeds and returns what it now holds.
+     *
+     * Idempotent by arithmetic rather than by an operation id: it issues the *difference*, so
+     * calling it twice in a row issues nothing the second time. That is what makes it safe as a
+     * `GET`, and it is why the client can simply ask whenever it notices it is low.
+     *
+     * @param seeds a generator for the new ones. The server's, obviously — a seed a caller could
+     *   influence would defeat the point of issuing it here.
+     */
+    fun issueTickets(accountId: Long, seeds: () -> Int): List<Int> = transaction { db ->
+        val held = unspentSeeds(db, accountId)
+        val wanted = SeedTickets.MAX_UNSPENT - held.size
+        if (wanted <= 0) return@transaction held
+
+        db.prepareStatement(
+            """
+            INSERT INTO match_tickets (account_id, seed) VALUES (?, ?)
+            ON CONFLICT (account_id, seed) DO NOTHING
+            """.trimIndent(),
+        ).use { statement ->
+            repeat(wanted) {
+                statement.setLong(1, accountId)
+                statement.setInt(2, seeds())
+                statement.addBatch()
+            }
+            statement.executeBatch()
+        }
+        unspentSeeds(db, accountId)
+    }
+
+    /** Whether this exact transcript has been credited to this account before. */
+    private fun alreadyCredited(db: Connection, accountId: Long, transcriptHash: String): Boolean =
+        db.prepareStatement(
+            "SELECT 1 FROM matches WHERE account_id = ? AND transcript_hash = ?",
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, transcriptHash)
+            statement.executeQuery().use { rows -> rows.next() }
+        }
+
+    /**
+     * Takes the row for [seed] and holds it, or null when it is not this account's to spend.
+     *
+     * `FOR UPDATE` rather than a plain read, so that two submissions of the same seed are ordered
+     * rather than both finding it good. The lock is released when the caller's transaction ends,
+     * which is also when the spend it guards is committed.
+     */
+    private fun lockTicket(db: Connection, accountId: Long, seed: Int): Long? = db.prepareStatement(
+        """
+            SELECT id FROM match_tickets
+            WHERE account_id = ? AND seed = ? AND spent_at IS NULL AND voided_at IS NULL
+            FOR UPDATE
+        """.trimIndent(),
+    ).use { statement ->
+        statement.setLong(1, accountId)
+        statement.setInt(2, seed)
+        statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
+    }
+
+    /**
+     * Marks [ticket] spent and voids every ticket issued to [accountId] before it.
+     *
+     * The voiding is the anti-grinding rule — see `V9__match_tickets.sql` — and it is one `UPDATE`
+     * away from being forgotten, so it lives here beside the spend rather than in the caller.
+     */
+    private fun spend(db: Connection, accountId: Long, ticket: Long) {
+        db.prepareStatement("UPDATE match_tickets SET spent_at = now() WHERE id = ?").use {
+            it.setLong(1, ticket)
+            it.executeUpdate()
+        }
+        db.prepareStatement(
+            """
+            UPDATE match_tickets SET voided_at = now()
+            WHERE account_id = ? AND id < ? AND spent_at IS NULL AND voided_at IS NULL
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setLong(2, ticket)
+            statement.executeUpdate()
+        }
+    }
+
+    private fun unspentSeeds(db: Connection, accountId: Long): List<Int> = db.prepareStatement(
+        """
+            SELECT seed FROM match_tickets
+            WHERE account_id = ? AND spent_at IS NULL AND voided_at IS NULL
+            ORDER BY id
+        """.trimIndent(),
+    ).use { statement ->
+        statement.setLong(1, accountId)
+        statement.executeQuery().use { rows ->
+            buildList { while (rows.next()) add(rows.getInt(1)) }
+        }
     }
 
     // ---- Reads used by more than one of the above -------------------------
@@ -410,6 +653,34 @@ data class RecordedMatch(
 )
 
 /**
+ * What an intent did: the profile it produced, and whatever describes it to the caller.
+ *
+ * Two values rather than one because the response needs both and they come from different places —
+ * the profile is written, and [detail] is what the core function reported doing. `Inventory.use`
+ * returning `ItemUse` is the shape this generalises.
+ */
+data class Outcome<T>(val save: GameSave, val detail: T)
+
+/**
+ * What happened when a verified match was offered for payment.
+ *
+ * Three answers where there used to be a nullable [PlayerState], and the split is the point: two of
+ * the three were the same `null` and mean opposite things. A duplicate is an offline queue draining
+ * twice after a lost acknowledgement — careful behaviour, answered with the player's real state. A
+ * missing ticket is a match played on a seed this server never issued.
+ */
+sealed interface Credited {
+    /** Recorded and paid. */
+    data class Paid(val player: PlayerState) : Credited
+
+    /** Already credited. Nothing changed, and nothing is wrong. */
+    data object Duplicate : Credited
+
+    /** The seed was not this account's to use. See `RejectionReason.UNKNOWN_SEED`. */
+    data object NoTicket : Credited
+}
+
+/**
  * How anything this server stores as JSONB is encoded — a [GameSave], a rule set, a move list.
  *
  * `encodeDefaults = true`, unlike the wire format: these documents are read back by a *future*
@@ -424,4 +695,24 @@ data class RecordedMatch(
 internal val SaveJson = Json {
     encodeDefaults = true
     ignoreUnknownKeys = true
+}
+
+/**
+ * How this server writes a **response body it encodes by hand**.
+ *
+ * Which is only the intent endpoints: everything else hands an object to content negotiation and
+ * never sees the bytes. Those endpoints cannot, because the body they send is also the body they
+ * *store* against the operation id — see `AccountStore.applyOnce` — so it has to exist as a string
+ * before it is sent.
+ *
+ * It matches the negotiation plugin's settings deliberately, and [SaveJson] deliberately does not:
+ * that one is for documents read back by a future build, where an omitted default is a field that
+ * silently changes meaning. A response is read *now*, by a client that shares the schema, and
+ * making `/me` and `/me/shop/buy` disagree about whether to spell out a default would put two
+ * shapes of the same type on one API. Anyone reading the raw payload would find one endpoint
+ * listing a starting purse and the other not.
+ */
+internal val ApiJson = Json {
+    ignoreUnknownKeys = false
+    explicitNulls = false
 }

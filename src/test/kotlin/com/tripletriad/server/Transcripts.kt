@@ -30,12 +30,15 @@ object Transcripts {
      * @param profile the save the match is dealt from. For a submission this must be the profile
      *   the **server** holds, because that is what it will replay against.
      */
-    fun honest(profile: GameSave, seed: Int): MatchTranscript {
+    fun honest(profile: GameSave, seed: Int, opponent: Int = 0): MatchTranscript {
         // The server's own format catalogue, which is what the verifier will resolve too — a
         // fixture that dealt under a different pool, or against an opponent from another format,
         // would produce transcripts the server rejects.
         val format = requireNotNull(Catalogs.formats.default) { "no format is authored" }
-        val opponent = Catalogs.npcs.playing(format.id).first()
+        // Which opponent, by index. Defaults to the first, and is a parameter for one test: the
+        // same seed played against a *different* opponent is a different match, which is how
+        // `SeedTicketTest` tells "this ticket is spent" apart from "this transcript is a repeat".
+        val opponent = Catalogs.npcs.playing(format.id)[opponent]
         val deck = PveMatches.playerDeck(profile)
 
         val random = Random(seed)

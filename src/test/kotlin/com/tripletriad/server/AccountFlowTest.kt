@@ -3,6 +3,7 @@ package com.tripletriad.server
 import com.tripletriad.model.DailyQuests
 import com.tripletriad.model.Deck
 import com.tripletriad.model.MatchResult
+import com.tripletriad.model.Stats
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
 import com.tripletriad.protocol.CURRENT_VERSION
@@ -12,6 +13,7 @@ import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.MatchVerdict
 import com.tripletriad.protocol.PlayerState
 import com.tripletriad.protocol.RejectionReason
+import com.tripletriad.protocol.SeedTickets
 import com.tripletriad.protocol.Session
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.client.request.HttpRequestBuilder
@@ -34,6 +36,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -62,13 +65,18 @@ class AccountFlowTest {
     fun aMatchPlayedOnOneClientIsStillThereForTheNext() {
         val name = Postgres.freshAccount("returning")
         var token = ""
+        var seed = 0
         var afterMatch: PlayerState? = null
 
         server {
             val session = register(name)
             token = session.token
+            // The seed the *server* issued, which is the one the record will carry. It used to be
+            // a constant this test chose, and a test that chooses its own seed is a test that
+            // could not have caught the seed being anybody's to choose.
+            seed = aTicket(token)
 
-            val receipt = submit(token, Transcripts.honest(session.player.save, SEED))
+            val receipt = submit(token, Transcripts.honest(session.player.save, seed))
             assertIs<MatchVerdict.Accepted>(receipt.verdict)
             assertFalse(receipt.duplicate, "a first submission was treated as a repeat")
             afterMatch = assertNotNull(receipt.player, "an accepted match credited nothing")
@@ -85,7 +93,7 @@ class AccountFlowTest {
             assertEquals(credited.save.mgp, restored.save.mgp, "the profile's MGP was not stored")
             assertEquals(name, restored.save.username)
             assertEquals(1, restored.stats.recent.size)
-            assertEquals(SEED, restored.stats.recent.first().seed)
+            assertEquals(seed, restored.stats.recent.first().seed)
         }
     }
 
@@ -96,7 +104,8 @@ class AccountFlowTest {
         val name = Postgres.freshAccount("signin")
 
         val registered = register(name)
-        submit(registered.token, Transcripts.honest(registered.player.save, SEED))
+        val seed = aTicket(registered.token)
+        submit(registered.token, Transcripts.honest(registered.player.save, seed))
 
         val signedIn = signIn(name)
         assertEquals(1, signedIn.player.stats.played)
@@ -118,7 +127,7 @@ class AccountFlowTest {
         application { module(Postgres.dataSource, prometheusRegistry()) }
 
         val session = register(Postgres.freshAccount("duplicate"))
-        val transcript = Transcripts.honest(session.player.save, SEED)
+        val transcript = Transcripts.honest(session.player.save, aTicket(session.token))
 
         val first = submit(session.token, transcript)
         val second = submit(session.token, transcript)
@@ -156,7 +165,7 @@ class AccountFlowTest {
             )
         }
 
-        val borrowed = Transcripts.honest(rich, SEED)
+        val borrowed = Transcripts.honest(rich, aTicket(session.token))
 
         // It is a legal game — the unauthenticated endpoint accepts it.
         assertIs<MatchVerdict.Accepted>(verify(borrowed))
@@ -208,13 +217,77 @@ class AccountFlowTest {
         assertEquals("ffxiv_twi03007", stored.avatarId, "the rest of the profile is still believed")
     }
 
+    /**
+     * Nor a record, nor a trophy: every field on the server-owned list is taken back at once.
+     *
+     * The sibling of [aFabricatedQuestCompletionIsNotStored], and written as one test over the
+     * whole list rather than three tests over one field each — because the claim being made is
+     * about `GameSave.withServerOwnedFrom` as a set, and a test per field is a test that passes
+     * while a *fourth* field quietly goes unprotected.
+     *
+     * Achievements and stats are both written only by `MatchRewards`, off a replay this server
+     * performed. A client that could assert them could award itself the collection trophies without
+     * owning a card and post any record it liked to a profile screen.
+     */
+    @Test
+    fun aFabricatedRecordAndTrophyAreNotStored() = testApplication {
+        application { module(Postgres.dataSource, prometheusRegistry()) }
+
+        val session = register(Postgres.freshAccount("boaster"))
+        val forged = session.player.save.copy(
+            achievements = mapOf("first-win" to 1L, "collector" to 2L),
+            stats = Stats(wins = 999, defeats = 0, draws = 0),
+            avatarId = "ffxiv_twi03007",
+        )
+
+        val response = client.put("/me/save") {
+            protocolHeaders()
+            bearer(session.token)
+            setBody(json.encodeToString(forged))
+        }
+        assertEquals(HttpStatusCode.NoContent, response.status)
+
+        val stored = me(session.token).save
+        assertTrue(
+            stored.achievements.isEmpty(),
+            "a client awarded itself ${stored.achievements.keys} and the server kept them",
+        )
+        assertEquals(Stats(), stored.stats, "a client posted its own record and the server kept it")
+        // The same second half the quest test makes, for the same reason: a fix that dropped the
+        // whole request would pass everything above and break buying a card.
+        assertEquals("ffxiv_twi03007", stored.avatarId, "the rest of the profile is still believed")
+    }
+
+    /**
+     * A real win still moves the record, which is what stops the test above from passing vacuously.
+     *
+     * Taking a field off the request is only correct if the server puts something there itself. An
+     * implementation that pinned `stats` to `Stats()` for ever would satisfy every assertion above
+     * and quietly break the profile screen.
+     */
+    @Test
+    fun aReplayedMatchStillMovesTheRecord() = testApplication {
+        application { module(Postgres.dataSource, prometheusRegistry()) }
+
+        val session = register(Postgres.freshAccount("earnest"))
+        val before = me(session.token).save.stats
+
+        val receipt =
+            submit(session.token, Transcripts.honest(session.player.save, aTicket(session.token)))
+        assertIs<MatchVerdict.Accepted>(receipt.verdict)
+
+        val after = me(session.token).save.stats
+        assertNotEquals(before, after, "a credited match left the record untouched")
+        assertEquals(1, after.wins + after.defeats + after.draws, "exactly one match was recorded")
+    }
+
     /** Nothing is credited without a session, and the refusal names why. */
     @Test
     fun submittingWithoutASessionIsRefused() = testApplication {
         application { module(Postgres.dataSource, prometheusRegistry()) }
 
         val session = register(Postgres.freshAccount("anonymous"))
-        val transcript = Transcripts.honest(session.player.save, SEED)
+        val transcript = Transcripts.honest(session.player.save, aTicket(session.token))
 
         val response = client.post("/matches/submit") {
             protocolHeaders()
@@ -222,6 +295,32 @@ class AccountFlowTest {
         }
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+        assertEquals(AccountError.UNAUTHENTICATED, response.failure().error)
+    }
+
+    /**
+     * An expired session stops working, which is what makes a session a session.
+     *
+     * Enforced in SQL — `accountForToken` selects `WHERE … AND expires_at > now()` — so it holds on
+     * every authenticated route at once rather than route by route. That is the right place for it
+     * and also the reason it was worth checking: a lifetime that is stored and never compared is a
+     * token that never expires, and a token that never expires is a password that cannot be
+     * changed.
+     *
+     * The row is aged directly rather than by waiting thirty days, and by the store rather than
+     * through the API, because there is no endpoint that ages a session and there should not be.
+     */
+    @Test
+    fun anExpiredSessionIsRefused() = testApplication {
+        application { module(Postgres.dataSource, prometheusRegistry()) }
+
+        val session = register(Postgres.freshAccount("stale"))
+        assertEquals(HttpStatusCode.OK, meResponse(session.token).status, "the token began valid")
+
+        expire(session.token)
+
+        val response = meResponse(session.token)
+        assertEquals(HttpStatusCode.Unauthorized, response.status, response.bodyAsText())
         assertEquals(AccountError.UNAUTHENTICATED, response.failure().error)
     }
 
@@ -314,7 +413,7 @@ class AccountFlowTest {
         val session = register(Postgres.freshAccount("reward"))
         val before = session.player.save
 
-        val receipt = submit(session.token, Transcripts.honest(before, SEED))
+        val receipt = submit(session.token, Transcripts.honest(before, aTicket(session.token)))
         val reward = assertNotNull(receipt.reward, "an accepted match reported no reward")
         val after = assertNotNull(receipt.player).save
 
@@ -349,6 +448,41 @@ class AccountFlowTest {
         }
         assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
         return json.decodeFromString<Session>(response.bodyAsText())
+    }
+
+    /**
+     * A seed this server issued to [token], which a transcript now has to be played on.
+     *
+     * Every fixture below used to invent a seed and the server believed it. It no longer does —
+     * see `RejectionReason.UNKNOWN_SEED` — so a test that wants a *credited* match has to do what a
+     * real client does and draw one first. That is the change, and it is the right shape: the
+     * fixture and the client now take the same path.
+     */
+    private suspend fun ApplicationTestBuilder.aTicket(token: String): Int {
+        val response = client.get("/matches/tickets") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        return json.decodeFromString<SeedTickets>(response.bodyAsText()).seeds.first()
+    }
+
+    /** Ages a session past its expiry, which nothing in the API can do and nothing should. */
+    private fun expire(token: String) {
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                "UPDATE sessions SET expires_at = now() - interval '1 second' WHERE token_hash = ?",
+            ).use { statement ->
+                statement.setString(1, Tokens.fingerprint(token))
+                assertEquals(1, statement.executeUpdate(), "no session row to expire")
+            }
+            db.commit()
+        }
+    }
+
+    private suspend fun ApplicationTestBuilder.meResponse(token: String) = client.get("/me") {
+        protocolHeaders()
+        bearer(token)
     }
 
     private suspend fun ApplicationTestBuilder.me(token: String): PlayerState {

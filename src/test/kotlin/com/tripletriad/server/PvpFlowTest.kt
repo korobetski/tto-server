@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.model.GameRules
+import com.tripletriad.model.MatchResult
 import com.tripletriad.model.TradeRule
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.Credentials
@@ -31,6 +32,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -297,9 +299,20 @@ class PvpFlowTest {
         assertTrue(me(alice.token) > aliceBefore, "the loser was not credited at all")
         assertTrue(me(bob.token) > bobBefore, "the winner was not paid")
 
-        // The match is over for both, so neither is still in one.
-        assertNull(currentMatch(alice.token))
-        assertNull(currentMatch(bob.token))
+        // Both sides can still read it, and both are told it was a forfeit. This used to assert
+        // the opposite — that a settled match was gone from `GET /pvp/match` — and that is exactly
+        // the bug: the player who did *not* concede finds out by polling, so a match that vanished
+        // on settlement left them looking at an empty board with no result on it.
+        assertEquals(
+            PvpMatchStatus.FORFEITED,
+            assertNotNull(currentMatch(alice.token), "the conceder lost the result").status,
+        )
+        val toBob = assertNotNull(currentMatch(bob.token), "the winner was never told")
+        val outcome = assertNotNull(toBob.outcome)
+        assertEquals(MatchResult.WIN, outcome.result)
+        // `forfeitedBy` travels in the server's colours, so "was it me" is a comparison against
+        // the side the server dealt — never against a client's own mirrored view of the board.
+        assertNotEquals(toBob.side, outcome.forfeitedBy, "Bob was told he was the one who left")
     }
 
     /** An invitation is offered, accepted, and turns into a match both players are in. */
@@ -420,6 +433,58 @@ class PvpFlowTest {
         )
     }
 
+    /**
+     * **Both** players are told how the match ended, not only the one who finished it.
+     *
+     * The player who places the ninth card is handed the settled view as the response to their
+     * move. Their opponent finds out by polling — and a match left the live query the instant it
+     * settled, so by the time they polled there was nothing there. They were dropped onto an empty
+     * board at the exact moment the game owed them a score.
+     */
+    @Test
+    fun bothPlayersCanStillReadAFinishedMatch() = server {
+        val alice = register(Postgres.freshAccount("end-a"))
+        val bob = register(Postgres.freshAccount("end-b"))
+        val matchId = playing(alice.token, bob.token)
+
+        playOut(matchId, alice.token, bob.token)
+
+        // Neither side has been forgotten, and each is told the result from their own end.
+        val fromAlice = assertNotNull(currentMatch(alice.token), "Alice lost the finished match")
+        val fromBob = assertNotNull(currentMatch(bob.token), "Bob lost the finished match")
+        assertEquals(matchId, fromAlice.matchId)
+        assertEquals(matchId, fromBob.matchId)
+        assertNotNull(fromAlice.outcome, "Alice was shown a board with no outcome on it")
+        assertNotNull(fromBob.outcome, "Bob was shown a board with no outcome on it")
+        assertEquals(PLACEMENTS, fromBob.placement)
+    }
+
+    /**
+     * And a finished match does not stop either of them starting another.
+     *
+     * The reason the readable window is a **separate** query: reusing the live one would answer
+     * "you are already in a match" for two minutes after one ended, which would be a worse bug
+     * than the blank screen it was fixing.
+     */
+    @Test
+    fun aFinishedMatchDoesNotBlockTheNextOne() = server {
+        val alice = register(Postgres.freshAccount("next-a"))
+        val bob = register(Postgres.freshAccount("next-b"))
+        val matchId = playing(alice.token, bob.token)
+
+        playOut(matchId, alice.token, bob.token)
+
+        // The match is still readable — and opening a table is still allowed.
+        assertNotNull(currentMatch(alice.token))
+        val response = client.post("/pvp/tables") {
+            protocolHeaders()
+            bearer(alice.token)
+            setBody(json.encodeToString(PvpTableRequest(FORMAT)))
+        }
+
+        assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
+    }
+
     /** A player in no match gets 204, which is how a client knows there is nothing to resume. */
     @Test
     fun aPlayerWithNoMatchIsToldSo() = server {
@@ -513,6 +578,28 @@ class PvpFlowTest {
     }
 
     // ---- Helpers ----------------------------------------------------------
+
+    /**
+     * Plays a match to the last card, whichever side is to move.
+     *
+     * Always the first playable slot into the first empty square. What the tests using this care
+     * about is the *settlement*, not the play — and the server decides who moves, so the caller
+     * cannot know whose turn it is without asking.
+     */
+    private suspend fun ApplicationTestBuilder.playOut(matchId: String, vararg tokens: String) {
+        repeat(PLACEMENTS) {
+            val turn = tokens
+                .mapNotNull { token -> currentMatch(token)?.let { token to it } }
+                .firstOrNull { (_, view) -> view.playable.isNotEmpty() }
+                ?: return
+            val (token, view) = turn
+            move(
+                token,
+                matchId,
+                PvpMove(view.playable.first(), view.cells.indexOfFirst { it == null }),
+            )
+        }
+    }
 
     private fun server(block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
         application { module(Postgres.dataSource, prometheusRegistry()) }
@@ -645,5 +732,8 @@ class PvpFlowTest {
 
         /** More than any purse in these tests, so the refusal is what is being measured. */
         const val FORTUNE = 1_000_000
+
+        /** A full board. */
+        const val PLACEMENTS = 9
     }
 }

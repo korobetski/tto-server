@@ -2,6 +2,7 @@ package com.tripletriad.server
 
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
+import com.tripletriad.protocol.ANY_DECK
 import com.tripletriad.protocol.PvpChallenge
 import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpMove
@@ -60,8 +61,9 @@ class PvpStore(
     fun openTable(row: PvpTableRow): Boolean = transaction { db ->
         db.prepareStatement(
             """
-            INSERT INTO pvp_tables (id, host_account, format, rules, roulette, stake, expires_at)
-            VALUES (?, ?, ?, ?::jsonb, ?, ?::jsonb, ?)
+            INSERT INTO pvp_tables
+                (id, host_account, format, rules, roulette, stake, expires_at, host_deck)
+            VALUES (?, ?, ?, ?::jsonb, ?, ?::jsonb, ?, ?)
             ON CONFLICT (host_account) WHERE match_id IS NULL DO NOTHING
             """.trimIndent(),
         ).use { statement ->
@@ -72,6 +74,7 @@ class PvpStore(
             statement.setBoolean(5, row.roulette)
             statement.setString(6, json.encodeToString(PvpStake.serializer(), row.stake))
             statement.setTimestamp(7, Timestamp(row.expiresAt))
+            statement.setInt(8, row.hostDeck)
             statement.executeUpdate() > 0
         }
     }
@@ -170,8 +173,9 @@ class PvpStore(
             db.prepareStatement(
                 """
             INSERT INTO pvp_challenges
-                (id, from_account, to_account, format, rules, roulette, stake, expires_at)
-            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?)
+                (id, from_account, to_account, format, rules, roulette, stake, expires_at,
+                 from_deck)
+            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?, ?)
                 """.trimIndent(),
             ).use { statement ->
                 statement.setString(1, id)
@@ -182,6 +186,9 @@ class PvpStore(
                 statement.setBoolean(6, terms.roulette)
                 statement.setString(7, json.encodeToString(PvpStake.serializer(), terms.stake))
                 statement.setTimestamp(8, Timestamp(expiresAt))
+                // Out of `terms` and into a column of its own, which is where it stays: the
+                // recipient is sent the terms and a deck is not one of them.
+                statement.setInt(9, terms.deck)
                 statement.executeUpdate()
             }
             Unit
@@ -192,7 +199,7 @@ class PvpStore(
         db.prepareStatement(
             """
             SELECT c.id, c.from_account, c.to_account, c.stake, c.expires_at, c.match_id,
-                   f.username, t.username, c.format, c.rules, c.roulette
+                   f.username, t.username, c.format, c.rules, c.roulette, c.from_deck
             FROM pvp_challenges c
             JOIN accounts f ON f.id = c.from_account
             JOIN accounts t ON t.id = c.to_account
@@ -222,12 +229,14 @@ class PvpStore(
         challengeId: String,
         accountId: Long,
         now: Long,
-        open: (challenger: Long, accepter: Long, terms: PvpTableRequest) -> PvpMatchRow?,
+        // The whole row rather than three of its fields: the challenger's deck joined them in V7
+        // and a fourth positional argument is how a caller ends up passing them in the wrong order.
+        open: (challenge: StoredChallenge, accepter: Long) -> PvpMatchRow?,
     ): PvpMatchRow? = transaction { db ->
         val challenge = db.prepareStatement(
             """
             SELECT c.id, c.from_account, c.to_account, c.stake, c.expires_at, c.match_id,
-                   f.username, t.username, c.format, c.rules, c.roulette
+                   f.username, t.username, c.format, c.rules, c.roulette, c.from_deck
             FROM pvp_challenges c
             JOIN accounts f ON f.id = c.from_account
             JOIN accounts t ON t.id = c.to_account
@@ -241,8 +250,7 @@ class PvpStore(
             statement.executeQuery().use { rows -> if (rows.next()) rows.toChallenge() else null }
         } ?: return@transaction null
 
-        val row = open(challenge.fromAccount, accountId, challenge.terms)
-            ?: return@transaction null
+        val row = open(challenge, accountId) ?: return@transaction null
         insertMatch(db, row)
 
         db.prepareStatement(
@@ -295,6 +303,42 @@ class PvpStore(
         ).use { statement ->
             statement.setLong(1, accountId)
             statement.setLong(2, accountId)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.toMatch() else null }
+        }
+    }
+
+    /**
+     * The match [accountId] should be **looking at**, which is not the same as being in.
+     *
+     * A match stops being live the instant it is settled, and for [liveMatchFor] that is right —
+     * it answers "may this player start something else", and the answer becomes yes immediately.
+     *
+     * It is wrong for the screen. The player who places the ninth card is handed the finished view
+     * as the *response to their move*, so they see the result; their opponent finds out by polling,
+     * and by the time they poll the match is settled and gone. They were dropped onto an empty
+     * board with a "no match" note on it — a black screen at the exact moment the game owed them a
+     * score. So a settled match stays visible for [RESULT_MILLIS] after it ends.
+     *
+     * The two queries are separate rather than one with a wider window, because a window here must
+     * **not** stop the player opening a table: "you are already in a match" for two minutes after
+     * one ended would be a worse bug than the one this fixes.
+     */
+    fun recentMatchFor(accountId: Long, now: Long): PvpMatchRow? = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT * FROM pvp_matches
+            WHERE (blue_account = ? OR red_account = ?)
+              AND (
+                status IN ('PLAYING', 'AWAITING_CLAIM')
+                OR (finished_at IS NOT NULL AND finished_at > ?)
+              )
+            ORDER BY created_at DESC
+            LIMIT 1
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setLong(2, accountId)
+            statement.setTimestamp(3, Timestamp(now - RESULT_MILLIS))
             statement.executeQuery().use { rows -> if (rows.next()) rows.toMatch() else null }
         }
     }
@@ -415,6 +459,29 @@ class PvpStore(
     }
 
     /**
+     * Writes what each side was paid.
+     *
+     * Separate from [finish] because the number does not exist yet when a match ends: it is rolled
+     * inside `MatchRewards.creditPvp`, one side at a time, along with whatever boons that profile
+     * was holding. So the row is settled first, both profiles are credited, and what they were
+     * credited is written back here.
+     *
+     * No status guard, unlike its neighbours. This cannot double-credit anything — it records a
+     * number rather than moving one — and the callers that reach it have already been through a
+     * guarded `finish` or `recordClaim`, so a second write would be writing the same values.
+     */
+    fun recordPayout(id: String, payout: Map<CardColor, Payout>) = transaction { db ->
+        db.prepareStatement(
+            "UPDATE pvp_matches SET payout = ?::jsonb, updated_at = now() WHERE id = ?",
+        ).use { statement ->
+            statement.setString(1, json.encodeToString(payout.mapKeys { it.key.name }))
+            statement.setString(2, id)
+            statement.executeUpdate()
+        }
+        Unit
+    }
+
+    /**
      * Every match whose claim deadline has passed.
      *
      * The safety net for a winner who never came back to take their prize. Without it the loser is
@@ -513,6 +580,9 @@ class PvpStore(
             .decodeFromString<Map<String, List<Int>>>(getString("claimed"))
             .mapKeys { CardColor.valueOf(it.key) },
         claimDeadline = getTimestamp("claim_deadline")?.time,
+        payout = json
+            .decodeFromString<Map<String, Payout>>(getString("payout"))
+            .mapKeys { CardColor.valueOf(it.key) },
     )
 
     private fun ResultSet.toTable() = PvpTableRow(
@@ -526,6 +596,7 @@ class PvpStore(
         openedAt = getTimestamp("created_at").time,
         expiresAt = getTimestamp("expires_at").time,
         matchId = getString("match_id"),
+        hostDeck = getInt("host_deck"),
     )
 
     private fun ResultSet.toChallenge() = StoredChallenge(
@@ -536,12 +607,15 @@ class PvpStore(
         matchId = getString(6),
         fromName = getString(7),
         toName = getString(8),
+        // `deck` is left at its default rather than filled from column 12. It is read back into
+        // [StoredChallenge.fromDeck] instead, so that `terms` is only ever the public offer.
         terms = PvpTableRequest(
             formatId = getString(9),
             rules = json.decodeFromString(GameRules.serializer(), getString(10)),
             roulette = getBoolean(11),
             stake = json.decodeFromString(PvpStake.serializer(), getString(4)),
         ),
+        fromDeck = getInt(12),
     )
 
     // As wide as it can be, and for the reason `AccountStore.transaction` gives: anything at all
@@ -571,6 +645,15 @@ class PvpStore(
          * player wants to play rather than a second page of strangers.
          */
         const val LOBBY_LIMIT = 100
+
+        /**
+         * How long a settled match stays readable, so both players can see how it ended.
+         *
+         * Long enough to survive the app being killed and reopened — a player who closes the game
+         * the moment they lose should still be told they lost — and short enough that it is gone
+         * before they would wonder why it is still there.
+         */
+        const val RESULT_MILLIS = 120_000L
     }
 }
 
@@ -591,6 +674,15 @@ data class PvpTableRow(
     val openedAt: Long,
     val expiresAt: Long,
     val matchId: String? = null,
+    /**
+     * Which of the host's decks is waiting here, or [ANY_DECK].
+     *
+     * Absent from [toWire] on purpose. A table is a public offer and a deck is not part of one —
+     * see [PvpTableRequest.deck]. A slot index would tell a joiner nothing they could act on, decks
+     * being local to a save, but "it leaks nothing useful" is a weaker guarantee than "it is not
+     * sent", and this costs nothing to keep as the stronger one.
+     */
+    val hostDeck: Int = ANY_DECK,
 ) {
     fun toWire(): PvpTable = PvpTable(
         id = id,
@@ -616,6 +708,8 @@ data class StoredChallenge(
     val toName: String,
     /** Everything about the match being proposed. The same shape a table states. */
     val terms: PvpTableRequest,
+    /** The challenger's deck, kept out of [terms] so [toWire] cannot carry it by accident. */
+    val fromDeck: Int = ANY_DECK,
 ) {
     fun toWire(): PvpChallenge = PvpChallenge(
         id = id,

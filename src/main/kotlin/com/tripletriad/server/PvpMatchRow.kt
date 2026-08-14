@@ -17,6 +17,7 @@ import com.tripletriad.protocol.PvpMatchView
 import com.tripletriad.protocol.PvpMove
 import com.tripletriad.protocol.PvpOutcome
 import com.tripletriad.protocol.PvpStake
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 /**
@@ -64,6 +65,14 @@ data class PvpMatchRow(
     /** What each side has named under One or Diff. Absent until they name it. */
     val claimed: Map<CardColor, List<Int>> = emptyMap(),
     val claimDeadline: Long? = null,
+    /**
+     * What each side was paid, written when it was credited.
+     *
+     * Not derivable, which is why it is stored: the payout carries a random top-up and spends
+     * whatever boons the profile happened to be holding, so replaying the match cannot reproduce
+     * it. Empty until settlement, and empty forever on a match settled before it was recorded.
+     */
+    val payout: Map<CardColor, Payout> = emptyMap(),
 ) {
     /** Which side [accountId] is playing, or null if they are not in this match. */
     fun sideOf(accountId: Long): CardColor? = when (accountId) {
@@ -162,6 +171,8 @@ data class PvpMatchRow(
             blue = score.blue,
             red = score.red,
             forfeitedBy = forfeitedBy,
+            mgp = payout[side]?.mgp ?: 0,
+            xp = payout[side]?.xp ?: 0,
             stakeMgp = spoils.mgp,
             cardsWon = spoils.won,
             cardsLost = spoils.lost,
@@ -378,6 +389,10 @@ data class PvpMatchRow(
  * [won] and [lost] can both be non-empty at once — that is Direct, where each side keeps whatever
  * it captured — which is the reason this is a pair of lists rather than a single signed thing.
  */
+/** What a match paid one side, as credited. See `PvpMatchRow.payout`. */
+@Serializable
+data class Payout(val mgp: Int, val xp: Int)
+
 data class Spoils(
     val mgp: Int = 0,
     val won: List<Int> = emptyList(),

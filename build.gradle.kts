@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
     application
+    jacoco
 }
 
 group = "com.tripletriad"
@@ -50,6 +51,8 @@ dependencies {
     implementation(libs.ktor.server.call.id)
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.default.headers)
+    implementation(libs.ktor.server.rate.limit)
+    implementation(libs.ktor.server.forwarded.header)
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.flyway.core)
@@ -90,6 +93,79 @@ tasks.test {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
+
+/**
+ * Coverage, and a floor under it.
+ *
+ * ### Why this arrives late and matters more here than in the client
+ *
+ * The client has had a gate at 0.90/0.75 since it had screens; this module had none at all — which
+ * was defensible while it was a thin layer over `:core`, and stopped being so the moment the
+ * economy moved here. Every rule about what a thing costs, who may spend it and whether a seed was
+ * issued now lives in this module, and an untested branch in any of them is a way to get something
+ * for nothing.
+ *
+ * ### Set from what the suite already achieves, not from an aspiration
+ *
+ * A gate above the current figure fails on day one and gets deleted; a gate well below it permits a
+ * long slide. Measured at **89.7% line / 64.5% branch** (2026-08-14) and pinned just under, so it
+ * catches a *regression* rather than demanding an improvement — the same reasoning the client's own
+ * gate is written with.
+ *
+ * The branch figure is much the lower of the two and that is expected here rather than alarming: a
+ * route is mostly guard clauses, and the arms that answer "no such account", "no character" and
+ * "not reachable" are the ones a test has to construct deliberately. The number to watch is whether
+ * it falls, not whether it looks like the client's.
+ *
+ * The tests behind it run against a real Postgres in a container, so this measures the paths a
+ * deployment actually takes rather than the ones a mock would allow.
+ */
+tasks.register<JacocoReport>("coverageReport") {
+    group = "verification"
+    description = "HTML + XML coverage, from the JUnit suite."
+    dependsOn(tasks.test)
+    // The `.exec` the test task writes, named through the extension rather than guessed at — the
+    // obvious `executionData(tasks.test)` resolves to the JUnit results directory instead.
+    executionData(
+        tasks.test.map { test ->
+            test.extensions.getByType<JacocoTaskExtension>().destinationFile!!
+        },
+    )
+    sourceSets(sourceSets.main.get())
+
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.register<JacocoCoverageVerification>("coverageVerify") {
+    group = "verification"
+    description = "Fails if coverage drops below what the suite already reaches."
+    val report = tasks.named<JacocoReport>("coverageReport")
+    dependsOn(report)
+    executionData(report.map { it.executionData })
+    classDirectories.setFrom(report.map { it.classDirectories })
+    sourceDirectories.setFrom(report.map { it.sourceDirectories })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.87".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.62".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.named("check") { dependsOn("coverageVerify") }
 
 // The distribution the container runs. `installDist` lays out `bin/` + `lib/` without building a
 // tarball only to unpack it again inside the image — a fat jar would be simpler to copy but would
