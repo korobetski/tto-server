@@ -3051,11 +3051,11 @@
         409
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -3069,7 +3069,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 6
+      "difficulty": 5
     },
     {
       "id": 1,
@@ -3816,12 +3816,12 @@
         566,
         607
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -3830,7 +3830,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 5
+      "difficulty": 4
     },
     {
       "id": 13,
@@ -3989,11 +3989,11 @@
         617
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "matchFee": 13,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -4002,7 +4002,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 16,
@@ -4044,11 +4044,11 @@
         595
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "matchFee": 13,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -4057,7 +4057,7 @@
           "rate": 0.02
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 17,
@@ -4331,12 +4331,12 @@
         566,
         614
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -4345,7 +4345,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 4
+      "difficulty": 5
     },
     {
       "id": 22,

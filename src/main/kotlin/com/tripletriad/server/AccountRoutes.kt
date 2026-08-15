@@ -247,12 +247,12 @@ private fun Route.profileRoutes(store: AccountStore, tables: ShopTables, random:
         val accountId = authenticate(store) ?: return@put
 
         val incoming = call.receive<GameSave>()
-        val stored = store.saveFor(accountId) ?: run {
-            call.application.environment.log.error("Account {} has no character", accountId)
-            return@put call.respond(HttpStatusCode.InternalServerError, "no character")
-        }
-        val save = incoming.withServerOwnedFrom(stored)
-        if (!store.replaceSave(accountId, save)) {
+        // Read, merge and write in **one locked transaction** — see `AccountStore.mutate`. It used
+        // to be three separate ones, so a match credited between the read and the write was thrown
+        // away by this endpoint: the client's copy of the server-owned fields was stale by exactly
+        // the change that had just landed.
+        val written = store.mutate(accountId) { stored -> incoming.withServerOwnedFrom(stored) }
+        if (written == null) {
             call.application.environment.log.error("Account {} has no character", accountId)
             return@put call.respond(HttpStatusCode.InternalServerError, "no character")
         }
@@ -337,6 +337,33 @@ private fun Route.intentRoutes(store: AccountStore, tables: ShopTables, random: 
             val request = call.receive<BagItemRequest>()
             respondWithProfile(store, request) { save ->
                 Inventory.sell(save, request.item, tables.cards.byId)
+            }
+        }
+
+        /**
+         * Sells **every one** of a bag item, at the same price each.
+         *
+         * ### Why this is its own route rather than a count on `/me/bag/sell`
+         *
+         * Because `stack` on this wire says *which*, never *how many* — `BagRoutesTest` pins that
+         * as a decision rather than an accident, and `Inventory.remove` takes its count separately
+         * for the same reason. A `count` field would be the first quantity a client got to name,
+         * and the first thing to validate against the bag it claims to be emptying.
+         *
+         * Here the client says "all of these" and the **server** counts them. There is nothing to
+         * validate because there is no number on the wire: `Inventory.count` reads the stored
+         * profile, and a bag holding none of the item sells nothing for nothing.
+         */
+        post("/me/bag/sell-all") {
+            if (!requireCompatibleClient()) return@post
+            val request = call.receive<BagItemRequest>()
+            respondWithProfile(store, request) { save ->
+                Inventory.sell(
+                    save,
+                    request.item,
+                    tables.cards.byId,
+                    count = Inventory.count(save, request.item).coerceAtLeast(1),
+                )
             }
         }
 

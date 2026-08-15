@@ -257,6 +257,29 @@ class AccountStore(
      *
      * @return false if the account has no character, which is not reachable — see registration.
      */
+    /**
+     * Reads the stored profile under a row lock, applies [change], and writes the result.
+     *
+     * The shape every write in this class should have had. `PUT /me/save` used to read with
+     * [saveFor], merge with `withServerOwnedFrom`, and write with [replaceSave] — three
+     * transactions, so anything committing between the first and the third was discarded. Here the
+     * read and the write are one transaction and one lock; see [lockSave].
+     *
+     * @return the profile that was written, or null when the account has no character.
+     */
+    fun mutate(accountId: Long, change: (GameSave) -> GameSave): GameSave? = transaction { db ->
+        val stored = lockSave(db, accountId) ?: return@transaction null
+        val next = change(stored)
+        db.prepareStatement(
+            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
+        ).use { statement ->
+            statement.setString(1, json.encodeToString(next))
+            statement.setLong(2, accountId)
+            statement.executeUpdate()
+        }
+        next
+    }
+
     fun replaceSave(accountId: Long, save: GameSave): Boolean = transaction { db ->
         db.prepareStatement(
             "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
@@ -398,7 +421,7 @@ class AccountStore(
 
         if (claimed == 0) return@transaction readAnswer(db, accountId, operationId)
 
-        val stored = readSave(db, accountId) ?: return@transaction null
+        val stored = lockSave(db, accountId) ?: return@transaction null
         val outcome = perform(stored)
 
         db.prepareStatement(
@@ -535,6 +558,40 @@ class AccountStore(
     }
 
     // ---- Reads used by more than one of the above -------------------------
+
+    /**
+     * The stored profile, with the row **locked for the rest of the transaction**.
+     *
+     * ### The bug this exists to end
+     *
+     * Every write in this class is a read-modify-write: read the profile, apply something to it,
+     * write the whole document back. Two of those running at once against one account both read the
+     * same starting profile and both write their own result, and **the one that commits first is
+     * erased**. Not corrupted — erased, silently, with a `200` for both.
+     *
+     * That is not a theoretical race. A player who opens the app has the offline queue draining
+     * (which credits matches and writes the profile) at the same moment they can tap Buy, and both
+     * paths land here. The reported symptoms were exactly its shape: an item bought and then gone,
+     * a bag that emptied, and a daily quest completable twice because a stale profile was written
+     * back over the completion.
+     *
+     * `FOR UPDATE` makes the second reader wait for the first to commit, so it modifies what the
+     * first one wrote instead of what they both started from. It is the whole fix, and it belongs
+     * here rather than in each caller: a caller that forgot would be a caller that loses data on a
+     * timing nobody can reproduce on demand.
+     *
+     * Only for a transaction that is going to write. [readSave] stays unlocked for the reads that
+     * only render — taking a row lock to answer `GET /me` would serialise every poll in the app
+     * behind every purchase.
+     */
+    private fun lockSave(db: Connection, accountId: Long): GameSave? = db.prepareStatement(
+        "SELECT save FROM characters WHERE account_id = ? FOR UPDATE",
+    ).use { statement ->
+        statement.setLong(1, accountId)
+        statement.executeQuery().use { rows ->
+            if (rows.next()) json.decodeFromString<GameSave>(rows.getString(1)) else null
+        }
+    }
 
     private fun readSave(db: Connection, accountId: Long): GameSave? =
         db.prepareStatement("SELECT save FROM characters WHERE account_id = ?").use { statement ->
