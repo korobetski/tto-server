@@ -101,6 +101,11 @@ fun Application.module(
     // a player is and what they have, this one owns what is happening right now. See [PvpStore].
     val pvp = PvpStore(dataSource)
 
+    // The same line again, for the matches the server itself plays the opponent in. Its own store
+    // rather than a wider `PvpStore`: the two tables share a shape and almost nothing else — no
+    // lobby, no invitations, no wager, and no deadline, because a program is never waiting.
+    val pve = PveStore(dataSource)
+
     sweepAbandonedMatches(PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp))
 
     routing {
@@ -109,6 +114,7 @@ fun Application.module(
         accountRoutes(accounts, ShopTables.shipped())
         matchRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts)
         pvpRoutes(Catalogs.cards, Catalogs.formats, accounts, pvp)
+        pveRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts, pve)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.

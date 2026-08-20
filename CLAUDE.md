@@ -153,6 +153,20 @@ won. Match that density when editing; a change that removes the reasoning is a r
 `intellij_idea` ktlint style, 100 columns, no wildcard imports (`.editorconfig` is the source of truth
 and detekt's `MaxLineLength` is kept in step with it).
 
+## Secrets never reach a transcript
+
+No command output may carry a password or a token: `POSTGRES_PASSWORD`, `DATABASE_PASSWORD`,
+`gpr.key`, a bearer token. A conversation is durable and shareable, so a secret that appears in one
+costs a rotation — of the cluster superuser, in the case that matters most here.
+
+The trap is the incidental line, not the deliberate `cat .env`. `docker compose config` prints the
+whole resolved environment, and a grep for `POSTGRES` matches `POSTGRES_PASSWORD` alongside the two
+values you wanted. So **name the keys**: `grep -E '^(POSTGRES_USER|POSTGRES_DB|DATABASE_USER)='`.
+Same for `printenv`, `docker inspect` and `git config --list`.
+
+The code already holds this line — `Secrets.kt` and `LogSecrecyTest` assert that bearer tokens are
+stored and logged as fingerprints and never in the clear. This is that rule, applied to the shell.
+
 ## Docs
 
 `docs/operations.md` (configuration, exit codes, backups, alerting) and `docs/deployment.md` are

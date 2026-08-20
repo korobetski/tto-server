@@ -136,6 +136,53 @@ class PvpFlowTest {
     }
 
     /**
+     * A table that has **lapsed** does not refuse a second one.
+     *
+     * The bug this pins: `pvp_tables_one_per_host` is partial on `match_id IS NULL` and says
+     * nothing about `expires_at`, while the lobby listing says `expires_at > now`. A host whose
+     * client stopped refreshing — they closed the screen — therefore held a row that no lobby would
+     * show and no sweep would ever remove, and it refused them a table *forever*: "you already have
+     * a table open" about a table the host could not see, cancel, or wait at.
+     *
+     * The lapsed row is written through [PvpStore] rather than by advancing a clock, because the
+     * clock that matters here is the one inside the `INSERT` — the routes' `clock()` is not
+     * reachable from a `testApplication` that wires the real module. What is asserted is the way
+     * out: the next request succeeds, and the table it returns is the *new* one.
+     */
+    @Test
+    fun aLapsedTableDoesNotRefuseTheNextOne() = server {
+        val name = Postgres.freshAccount("lapsed")
+        val alice = register(name)
+        val accounts = AccountStore(Postgres.dataSource)
+        val hostId = assertNotNull(accounts.accountIdForUsername(name))
+        val stale = "stale-${alice.token.take(8)}"
+        assertTrue(
+            PvpStore(Postgres.dataSource).openTable(
+                PvpTableRow(
+                    id = stale,
+                    hostAccount = hostId,
+                    hostName = name,
+                    formatId = FORMAT,
+                    rules = GameRules(),
+                    roulette = false,
+                    stake = PvpStake.None,
+                    openedAt = 0L,
+                    // Lapsed before it was ever listed: the epoch is in the past by construction,
+                    // so this needs no arithmetic against the wall clock to stay true.
+                    expiresAt = 1L,
+                ),
+            ),
+            "the stale table was not planted",
+        )
+        assertTrue(tables(alice.token).none { it.id == stale }, "a lapsed table was listed")
+
+        val table = openTable(alice.token)
+
+        assertNotEquals(stale, table.id)
+        assertTrue(tables(alice.token).any { it.id == table.id }, "the new table was not listed")
+    }
+
+    /**
      * Rules the format does not allow are refused, and refused *before* anybody plays.
      *
      * Elemental is not in the FFXIV pool. A match opened under it would be one the format's players

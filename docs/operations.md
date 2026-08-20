@@ -68,8 +68,13 @@ given that progression is server-held is the difference between a bad day and an
 `tto_app` is created on first boot by `docker/postgres/init/10-app-role.sh`, from the values in
 `.env`. That directory runs **only on an empty data directory**, so an existing volume needs the
 role created by hand — `.env.sample` carries the exact commands, including the one that is easy to
-miss: handing `flyway_schema_history` over to the new owner, without which the server refuses to
-start with `permission denied for table flyway_schema_history`.
+miss: handing every object in `public` over to the new owner, without which the server refuses to
+start with `permission denied for table flyway_schema_history` and exits 70.
+
+The reflex on seeing that message is to cede the one table it names. Don't: a volume that ran with
+the server as superuser has `accounts`, `pvp_tables` and the rest owned the same way, so ceding
+`flyway_schema_history` alone moves the error to the next table and reads like a second, unrelated
+problem. `.env.sample`'s block walks `pg_tables` and `pg_sequences` for that reason.
 
 The two development defaults in the table above are now a `./gradlew run` fallback and nothing
 else. They name a role whose password is machine-specific, so that path needs `DATABASE_USER` and

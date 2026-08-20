@@ -291,6 +291,69 @@ class AccountStore(
     }
 
     /**
+     * Records a **refereed** match and the profile it produced, atomically.
+     *
+     * The same two-writes-are-one-fact argument [creditMatch] makes below, minus the two things a
+     * match the server itself played has no use for.
+     *
+     * There is no seed ticket to spend. Tickets exist so that a client cannot audition deals — play
+     * a match locally, look at the opponent's hand, and start again on a better seed. A refereed
+     * match is dealt here, from a seed this process chose, and the player never sees the hand they
+     * would be choosing between. The hole tickets were plugging is not reachable.
+     *
+     * There is no transcript to hash either, so the match's own id takes that column. It serves the
+     * identical purpose — `matches_transcript_idx` is what makes crediting happen exactly once —
+     * and an id is a better key than a digest: it is unique by construction rather than by hope.
+     *
+     * @param matchKey the `pve_matches.id`. Stored in `transcript_hash`, per the paragraph above.
+     * @return [Credited.Paid], or [Credited.Duplicate] if this match was already credited.
+     *   [Credited.NoTicket] is never returned — there is no ticket.
+     */
+    @Suppress("MagicNumber")
+    fun creditRefereedMatch(
+        accountId: Long,
+        matchKey: String,
+        match: RecordedMatch,
+        save: GameSave,
+        recent: Int = RECENT_MATCHES,
+    ): Credited = transaction { db ->
+        val inserted = db.prepareStatement(
+            """
+            INSERT INTO matches
+                (account_id, opponent_icon_id, format, seed, blue, red, result, mgp, xp,
+                 transcript_hash)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (account_id, transcript_hash) DO NOTHING
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, match.opponentIconId)
+            statement.setString(3, match.formatId)
+            statement.setInt(4, match.seed)
+            statement.setInt(5, match.blue)
+            statement.setInt(6, match.red)
+            statement.setString(7, match.result.name)
+            statement.setInt(8, match.mgp)
+            statement.setInt(9, match.xp)
+            statement.setString(10, matchKey)
+            statement.executeUpdate()
+        }
+        // Two settlements of the same match in flight at once — a double tap on the ninth card.
+        // The index picks one; the other pays nothing and says so.
+        if (inserted == 0) return@transaction Credited.Duplicate
+
+        db.prepareStatement(
+            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
+        ).use { statement ->
+            statement.setString(1, json.encodeToString(save))
+            statement.setLong(2, accountId)
+            statement.executeUpdate()
+        }
+
+        Credited.Paid(PlayerState(save = save, stats = readStats(db, accountId, recent)))
+    }
+
+    /**
      * Records a verified match and the profile it produced, atomically.
      *
      * ### The two writes are one fact

@@ -45,7 +45,7 @@ class PvpStore(
     // ---- Open tables ------------------------------------------------------
 
     /**
-     * Opens a table, or null if this host already has one standing.
+     * Opens a table, or false if this host already has one **still standing**.
      *
      * The refusal comes from `pvp_tables_one_per_host`, a partial unique index, rather than from a
      * read followed by a write — which two taps' worth of latency apart would let the same host
@@ -57,6 +57,18 @@ class PvpStore(
      * would then be reported to the player as "you already have a table open", a sentence with no
      * relation to what happened. Naming the index means an id collision throws, which is right: it
      * is a bug in whatever generated the id, not something to explain to a player.
+     *
+     * `DO UPDATE` and not `DO NOTHING`, because the index does not mention `expires_at` and
+     * [openTables] does. A host whose table lapsed while they were away — the client stops
+     * refreshing the moment the screen closes — held a row that no lobby would show and no sweep
+     * would ever remove, and it went on refusing them a table *permanently*: "you already have one"
+     * about a table nobody, the host included, could see. The lapsed row is reclaimed here instead,
+     * in the one statement that already holds the lock, so the host's next tap simply works.
+     *
+     * The `WHERE` on the update is what keeps the original rule intact: a table that has **not**
+     * lapsed still refuses, and `executeUpdate` reports the zero rows as such. Reclaiming means
+     * taking the new id too — the row is a new table on new terms, and leaving the old id would
+     * hand the host's client a table it cannot match to the request it just made.
      */
     fun openTable(row: PvpTableRow): Boolean = transaction { db ->
         db.prepareStatement(
@@ -64,7 +76,16 @@ class PvpStore(
             INSERT INTO pvp_tables
                 (id, host_account, format, rules, roulette, stake, expires_at, host_deck)
             VALUES (?, ?, ?, ?::jsonb, ?, ?::jsonb, ?, ?)
-            ON CONFLICT (host_account) WHERE match_id IS NULL DO NOTHING
+            ON CONFLICT (host_account) WHERE match_id IS NULL DO UPDATE
+                SET id         = EXCLUDED.id,
+                    format     = EXCLUDED.format,
+                    rules      = EXCLUDED.rules,
+                    roulette   = EXCLUDED.roulette,
+                    stake      = EXCLUDED.stake,
+                    created_at = now(),
+                    expires_at = EXCLUDED.expires_at,
+                    host_deck  = EXCLUDED.host_deck
+                WHERE pvp_tables.expires_at <= ?
             """.trimIndent(),
         ).use { statement ->
             statement.setString(1, row.id)
@@ -75,6 +96,10 @@ class PvpStore(
             statement.setString(6, json.encodeToString(PvpStake.serializer(), row.stake))
             statement.setTimestamp(7, Timestamp(row.expiresAt))
             statement.setInt(8, row.hostDeck)
+            // The host's own clock, not the database's: every other decision about whether a table
+            // is still open is made against `clock()`, and mixing the two would make a table lapsed
+            // for the lobby and standing for this statement.
+            statement.setTimestamp(9, Timestamp(row.openedAt))
             statement.executeUpdate() > 0
         }
     }
