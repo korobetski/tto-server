@@ -10,9 +10,10 @@ import com.tripletriad.model.Board
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.HAND_SIZE
-import com.tripletriad.model.MatchAi
+import com.tripletriad.model.MatchAiOptions
 import com.tripletriad.model.MatchPreparation
 import com.tripletriad.model.MatchResult
+import com.tripletriad.model.MatchSearch
 import com.tripletriad.model.Npc
 import com.tripletriad.model.PlayResult
 import com.tripletriad.protocol.Placement
@@ -316,7 +317,24 @@ class PveReferee(
     private fun opponentMove(row: PveMatchRow): PveMove? {
         val at = row.position(cards) ?: return null
         val onMove = at.state.takeIf { it.currentPlayer == CardColor.RED } ?: return null
-        val chosen = MatchAi().choose(onMove, random()) ?: return null
+        val npc = npcs.byIcon(row.opponentIconId, row.formatId)
+
+        // **How hard it plays comes from the opponent's authored band**, not from how hard it was
+        // measured to be — `NpcRating` deliberately stopped writing `level` so that this read
+        // cannot close the loop. An opponent whose icon no longer resolves plays the old one-move
+        // game rather than not moving: a missing row in `npcs.json` must not wedge a live match.
+        val options = npc?.let { MatchAiOptions.forLevel(it.level) } ?: MatchAiOptions()
+
+        // The opponent's **own view**, which is all it is entitled to. Handing it `onMove` would
+        // hand it both hands, which is how a program ends up ignoring All Open and Three Open
+        // rather than obeying them — see `PveMatchPosition.viewFor`, and `MatchSearch`, which
+        // substitutes for everything the visibility does not name.
+        val chosen = MatchSearch(options).choose(
+            state = onMove,
+            visible = at.visibilityFor(CardColor.RED),
+            random = random(),
+        ) ?: return null
+
         val slot = onMove.currentHand.indexOfFirst { it.id == chosen.card.id }
         return slot.takeIf { it >= 0 }?.let { PveMove(it, chosen.position) }
     }

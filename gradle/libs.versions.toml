@@ -13,7 +13,7 @@ serializationJson = "1.11.0"
 # than anywhere: a match is verified by replaying it with this engine, so a `verify` that resolved a
 # different one than the release did would be re-testing a server nobody deployed. The client pins
 # this same number, and the two move together — tag `tto-core`, then the client, then this line.
-core = "0.7.4"
+core = "0.7.5"
 
 # Held in step with the client's Ktor. It was pinned at 3.3.1 by the client's Kotlin — from 3.4.0
 # Ktor's Kotlin/Native klibs are compiled by Kotlin 2.3, whose ABI Kotlin 2.2.20 refused — and

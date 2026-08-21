@@ -6,7 +6,9 @@ import com.tripletriad.data.Format
 import com.tripletriad.model.Card
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
+import com.tripletriad.model.HandVisibility
 import com.tripletriad.model.MatchAi
+import com.tripletriad.model.OpenRule
 import com.tripletriad.protocol.PveMatchStatus
 import com.tripletriad.protocol.PveMove
 import kotlin.random.Random
@@ -90,6 +92,43 @@ class PveMatchRowTest {
     private fun wholeBoard() = List(PLACEMENTS) { PveMove(handIndex = 0, position = it) }
 
     // ---- Replaying --------------------------------------------------------
+
+    /**
+     * **Three Open shows three cards for the whole match, and it was showing more as it went on.**
+     *
+     * `HandVisibility` names *positions*, and `MatchState.play` closes the hand over the slot that
+     * was played rather than leaving a hole — so a set of three positions starts naming different
+     * cards the moment one is played. [PveMatchPosition.advanced] was not calling
+     * [HandVisibility.afterPlaying], and the result was visible from the sofa: the opponent played,
+     * their hand shifted down, and a card that had been face down all match turned face up.
+     *
+     * Asserted in both directions on purpose. That nothing new is revealed is the bug; that
+     * everything already revealed *stays* revealed is the over-correction that shifting the wrong
+     * way would produce, and it would look almost right.
+     */
+    @Test
+    fun aHiddenCardDoesNotTurnFaceUpAsTheOpponentsHandShrinks() {
+        val rules = GameRules(open = OpenRule.THREE_OPEN)
+        val moves = wholeBoard()
+        val start = assertNotNull(row(flat, rules).position(flat))
+        val opening = start.blueSeesRed
+            .visible(start.state.hands[CardColor.RED].orEmpty())
+            .map { it.id }
+            .toSet()
+        assertEquals(HandVisibility.THREE_OPEN_COUNT, opening.size, "the deal should show three")
+
+        for (played in 1..moves.size) {
+            val at = assertNotNull(row(flat, rules, moves.take(played)).position(flat))
+            val red = at.state.hands[CardColor.RED].orEmpty()
+            val seen = at.blueSeesRed.visible(red).map { it.id }.toSet()
+
+            assertEquals(
+                red.map { it.id }.filter { it in opening }.toSet(),
+                seen,
+                "after $played placements the face-up cards are not the ones dealt face up",
+            )
+        }
+    }
 
     @Test
     fun anUnplayedRowReplaysToAnEmptyBoardWithTheDealtHands() {

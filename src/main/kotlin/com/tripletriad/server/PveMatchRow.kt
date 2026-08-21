@@ -286,9 +286,34 @@ data class PveMatchPosition(
      * which throws.
      */
     fun advanced(move: PveMove): PveMatchPosition? {
+        val mover = state.currentPlayer
         val card = state.currentHand
             .getOrNull(move.handIndex)
-            ?.takeIf { move.position in state.playablePositions() }
-        return card?.let { copy(state = state.play(it, move.position)) }
+            ?.takeIf { mover != null && move.position in state.playablePositions() }
+        return card?.let {
+            copy(
+                state = state.play(it, move.position),
+                // **The visibility follows the hand, and forgetting that is a real bug this had.**
+                // `HandVisibility` names *positions*, and `MatchState.play` closes the gap rather
+                // than leaving a hole — so a set of three positions keeps pointing at whatever now
+                // sits at them. Under Three Open the effect was visible from the sofa: the
+                // opponent played, the hand shifted down, and a card that had been face down all
+                // match turned face up. See `HandVisibility.afterPlaying`, which exists for exactly
+                // this and which this function was not calling.
+                //
+                // Only the mover's side re-indexes. `blueSeesRed` is indexed into *red's* hand, so
+                // it moves when red plays and not when blue does.
+                blueSeesRed = if (mover == CardColor.RED) {
+                    blueSeesRed.afterPlaying(move.handIndex)
+                } else {
+                    blueSeesRed
+                },
+                redSeesBlue = if (mover == CardColor.BLUE) {
+                    redSeesBlue.afterPlaying(move.handIndex)
+                } else {
+                    redSeesBlue
+                },
+            )
+        }
     }
 }
