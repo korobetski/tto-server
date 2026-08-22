@@ -1,10 +1,13 @@
 package com.tripletriad.server
 
+import com.tripletriad.data.CampaignEntry
+import com.tripletriad.data.CampaignRewards
 import com.tripletriad.data.CardValue
 import com.tripletriad.data.Inventory
 import com.tripletriad.data.ShopCatalog
 import com.tripletriad.data.StarterPack
 import com.tripletriad.model.GameSave
+import com.tripletriad.model.questDayOf
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
 import com.tripletriad.protocol.BagItemRequest
@@ -180,7 +183,7 @@ fun Route.accountRoutes(
         }
     }
 
-    profileRoutes(store, tables, random)
+    profileRoutes(store, tables, random, clock)
 }
 
 /**
@@ -191,7 +194,12 @@ fun Route.accountRoutes(
  * between the lobby and a live match, and it happened here for the same reason: the file grew a
  * bag endpoint and the function that held everything stopped fitting on a screen.
  */
-private fun Route.profileRoutes(store: AccountStore, tables: ShopTables, random: () -> Random) {
+private fun Route.profileRoutes(
+    store: AccountStore,
+    tables: ShopTables,
+    random: () -> Random,
+    clock: () -> Long,
+) {
     /**
      * The profile and the match record — what a returning player is shown.
      *
@@ -259,7 +267,7 @@ private fun Route.profileRoutes(store: AccountStore, tables: ShopTables, random:
         call.respond(HttpStatusCode.NoContent)
     }
 
-    intentRoutes(store, tables, random)
+    intentRoutes(store, tables, random, clock)
 }
 
 /**
@@ -272,7 +280,12 @@ private fun Route.profileRoutes(store: AccountStore, tables: ShopTables, random:
  * All of them share one rate-limit bucket and one idempotency guard, which is why they are one
  * function: a seventh added outside this block would silently get neither.
  */
-private fun Route.intentRoutes(store: AccountStore, tables: ShopTables, random: () -> Random) {
+private fun Route.intentRoutes(
+    store: AccountStore,
+    tables: ShopTables,
+    random: () -> Random,
+    clock: () -> Long,
+) {
     /**
      * Uses something from the bag — and, for a booster, **rolls it here**.
      *
@@ -376,7 +389,7 @@ private fun Route.intentRoutes(store: AccountStore, tables: ShopTables, random: 
 
         // Inside the block, deliberately: this is what makes the shop share the bucket and the
         // guard rather than quietly having neither.
-        shopIntents(store, tables)
+        shopIntents(store, tables, clock)
     }
 }
 
@@ -390,7 +403,7 @@ private fun Route.intentRoutes(store: AccountStore, tables: ShopTables, random: 
  * What they have in common is the thing worth stating: **no price arrives from the client.**
  * Each one names what it wants and the server looks up what that costs.
  */
-private fun Route.shopIntents(store: AccountStore, tables: ShopTables) {
+private fun Route.shopIntents(store: AccountStore, tables: ShopTables, clock: () -> Long) {
     /**
      * Buys from the shop, at the server's price.
      *
@@ -450,32 +463,42 @@ private fun Route.shopIntents(store: AccountStore, tables: ShopTables) {
     }
 
     /**
-     * Pays to enter a campaign ladder.
+     * Pays to enter a campaign ladder, and opens the run.
      *
      * The fee comes from this server's campaign catalogue, so a client cannot enter for less
      * than the ladder costs — nor for nothing, which is what happened when the deduction lived
      * on the client and the client could simply not apply it.
      *
-     * A ladder that does not exist charges nothing rather than refusing: the profile comes back
-     * unchanged and the client learns its catalogue disagrees with the server's, which is a
-     * version problem and not a payment one.
+     * ### Five ways in are refused, and all five answer the same way
      *
-     * ### The purse is checked here, and nothing else was going to
+     * An unknown ladder, one still gated behind an achievement, a run already open, today's entry
+     * already spent, and a purse that does not cover the fee. Each returns the profile **unchanged
+     * and uncharged**, which is this file's convention for a refusal and is more use to a client
+     * than a status code: it asked for something, and here is the state it asked against.
+     *
+     * `CampaignRewards.enter` decides all five, in `:core`, so the ladder's rules are the same
+     * arithmetic the client shows the player and are not stated twice.
+     *
+     * ### The purse is checked there, and nothing else was going to
      *
      * `GameSave.withMgp` **floors at zero**. So a player holding 100 who entered a 500 ladder would
      * pay 100 and play, which makes being broke the cheapest way in. The client hid the button, and
      * a hidden button is not a rule.
      *
-     * `ShopCatalog.buy` makes this check itself and selling a card cannot overdraw, so this is the
-     * one intent that needed it written out — exactly the sort of thing that stays invisible until
-     * the arithmetic moves to the side that has to mean it.
+     * ### The day's entry is stamped here, at entry
+     *
+     * Not when the run resolves. A first-round defeat is eliminating, so a limit applied at
+     * settlement would only ever bite the players who won — see `GameSave.enteringCampaign`.
      */
     post("/me/campaign/enter") {
         if (!requireCompatibleClient()) return@post
         val request = call.receive<EnterCampaignRequest>()
-        val fee = tables.campaigns.byKey(request.campaignKey)?.fee ?: 0
+        val campaign = tables.campaigns.byKey(request.campaignKey)
+        val now = clock()
+
         respondWithProfile(store, request) { save ->
-            if (save.mgp < fee) save else save.withMgp(-fee)
+            val entry = CampaignRewards.enter(save, campaign, questDayOf(now), now)
+            (entry as? CampaignEntry.Entered)?.save ?: save
         }
     }
 }

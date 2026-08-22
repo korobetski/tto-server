@@ -402,7 +402,11 @@
           },
           "messages": {}
         }
-      ]
+      ],
+      "dropMultiplier": 2.0,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2.0,
+      "requiresAchievement": "ac-cmp-balamb"
     },
     {
       "key": "gs",
@@ -794,6 +798,266 @@
             "win": "I admit my defeat...",
             "lose": "Come see me in hundred years."
           }
+        }
+      ],
+      "dropMultiplier": 2.0,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2.0
+    },
+    {
+      "key": "balamb",
+      "nameKey": "APP_CAMPAIGN_BALAMB",
+      "format": "ff8-standard",
+      "fee": 200,
+      "steps": [
+        {
+          "npc": {
+            "id": 1,
+            "name": "STR_NPC_KID",
+            "iconID": "kid",
+            "rules": [
+              "RULE_ALL_OPEN"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              513,
+              514,
+              515,
+              516,
+              517,
+              518,
+              519,
+              520,
+              521,
+              522,
+              523,
+              524,
+              525,
+              526,
+              527,
+              528,
+              529,
+              530,
+              531,
+              532,
+              533,
+              593
+            ],
+            "level": "STR_NPC_LEVEL_NOVICE",
+            "matchFee": 5,
+            "MGPReward": {
+              "w": 25,
+              "d": 9,
+              "l": 3
+            },
+            "itemRewards": [
+              {
+                "card": 522,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 525,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 593,
+                "type": "card",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 2,
+            "name": "STR_NPC_TREPIES",
+            "iconID": "trepies",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_RANDOM",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              527,
+              528,
+              529,
+              530,
+              531,
+              532,
+              533,
+              534,
+              535,
+              536,
+              537,
+              538,
+              539,
+              541,
+              542,
+              616
+            ],
+            "level": "STR_NPC_LEVEL_INITIATE",
+            "matchFee": 13,
+            "MGPReward": {
+              "w": 75,
+              "d": 26,
+              "l": 9
+            },
+            "itemRewards": [
+              {
+                "card": 616,
+                "type": "card",
+                "rate": 0.01
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 3,
+            "name": "STR_NPC_MA_DINCHT",
+            "iconID": "ma-dincht",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_RANDOM",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              527,
+              528,
+              529,
+              530,
+              531,
+              532,
+              533,
+              534,
+              535,
+              536,
+              537,
+              538,
+              539,
+              541,
+              542,
+              618
+            ],
+            "level": "STR_NPC_LEVEL_NOVICE",
+            "matchFee": 9,
+            "MGPReward": {
+              "w": 50,
+              "d": 18,
+              "l": 6
+            },
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 1.0
+              },
+              {
+                "card": 538,
+                "type": "card",
+                "rate": 0.33
+              },
+              {
+                "card": 539,
+                "type": "card",
+                "rate": 0.33
+              },
+              {
+                "card": 618,
+                "type": "card",
+                "rate": 0.005
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 4,
+            "name": "STR_NPC_JACK",
+            "iconID": "jack",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              520,
+              523,
+              527,
+              529,
+              530,
+              531,
+              532,
+              536,
+              537,
+              538,
+              539,
+              541,
+              542,
+              597
+            ],
+            "level": "STR_NPC_LEVEL_NOVICE",
+            "matchFee": 5,
+            "MGPReward": {
+              "w": 25,
+              "d": 9,
+              "l": 3
+            },
+            "itemRewards": [
+              {
+                "card": 541,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 542,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 597,
+                "type": "card",
+                "rate": 0.01
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2.0,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2.0,
+      "finalReward": [
+        {
+          "type": "card",
+          "card": 593,
+          "rate": 0.4
+        },
+        {
+          "type": "card",
+          "card": 597,
+          "rate": 0.4
+        },
+        {
+          "type": "card",
+          "card": 616,
+          "rate": 0.1
+        },
+        {
+          "type": "card",
+          "card": 618,
+          "rate": 0.1
         }
       ]
     }

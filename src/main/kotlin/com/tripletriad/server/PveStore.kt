@@ -54,8 +54,8 @@ class PveStore(
             """
             INSERT INTO pve_matches
                 (id, account_id, format_id, opponent_icon, rules, seed, blue_hand, red_hand,
-                 first_player, moves, status)
-            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?::jsonb, ?)
+                 first_player, moves, status, campaign_key, campaign_step)
+            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?::jsonb, ?, ?, ?)
             ON CONFLICT (account_id) WHERE status = 'PLAYING' DO NOTHING
             """.trimIndent(),
         ).use { statement ->
@@ -70,6 +70,9 @@ class PveStore(
             statement.setString(9, row.first.name)
             statement.setString(10, json.encodeToString(row.moves))
             statement.setString(11, row.status.name)
+            statement.setString(12, row.campaignKey)
+            // `setObject` rather than `setInt`, which cannot express the null half of the pair.
+            statement.setObject(13, row.campaignStep, java.sql.Types.INTEGER)
             if (statement.executeUpdate() > 0) row else null
         }
     }
@@ -231,6 +234,10 @@ class PveStore(
         status = PveMatchStatus.valueOf(getString("status")),
         reward = getString("reward")
             ?.let { json.decodeFromString(RewardSummary.serializer(), it) },
+        campaignKey = getString("campaign_key"),
+        // `getInt` reads a SQL NULL as 0, which is a real rung. `wasNull` is the only way to tell
+        // the first rung of a run from a match that was never part of one.
+        campaignStep = getInt("campaign_step").takeUnless { wasNull() },
     )
 
     // As wide as it can be, and for the reason `AccountStore.transaction` gives: anything at all

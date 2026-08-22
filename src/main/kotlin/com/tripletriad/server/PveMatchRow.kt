@@ -85,6 +85,17 @@ data class PveMatchRow(
     val moves: List<PveMove>,
     val status: PveMatchStatus,
     val reward: RewardSummary? = null,
+    /**
+     * The tournament run this match was dealt for, or null for an ordinary match.
+     *
+     * **A checked claim, written down.** The client says which ladder it is playing when it opens
+     * the match; the referee compares that against the run the profile actually holds, and only a
+     * claim that matched is stored here. See `V11__pve_campaign.sql` for why settlement cannot
+     * simply re-read the profile instead.
+     */
+    val campaignKey: String? = null,
+    /** The rung, as `CampaignRun.step`. Null exactly when [campaignKey] is. */
+    val campaignStep: Int? = null,
 ) {
     /**
      * The match as it stands, replayed from the inputs.

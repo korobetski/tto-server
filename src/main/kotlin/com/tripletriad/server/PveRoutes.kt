@@ -1,12 +1,19 @@
 package com.tripletriad.server
 
+import com.tripletriad.data.Campaign
+import com.tripletriad.data.CampaignCatalog
+import com.tripletriad.data.CampaignPayout
+import com.tripletriad.data.CampaignRewards
 import com.tripletriad.data.CardCatalog
 import com.tripletriad.data.Format
 import com.tripletriad.data.FormatCatalog
+import com.tripletriad.data.MatchReward
 import com.tripletriad.data.MatchRewards
 import com.tripletriad.data.NpcCatalog
 import com.tripletriad.data.PveMatches
+import com.tripletriad.data.RewardBoost
 import com.tripletriad.model.Board
+import com.tripletriad.model.CampaignRun
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.HAND_SIZE
@@ -65,10 +72,11 @@ fun Route.pveRoutes(
     formats: FormatCatalog,
     accounts: AccountStore,
     pve: PveStore,
+    campaigns: CampaignCatalog = Catalogs.campaigns,
     clock: () -> Long = System::currentTimeMillis,
     random: () -> Random = { Random.Default },
 ) {
-    val referee = PveReferee(cards, npcs, formats, accounts, pve, clock, random)
+    val referee = PveReferee(cards, npcs, formats, accounts, pve, campaigns, clock, random)
 
     route("/pve/matches") {
         openRoute(referee, accounts)
@@ -139,12 +147,28 @@ private fun Route.liveRoutes(referee: PveReferee, accounts: AccountStore) {
     }
 }
 
+/** The ladder a match belongs to and where the run stands on it. */
+private data class Rung(val campaign: Campaign, val run: CampaignRun)
+
+/**
+ * A request's tournament claim, once it has been checked. See `PveReferee.claimed`.
+ *
+ * Three answers in two types, and the wrapper is what keeps them apart: **no `Claim` at all** is a
+ * claim that was refused, a `Claim` with a null [run] is an ordinary free-play match, and one with
+ * a run is a rung the player really is standing on. A bare `CampaignRun?` could not say the first
+ * two differently, which is exactly the confusion that would let a refused claim be dealt.
+ */
+private data class Claim(val run: CampaignRun?)
+
 /** Why a match did or did not open. */
 sealed interface Dealt {
     data class Playing(val view: PveMatchView) : Dealt
     data object NoSuchOpponent : Dealt
     data object NoSuchFormat : Dealt
     data object Undealable : Dealt
+
+    /** The request claimed a rung the profile's run is not standing on. See [PveRefusal]. */
+    data object NotOnThatRung : Dealt
 }
 
 /** What happened to a placement. */
@@ -175,6 +199,11 @@ internal fun Dealt.refusal(): RejectedPve = when (this) {
         PveRefusal.UNDEALABLE,
         "you cannot field five cards in that format",
     )
+    Dealt.NotOnThatRung -> RejectedPve(
+        HttpStatusCode.Conflict,
+        PveRefusal.NOT_ON_THAT_RUNG,
+        "you are not on that rung of that tournament",
+    )
 }
 
 internal fun Moved.refusal(): RejectedPve = when (this) {
@@ -204,6 +233,7 @@ class PveReferee(
     private val formats: FormatCatalog,
     private val accounts: AccountStore,
     private val pve: PveStore,
+    private val campaigns: CampaignCatalog = Catalogs.campaigns,
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: () -> Random = { Random.Default },
 ) {
@@ -220,8 +250,17 @@ class PveReferee(
     fun open(accountId: Long, request: PveMatchRequest): Dealt {
         val save = accounts.saveFor(accountId) ?: return Dealt.Undealable
         val format = formats[request.formatId] ?: return Dealt.NoSuchFormat
-        val npc = npcs.byIcon(request.opponentIconId, format.id) ?: return Dealt.NoSuchOpponent
-        val dealt = deal(accountId, save, npc, format, request.deck) ?: return Dealt.Undealable
+        // An opponent the profile has not earned is answered as though they were not there.
+        // Deliberately the same refusal as an unknown icon: the roster is not a secret, but a
+        // client learning the difference between "no such opponent" and "not yet" from a status
+        // code learns nothing it cannot read off `npcs.json`, and one answer is one code path.
+        val npc = npcs.byIcon(request.opponentIconId, format.id)
+            ?.takeIf { it.isUnlockedFor(save) }
+            ?: return Dealt.NoSuchOpponent
+        val claim = claimed(save, request, npc) ?: return Dealt.NotOnThatRung
+        val dealt = deal(accountId, save, npc, format, request.deck)
+            ?.copy(campaignKey = claim.run?.campaignKey, campaignStep = claim.run?.step)
+            ?: return Dealt.Undealable
 
         pve.abandonLive(accountId)
         // Losing the insert means a second tap got there first. Its match is the answer — which is
@@ -362,22 +401,27 @@ class PveReferee(
             score.blue < score.red -> MatchResult.LOSE
             else -> MatchResult.DRAW
         }
+        // Null unless this row was dealt as a rung **and** the profile still stands on that run.
+        // See `V11__pve_campaign.sql`: a run that closed underneath a live match settles it as the
+        // ordinary match it turned out to be, rather than crediting a tournament nobody is in.
+        val ladder = runFor(row, save)
+        val at = clock()
+        val generator = random()
+
         val credited = MatchRewards.credit(
             save = save.startingMatch(againstNpc = true),
             npc = npc,
             result = result,
             rules = row.rules,
-            at = clock(),
-            random = random(),
+            at = at,
+            random = generator,
+            boost = ladder?.let { CampaignRewards.rungBoost(it.campaign, result) }
+                ?: RewardBoost.NONE,
         )
-        val summary = RewardSummary(
-            result = credited.reward.result,
-            mgp = credited.reward.mgp,
-            xp = credited.reward.xp,
-            items = credited.reward.items,
-            achievementIds = credited.reward.achievements.map { it.id },
-            questIds = credited.reward.quests.map { it.id },
-        )
+        // The run is advanced on the profile the match just wrote, so both land in one save.
+        val climbed = ladder?.let { closing(credited.save, it, result, at, generator) }
+        val summary = summarise(credited.reward, climbed)
+        val settled = climbed?.save ?: credited.save
 
         if (!pve.finish(row.id, PveMatchStatus.FINISHED, summary)) {
             return pve.matchById(row.id, row.accountId) ?: row
@@ -395,9 +439,81 @@ class PveReferee(
                 mgp = credited.reward.mgp,
                 xp = credited.reward.xp,
             ),
-            save = credited.save.copy(lastSave = clock(), saveNumber = save.saveNumber + 1),
+            save = settled.copy(lastSave = at, saveNumber = save.saveNumber + 1),
         )
         return row.copy(status = PveMatchStatus.FINISHED, reward = summary)
+    }
+
+    /**
+     * What the match paid, as one line, with anything the tournament added folded in.
+     *
+     * The two are added rather than reported apart because a player is owed one answer to "what did
+     * that get me" — the panel shows a total. Which half came from the ladder is the run's own
+     * business, and the summary screen already knows it was the last rung.
+     */
+    private fun summarise(reward: MatchReward, climbed: CampaignPayout?): RewardSummary =
+        RewardSummary(
+            result = reward.result,
+            mgp = reward.mgp + (climbed?.mgp ?: 0),
+            xp = reward.xp,
+            items = reward.items + (climbed?.items ?: emptyList()),
+            achievementIds = (reward.achievements + (climbed?.achievements ?: emptyList()))
+                .map { it.id },
+            questIds = reward.quests.map { it.id },
+        )
+
+    /**
+     * The run this row belongs to, or null when settling it is nobody's tournament business.
+     *
+     * All four have to hold: the row claimed a ladder, the ladder is one this build knows, the
+     * profile still holds a run in it, and that run is still standing where the row was dealt for.
+     * The last is what makes an interrupted run safe to abandon — the moment a player forfeits and
+     * enters again, an old live match settles as free play instead of advancing the new run.
+     */
+    private fun runFor(row: PveMatchRow, save: GameSave): Rung? {
+        val key = row.campaignKey ?: return null
+        val campaign = campaigns.byKey(key) ?: return null
+        val run = save.runIn(key)?.takeIf { it.step == row.campaignStep } ?: return null
+
+        return Rung(campaign, run)
+    }
+
+    /**
+     * Moves the run on, and closes it when the rung was the last one or the player lost.
+     *
+     * The three endings, which are the whole of what a tournament is:
+     *
+     * - **a win that is not the top** advances, and pays only what the rung paid;
+     * - **a win at the top** pays [CampaignRewards.finish] — the ladder's own multiple of its entry
+     *   fee, plus one item drawn from its lot — and records the ladder as climbed;
+     * - **anything else** holds or closes. A draw holds and pays nothing at all, so the rung may
+     *   be replayed as often as the player likes; a defeat closes the run and refunds nothing.
+     *
+     * A first-round defeat is no different from any other, which is deliberate and is what the
+     * entry fee prices.
+     */
+    private fun closing(
+        save: GameSave,
+        rung: Rung,
+        result: MatchResult,
+        at: Long,
+        random: Random,
+    ): CampaignPayout {
+        val advanced = CampaignRewards.advance(rung.run, result)
+
+        return when {
+            result == MatchResult.LOSE ->
+                CampaignPayout(CampaignRewards.forfeit(save), mgp = 0, items = emptyList())
+
+            advanced.hasCompleted(rung.campaign.steps.size) ->
+                CampaignRewards.finish(save, rung.campaign, at, random)
+
+            else -> CampaignPayout(
+                save.copy(campaignRun = advanced),
+                mgp = 0,
+                items = emptyList(),
+            )
+        }
     }
 
     /**
@@ -437,6 +553,31 @@ class PveReferee(
         captures = play.captures,
         handIndex = play.handIndex,
     )
+
+    /**
+     * Whether this request may be dealt as a tournament rung, and which one.
+     *
+     * Four things have to agree before a match is credited as part of a run, and every one of them
+     * is checked here rather than at settlement — refusing to deal costs the player nothing, where
+     * refusing to pay for a match they have already played costs them the match:
+     *
+     * - the request claims a ladder at all (otherwise it is free play, and [Standing.FreePlay]);
+     * - the profile holds an open run, in **that** ladder;
+     * - the ladder exists in this server's catalogue;
+     * - the opponent asked for is the one standing on the run's current rung.
+     *
+     * The last is the one that is easy to leave out and the one that matters most. Without it a
+     * client could open the first rung's opponent as many times as the ladder is long and finish
+     * the tournament against the easiest of its opponents.
+     */
+    private fun claimed(save: GameSave, request: PveMatchRequest, npc: Npc): Claim? {
+        val key = request.campaignKey ?: return Claim(run = null)
+        val run = save.runIn(key) ?: return null
+        val campaign = campaigns.byKey(key) ?: return null
+        val rung = campaign.stepAt(run.step) ?: return null
+
+        return if (rung.npc.iconId == npc.iconId) Claim(run) else null
+    }
 
     /** The match that already existed, when opening lost the race to a second tap. */
     private fun reopened(accountId: Long): Dealt = pve.activeFor(accountId)
