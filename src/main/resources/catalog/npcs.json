@@ -113,11 +113,11 @@
         267
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "matchFee": 13,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -131,7 +131,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 4,
@@ -201,12 +201,12 @@
         313,
         301
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 225,
+        "d": 79,
+        "l": 27
       },
       "itemRewards": [
         {
@@ -220,7 +220,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 8
+      "difficulty": 9
     },
     {
       "id": 6,
@@ -244,12 +244,12 @@
         305,
         297
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -268,7 +268,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 5
+      "difficulty": 8
     },
     {
       "id": 7,
@@ -294,11 +294,11 @@
         258
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
+      "matchFee": 9,
       "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
+        "w": 50,
+        "d": 18,
+        "l": 6
       },
       "itemRewards": [
         {
@@ -317,7 +317,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 1
+      "difficulty": 2
     },
     {
       "id": 8,
@@ -341,12 +341,12 @@
         303,
         276
       ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 9,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 50,
-        "d": 18,
-        "l": 6
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -360,7 +360,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 2,
+      "difficulty": 6,
       "availability": {
         "begins": 20,
         "ends": 8
@@ -389,12 +389,12 @@
         283,
         277
       ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 9,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 50,
-        "d": 18,
-        "l": 6
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -408,7 +408,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 2
+      "difficulty": 5
     },
     {
       "id": 10,
@@ -432,12 +432,12 @@
         283,
         281
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -456,7 +456,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 6
+      "difficulty": 7
     },
     {
       "id": 11,
@@ -542,12 +542,12 @@
         286,
         311
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -566,7 +566,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6
+      "difficulty": 8
     },
     {
       "id": 13,
@@ -683,12 +683,12 @@
         267,
         261
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 225,
+        "d": 79,
+        "l": 27
       },
       "itemRewards": [
         {
@@ -712,7 +712,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 4
+      "difficulty": 9
     },
     {
       "id": 16,
@@ -737,12 +737,12 @@
         290,
         262
       ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
       "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
+        "w": 75,
+        "d": 26,
+        "l": 9
       },
       "itemRewards": [
         {
@@ -751,7 +751,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 1
+      "difficulty": 3
     },
     {
       "id": 17,
@@ -776,12 +776,12 @@
         260,
         263
       ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -795,7 +795,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 1
+      "difficulty": 4
     },
     {
       "id": 18,
@@ -820,12 +820,12 @@
         269,
         266
       ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -844,7 +844,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 1
+      "difficulty": 4
     },
     {
       "id": 19,
@@ -922,12 +922,12 @@
         283,
         278
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -941,7 +941,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 5,
+      "difficulty": 4,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -1062,12 +1062,12 @@
         291,
         286
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -1081,7 +1081,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 3,
+      "difficulty": 5,
       "availability": {
         "begins": 12,
         "ends": 20
@@ -1110,11 +1110,11 @@
         294
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -1133,7 +1133,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 6
+      "difficulty": 5
     },
     {
       "id": 26,
@@ -1159,11 +1159,11 @@
         269
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "matchFee": 25,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1182,7 +1182,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 5
+      "difficulty": 6
     },
     {
       "id": 27,
@@ -1206,12 +1206,12 @@
         295,
         298
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1230,7 +1230,7 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 4
+      "difficulty": 6
     },
     {
       "id": 28,
@@ -1303,12 +1303,12 @@
         291,
         298
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -1322,7 +1322,7 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 6,
+      "difficulty": 8,
       "availability": {
         "begins": 16,
         "ends": 8
@@ -1350,18 +1350,18 @@
         290,
         259
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
           "potion": "MGP_BOOST",
           "type": "potion",
-          "rate": 1.0
+          "rate": 1
         },
         {
           "card": 301,
@@ -1379,7 +1379,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 5
+      "difficulty": 7
     },
     {
       "id": 31,
@@ -1415,7 +1415,7 @@
         {
           "potion": "MGP_BOOST",
           "type": "potion",
-          "rate": 1.0
+          "rate": 1
         },
         {
           "card": 299,
@@ -1621,12 +1621,12 @@
         318,
         336
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -1645,7 +1645,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 6
+      "difficulty": 7
     },
     {
       "id": 36,
@@ -1725,11 +1725,11 @@
         330
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 29,
+      "matchFee": 33,
       "MGPReward": {
-        "w": 175,
-        "d": 61,
-        "l": 21
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -1753,7 +1753,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 7,
+      "difficulty": 8,
       "availability": {
         "begins": 21,
         "ends": 7
@@ -1831,12 +1831,12 @@
         285,
         263
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1855,7 +1855,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3,
+      "difficulty": 6,
       "availability": {
         "begins": 19,
         "ends": 23
@@ -1885,12 +1885,12 @@
         329,
         331
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -1904,7 +1904,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 6,
+      "difficulty": 7,
       "availability": {
         "begins": 15,
         "ends": 3
@@ -1981,12 +1981,12 @@
         337,
         352
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2000,7 +2000,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 6,
+      "difficulty": 7,
       "availability": {
         "begins": 9,
         "ends": 20
@@ -2075,12 +2075,12 @@
         389,
         390
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -2104,7 +2104,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 3,
+      "difficulty": 5,
       "availability": {
         "begins": 2,
         "ends": 9
@@ -2131,12 +2131,12 @@
         306,
         275
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2150,7 +2150,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6,
+      "difficulty": 8,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2229,12 +2229,12 @@
         344,
         294
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2248,7 +2248,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6,
+      "difficulty": 8,
       "availability": {
         "begins": 16,
         "ends": 20
@@ -2275,12 +2275,12 @@
         289,
         314
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 100,
+        "d": 35,
+        "l": 12
       },
       "itemRewards": [
         {
@@ -2309,7 +2309,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6,
+      "difficulty": 4,
       "availability": {
         "begins": 23,
         "ends": 4
@@ -2337,12 +2337,12 @@
         342,
         359
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2356,7 +2356,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6,
+      "difficulty": 7,
       "availability": {
         "begins": 17,
         "ends": 23
@@ -2429,12 +2429,12 @@
         349,
         352
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 225,
+        "d": 79,
+        "l": 27
       },
       "itemRewards": [
         {
@@ -2448,7 +2448,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 8,
+      "difficulty": 9,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2476,12 +2476,12 @@
         296,
         288
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 37,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 225,
-        "d": 79,
-        "l": 27
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2500,7 +2500,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 9,
+      "difficulty": 8,
       "availability": {
         "begins": 21,
         "ends": 8
@@ -2527,12 +2527,12 @@
         361,
         365
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2551,7 +2551,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 5
+      "difficulty": 8
     },
     {
       "id": 54,
@@ -2573,12 +2573,12 @@
         363,
         362
       ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -2592,7 +2592,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 4,
+      "difficulty": 5,
       "availability": {
         "begins": 14,
         "ends": 18
@@ -2623,11 +2623,11 @@
         315
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 29,
+      "matchFee": 33,
       "MGPReward": {
-        "w": 175,
-        "d": 61,
-        "l": 21
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2641,7 +2641,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 7,
+      "difficulty": 8,
       "availability": {
         "begins": 6,
         "ends": 24
@@ -2669,12 +2669,12 @@
         355,
         364
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2693,7 +2693,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 5,
+      "difficulty": 7,
       "availability": {
         "begins": 21,
         "ends": 3
@@ -2721,12 +2721,12 @@
         346,
         259
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 225,
+        "d": 79,
+        "l": 27
       },
       "itemRewards": [
         {
@@ -2735,7 +2735,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 8,
+      "difficulty": 9,
       "availability": {
         "begins": 19,
         "ends": 5
@@ -2764,12 +2764,12 @@
         353,
         338
       ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2793,7 +2793,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 6
+      "difficulty": 8
     },
     {
       "id": 59,
@@ -2819,11 +2819,11 @@
         305
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 29,
+      "matchFee": 33,
       "MGPReward": {
-        "w": 175,
-        "d": 61,
-        "l": 21
+        "w": 200,
+        "d": 70,
+        "l": 24
       },
       "itemRewards": [
         {
@@ -2832,7 +2832,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 7
+      "difficulty": 8
     },
     {
       "id": 60,
@@ -2856,12 +2856,12 @@
         271,
         273
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 225,
+        "d": 79,
+        "l": 27
       },
       "itemRewards": [
         {
@@ -2880,7 +2880,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 8
+      "difficulty": 9
     },
     {
       "id": 99,
@@ -3048,1374 +3048,109 @@
         406,
         407,
         408,
-        409
-      ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
-      "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 333,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 5
-    },
-    {
-      "id": 1,
-      "name": "STR_NPC_KID",
-      "iconID": "kid",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ALL_OPEN"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        513,
-        514,
-        515,
-        516,
-        517,
-        518,
-        519,
-        520,
-        521,
-        522,
-        523,
-        524,
-        525,
-        526,
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        593
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
-      "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
-      },
-      "itemRewards": [
-        {
-          "card": 522,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 525,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 593,
-          "type": "card",
-          "rate": 0.08
-        }
-      ],
-      "difficulty": 1
-    },
-    {
-      "id": 2,
-      "name": "STR_NPC_CHOCOBOY",
-      "iconID": "chocoboy",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_THREE_OPEN"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        513,
-        514,
-        515,
-        516,
-        517,
-        518,
-        519,
-        520,
-        521,
-        522,
-        523,
-        524,
-        525,
-        526,
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        590,
-        594
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
-      "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
-      },
-      "itemRewards": [
-        {
-          "card": 528,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 532,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 590,
-          "type": "card",
-          "rate": 0.08
-        },
-        {
-          "card": 594,
-          "type": "card",
-          "rate": 0.08
-        }
-      ],
-      "difficulty": 1
-    },
-    {
-      "id": 2,
-      "name": "STR_NPC_UFO",
-      "iconID": "ufo",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME_WALL",
-        "RULE_THREE_OPEN"
-      ],
-      "fetishesCards": [
-        560
-      ],
-      "cards": [
-        513,
-        514,
-        515,
-        516,
-        517,
-        518,
-        519,
-        520,
-        521,
-        522,
-        523,
-        524,
-        525,
-        526,
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
-      "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 523,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 533,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 560,
-          "type": "card",
-          "rate": 0.05
-        }
-      ],
-      "difficulty": 1
-    },
-    {
-      "id": 3,
-      "name": "STR_NPC_JACK",
-      "iconID": "jack",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ALL_OPEN",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        520,
-        523,
-        527,
-        529,
-        530,
-        531,
-        532,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        597
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
-      "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
-      },
-      "itemRewards": [
-        {
-          "card": 541,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 542,
-          "type": "card",
-          "rate": 0.25
-        },
-        {
-          "card": 597,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 1
-    },
-    {
-      "id": 4,
-      "name": "STR_NPC_CLUB",
-      "iconID": "club",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        520,
-        523,
-        527,
-        529,
-        530,
-        531,
-        532,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        598
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 9,
-      "MGPReward": {
-        "w": 50,
-        "d": 18,
-        "l": 6
-      },
-      "itemRewards": [
-        {
-          "card": 538,
-          "type": "card",
-          "rate": 0.33
-        },
-        {
-          "card": 539,
-          "type": "card",
-          "rate": 0.33
-        },
-        {
-          "card": 598,
-          "type": "card",
-          "rate": 0.02
-        }
-      ],
-      "difficulty": 2
-    },
-    {
-      "id": 5,
-      "name": "STR_NPC_MA_DINCHT",
-      "iconID": "ma-dincht",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ALL_OPEN",
-        "RULE_RANDOM",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        618
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 9,
-      "MGPReward": {
-        "w": 50,
-        "d": 18,
-        "l": 6
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 538,
-          "type": "card",
-          "rate": 0.33
-        },
-        {
-          "card": 539,
-          "type": "card",
-          "rate": 0.33
-        },
-        {
-          "card": 618,
-          "type": "card",
-          "rate": 0.005
-        }
-      ],
-      "difficulty": 2
-    },
-    {
-      "id": 6,
-      "name": "STR_NPC_WATTS",
-      "iconID": "watts",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        591
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 591,
-          "type": "card",
-          "rate": 0.02
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 7,
-      "name": "STR_NPC_ZONE",
-      "iconID": "zone",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_SAME"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        596
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
-      "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
-      },
-      "itemRewards": [
-        {
-          "card": 596,
-          "type": "card",
-          "rate": 0.02
-        }
-      ],
-      "difficulty": 1
-    },
-    {
-      "id": 8,
-      "name": "STR_NPC_DIAMOND",
-      "iconID": "diamond",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_SAME",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 579,
-          "type": "card",
-          "rate": 0.1
-        },
-        {
-          "card": 580,
-          "type": "card",
-          "rate": 0.1
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 9,
-      "name": "STR_NPC_SPADE",
-      "iconID": "spade",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        610
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 610,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 10,
-      "name": "STR_NPC_TREPIES",
-      "iconID": "trepies",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ALL_OPEN",
-        "RULE_RANDOM",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        616
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 616,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 11,
-      "name": "STR_NPC_CARAWAY",
-      "iconID": "caraway",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ELEMENTAL",
-        "RULE_SAME",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542,
-        619
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 619,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 12,
-      "name": "STR_NPC_MARTINE",
-      "iconID": "martine",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ELEMENTAL",
-        "RULE_SUDDEN_DEATH"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        527,
-        528,
-        529,
-        530,
-        531,
-        532,
-        533,
-        534,
-        535,
-        536,
-        537,
-        538,
-        539,
-        541,
-        542
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
-      "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
-      },
-      "itemRewards": [],
-      "difficulty": 1
-    },
-    {
-      "id": 13,
-      "name": "STR_NPC_PIET",
-      "iconID": "piet",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_SAME_WALL",
-        "RULE_PLUS",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        607
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
-      "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
-      },
-      "itemRewards": [
-        {
-          "card": 607,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 4
-    },
-    {
-      "id": 13,
-      "name": "STR_NPC_ODINE",
-      "iconID": "odine",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ELEMENTAL",
-        "RULE_SAME_WALL",
-        "RULE_SUDDEN_DEATH"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        612
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 612,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 14,
-      "name": "STR_NPC_JOCKER",
-      "iconID": "jocker",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_SAME_WALL",
-        "RULE_PLUS",
-        "RULE_SUDDEN_DEATH"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        603
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
-      "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 603,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 4
-    },
-    {
-      "id": 15,
-      "name": "STR_NPC_FLO",
-      "iconID": "flo",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_SAME",
-        "RULE_PLUS",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        617
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 617,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 16,
-      "name": "STR_NPC_DOBE",
-      "iconID": "dobe",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_SAME",
-        "RULE_PLUS",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        595
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 13,
-      "MGPReward": {
-        "w": 75,
-        "d": 26,
-        "l": 9
-      },
-      "itemRewards": [
-        {
-          "card": 595,
-          "type": "card",
-          "rate": 0.02
-        }
-      ],
-      "difficulty": 3
-    },
-    {
-      "id": 17,
-      "name": "STR_NPC_EDEA",
-      "iconID": "edea",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        620
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
-      "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
-      },
-      "itemRewards": [
-        {
-          "card": 620,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 4
-    },
-    {
-      "id": 18,
-      "name": "STR_NPC_KING",
-      "iconID": "king",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_SAME_WALL",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        620
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
-      "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 620,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 4
-    },
-    {
-      "id": 19,
-      "name": "STR_NPC_CID",
-      "iconID": "cid",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        621
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
-      "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
-      },
-      "itemRewards": [
-        {
-          "card": 621,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 4
-    },
-    {
-      "id": 20,
-      "name": "STR_NPC_HEART",
-      "iconID": "heart",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_PLUS"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        601
-      ],
-      "level": "STR_NPC_LEVEL_INITIATE",
-      "matchFee": 17,
-      "MGPReward": {
-        "w": 100,
-        "d": 35,
-        "l": 12
-      },
-      "itemRewards": [
-        {
-          "potion": "MGP_BOOST",
-          "type": "potion",
-          "rate": 1.0
-        },
-        {
-          "card": 601,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 4
-    },
-    {
-      "id": 21,
-      "name": "STR_NPC_ELLONE",
-      "iconID": "ellone",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_SAME",
-        "RULE_SAME_WALL",
-        "RULE_PLUS",
-        "RULE_ELEMENTAL"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        614
-      ],
-      "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 21,
-      "MGPReward": {
-        "w": 125,
-        "d": 44,
-        "l": 15
-      },
-      "itemRewards": [
-        {
-          "card": 614,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 5
-    },
-    {
-      "id": 22,
-      "name": "STR_NPC_LAGUNA",
-      "iconID": "laguna",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_ELEMENTAL",
-        "RULE_SAME_WALL",
-        "RULE_SUDDEN_DEATH"
-      ],
-      "fetishesCards": [],
-      "cards": [
-        545,
-        546,
-        547,
-        548,
-        549,
-        550,
-        551,
-        552,
-        553,
-        554,
-        555,
-        556,
-        557,
-        558,
-        559,
-        560,
-        561,
-        562,
-        563,
-        564,
-        565,
-        566,
-        622
-      ],
-      "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 9,
-      "MGPReward": {
-        "w": 50,
-        "d": 18,
-        "l": 6
-      },
-      "itemRewards": [
-        {
-          "card": 622,
-          "type": "card",
-          "rate": 0.01
-        }
-      ],
-      "difficulty": 2
-    },
-    {
-      "id": 99,
-      "name": "APP_NPC_ISHTAR",
-      "iconID": "ishtar",
-      "formats": [
-        "ff8-standard",
-        "free-play"
-      ],
-      "rules": [
-        "RULE_RANDOM",
-        "RULE_ROULETTE"
-      ],
-      "fetishesCards": [],
-      "cards": [
+        409,
+        410,
+        411,
+        412,
+        413,
+        414,
+        415,
+        416,
+        417,
+        418,
+        419,
+        420,
+        421,
+        422,
+        423,
+        424,
+        425,
+        426,
+        427,
+        428,
+        429,
+        430,
+        431,
+        432,
+        433,
+        434,
+        435,
+        436,
+        437,
+        438,
+        439,
+        440,
+        441,
+        442,
+        443,
+        444,
+        445,
+        446,
+        447,
+        448,
+        449,
+        450,
+        451,
+        452,
+        453,
+        454,
+        455,
+        456,
+        457,
+        458,
+        459,
+        460,
+        461,
+        462,
+        463,
+        464,
+        465,
+        466,
+        467,
+        468,
+        469,
+        470,
+        471,
+        472,
+        473,
+        474,
+        475,
+        476,
+        477,
+        478,
+        479,
+        480,
+        481,
+        482,
+        483,
+        484,
+        485,
+        486,
+        487,
+        488,
+        489,
+        490,
+        491,
+        492,
+        493,
+        494,
+        495,
+        496,
+        497,
+        498,
+        499,
+        500,
+        501,
+        502,
+        503,
+        504,
+        505,
+        506,
+        507,
+        508,
+        509,
+        510,
+        511,
         513,
         514,
         515,
@@ -4514,7 +3249,985 @@
         608,
         609,
         610,
-        611
+        611,
+        612,
+        613,
+        614,
+        615,
+        616,
+        617,
+        618,
+        619,
+        620,
+        621,
+        622,
+        623,
+        624,
+        625,
+        626,
+        627,
+        628,
+        629,
+        630,
+        631,
+        632,
+        633,
+        634,
+        635,
+        636,
+        637,
+        638,
+        639,
+        640,
+        641,
+        642,
+        643,
+        644,
+        645,
+        646,
+        647,
+        648,
+        649,
+        650,
+        651,
+        652,
+        653,
+        654,
+        655,
+        656,
+        657,
+        658,
+        659,
+        660,
+        661,
+        662,
+        663,
+        664,
+        665,
+        666,
+        667,
+        668,
+        669,
+        670,
+        671,
+        672,
+        673,
+        674,
+        675,
+        676,
+        677,
+        678,
+        679,
+        680,
+        681,
+        682,
+        683,
+        684,
+        685,
+        686,
+        687,
+        688,
+        689,
+        690,
+        691,
+        692,
+        693,
+        694,
+        695,
+        696,
+        697,
+        698,
+        699,
+        700,
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708,
+        709,
+        710,
+        711
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [
+        {
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 333,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 6
+    },
+    {
+      "id": 1,
+      "name": "STR_NPC_KID",
+      "iconID": "kid",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2049,
+        2050,
+        2051,
+        2052,
+        2053,
+        2054,
+        2055,
+        2056,
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2129
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [
+        {
+          "card": 2058,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2061,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2129,
+          "type": "card",
+          "rate": 0.08
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 2,
+      "name": "STR_NPC_CHOCOBOY",
+      "iconID": "chocoboy",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2049,
+        2050,
+        2051,
+        2052,
+        2053,
+        2054,
+        2055,
+        2056,
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2126,
+        2130
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [
+        {
+          "card": 2064,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2068,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2126,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 2130,
+          "type": "card",
+          "rate": 0.08
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 2,
+      "name": "STR_NPC_UFO",
+      "iconID": "ufo",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME_WALL",
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [
+        2096
+      ],
+      "cards": [
+        2049,
+        2050,
+        2051,
+        2052,
+        2053,
+        2054,
+        2055,
+        2056,
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [
+        {
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 2059,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2069,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2096,
+          "type": "card",
+          "rate": 0.05
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 3,
+      "name": "STR_NPC_JACK",
+      "iconID": "jack",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2056,
+        2059,
+        2063,
+        2065,
+        2066,
+        2067,
+        2068,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2133
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [
+        {
+          "card": 2077,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2078,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2133,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 4,
+      "name": "STR_NPC_CLUB",
+      "iconID": "club",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2056,
+        2059,
+        2063,
+        2065,
+        2066,
+        2067,
+        2068,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2134
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [
+        {
+          "card": 2074,
+          "type": "card",
+          "rate": 0.33
+        },
+        {
+          "card": 2075,
+          "type": "card",
+          "rate": 0.33
+        },
+        {
+          "card": 2134,
+          "type": "card",
+          "rate": 0.02
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 5,
+      "name": "STR_NPC_MA_DINCHT",
+      "iconID": "ma-dincht",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_RANDOM",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2154
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [
+        {
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 2074,
+          "type": "card",
+          "rate": 0.33
+        },
+        {
+          "card": 2075,
+          "type": "card",
+          "rate": 0.33
+        },
+        {
+          "card": 2154,
+          "type": "card",
+          "rate": 0.005
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 6,
+      "name": "STR_NPC_WATTS",
+      "iconID": "watts",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2127
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [
+        {
+          "card": 2127,
+          "type": "card",
+          "rate": 0.02
+        }
+      ],
+      "difficulty": 3
+    },
+    {
+      "id": 7,
+      "name": "STR_NPC_ZONE",
+      "iconID": "zone",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2132
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [
+        {
+          "card": 2132,
+          "type": "card",
+          "rate": 0.02
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 8,
+      "name": "STR_NPC_DIAMOND",
+      "iconID": "diamond",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [
+        {
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 2115,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 2116,
+          "type": "card",
+          "rate": 0.1
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 9,
+      "name": "STR_NPC_SPADE",
+      "iconID": "spade",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2146
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [
+        {
+          "card": 2146,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 3
+    },
+    {
+      "id": 10,
+      "name": "STR_NPC_TREPIES",
+      "iconID": "trepies",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_RANDOM",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2152
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [
+        {
+          "card": 2152,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 3
+    },
+    {
+      "id": 11,
+      "name": "STR_NPC_CARAWAY",
+      "iconID": "caraway",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078,
+        2155
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [
+        {
+          "card": 2155,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 3
+    },
+    {
+      "id": 12,
+      "name": "STR_NPC_MARTINE",
+      "iconID": "martine",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2077,
+        2078
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [],
+      "difficulty": 2
+    },
+    {
+      "id": 13,
+      "name": "STR_NPC_PIET",
+      "iconID": "piet",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_PLUS",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2143
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2143,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 13,
+      "name": "STR_NPC_ODINE",
+      "iconID": "odine",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL",
+        "RULE_SAME_WALL",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2148
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2148,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 14,
+      "name": "STR_NPC_JOCKER",
+      "iconID": "jocker",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_PLUS",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2139
       ],
       "level": "STR_NPC_LEVEL_INITIATE",
       "matchFee": 17,
@@ -4525,13 +4238,2971 @@
       },
       "itemRewards": [
         {
-          "card": 622,
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 2139,
           "type": "card",
           "rate": 0.01
         }
       ],
-      "difficulty": 4,
+      "difficulty": 4
+    },
+    {
+      "id": 15,
+      "name": "STR_NPC_FLO",
+      "iconID": "flo",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_PLUS",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2153
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2153,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 16,
+      "name": "STR_NPC_DOBE",
+      "iconID": "dobe",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_PLUS",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2131
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [
+        {
+          "card": 2131,
+          "type": "card",
+          "rate": 0.02
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 17,
+      "name": "STR_NPC_EDEA",
+      "iconID": "edea",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2156
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2156,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 18,
+      "name": "STR_NPC_KING",
+      "iconID": "king",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2156
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 2156,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 19,
+      "name": "STR_NPC_CID",
+      "iconID": "cid",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2157
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2157,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 20,
+      "name": "STR_NPC_HEART",
+      "iconID": "heart",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2137
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [
+        {
+          "potion": "MGP_BOOST",
+          "type": "potion",
+          "rate": 1
+        },
+        {
+          "card": 2137,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 21,
+      "name": "STR_NPC_ELLONE",
+      "iconID": "ellone",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_PLUS",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2150
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2150,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 22,
+      "name": "STR_NPC_LAGUNA",
+      "iconID": "laguna",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL",
+        "RULE_SAME_WALL",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2158
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [
+        {
+          "card": 2158,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 99,
+      "name": "APP_NPC_ISHTAR",
+      "iconID": "ishtar",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2049,
+        2050,
+        2051,
+        2052,
+        2053,
+        2054,
+        2055,
+        2056,
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068,
+        2069,
+        2070,
+        2071,
+        2072,
+        2073,
+        2074,
+        2075,
+        2076,
+        2077,
+        2078,
+        2079,
+        2080,
+        2081,
+        2082,
+        2083,
+        2084,
+        2085,
+        2086,
+        2087,
+        2088,
+        2089,
+        2090,
+        2091,
+        2092,
+        2093,
+        2094,
+        2095,
+        2096,
+        2097,
+        2098,
+        2099,
+        2100,
+        2101,
+        2102,
+        2103,
+        2104,
+        2105,
+        2106,
+        2107,
+        2108,
+        2109,
+        2110,
+        2111,
+        2112,
+        2113,
+        2114,
+        2115,
+        2116,
+        2117,
+        2118,
+        2119,
+        2120,
+        2121,
+        2122,
+        2123,
+        2124,
+        2125,
+        2126,
+        2127,
+        2128,
+        2129,
+        2130,
+        2131,
+        2132,
+        2133,
+        2134,
+        2135,
+        2136,
+        2137,
+        2138,
+        2139,
+        2140,
+        2141,
+        2142,
+        2143,
+        2144,
+        2145,
+        2146,
+        2147
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [
+        {
+          "card": 2158,
+          "type": "card",
+          "rate": 0.01
+        }
+      ],
+      "difficulty": 5,
       "requiresAchievement": "ac-cmp-cc"
+    },
+    {
+      "id": 61,
+      "name": "STR_NPC_Hume_Black_Mage",
+      "iconID": "hume-black-mage",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        699,
+        700,
+        354,
+        375
+      ],
+      "cards": [
+        473,
+        575,
+        651
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 62,
+      "name": "STR_NPC_Pudeel_Ja",
+      "iconID": "pudeel-ja",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ASCENSION",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        694,
+        305,
+        309,
+        318
+      ],
+      "cards": [
+        302,
+        301,
+        294
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 63,
+      "name": "STR_NPC_Malevolent_Weasel",
+      "iconID": "malevolent-weasel",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        694,
+        305,
+        309,
+        318
+      ],
+      "cards": [
+        302,
+        301,
+        294
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 64,
+      "name": "STR_NPC_Miitso",
+      "iconID": "miitso",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [],
+      "fetishesCards": [
+        687,
+        688,
+        526,
+        321
+      ],
+      "cards": [
+        349,
+        402,
+        446
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 41,
+      "MGPReward": {
+        "w": 250,
+        "d": 88,
+        "l": 30
+      },
+      "itemRewards": [],
+      "difficulty": 10
+    },
+    {
+      "id": 65,
+      "name": "STR_NPC_Pawkukwe",
+      "iconID": "pawkukwe",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [],
+      "fetishesCards": [
+        685,
+        686,
+        453,
+        322
+      ],
+      "cards": [
+        449,
+        575,
+        492
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
+      "MGPReward": {
+        "w": 225,
+        "d": 79,
+        "l": 27
+      },
+      "itemRewards": [],
+      "difficulty": 9
+    },
+    {
+      "id": 66,
+      "name": "STR_NPC_Nyikweni",
+      "iconID": "nyikweni",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN"
+      ],
+      "fetishesCards": [
+        663,
+        266
+      ],
+      "cards": [
+        342,
+        338,
+        363,
+        412,
+        439
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [],
+      "difficulty": 1
+    },
+    {
+      "id": 67,
+      "name": "STR_NPC_Wopli",
+      "iconID": "wopli",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [
+        664,
+        264
+      ],
+      "cards": [
+        414,
+        447,
+        563,
+        258,
+        267
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [],
+      "difficulty": 1
+    },
+    {
+      "id": 68,
+      "name": "STR_NPC_Uataaye",
+      "iconID": "uataaye",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_DESCENSION"
+      ],
+      "fetishesCards": [
+        668,
+        501,
+        463
+      ],
+      "cards": [
+        448,
+        384,
+        304,
+        577
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [],
+      "difficulty": 4
+    },
+    {
+      "id": 69,
+      "name": "STR_NPC_Warsowok",
+      "iconID": "warsowok",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        665,
+        555
+      ],
+      "cards": [
+        294,
+        604,
+        516,
+        451
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [],
+      "difficulty": 2
+    },
+    {
+      "id": 70,
+      "name": "STR_NPC_Br_Uk_Noq",
+      "iconID": "bruk-noq",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ASCENSION"
+      ],
+      "fetishesCards": [
+        666,
+        418,
+        431
+      ],
+      "cards": [
+        461,
+        283,
+        448,
+        427
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
+      "MGPReward": {
+        "w": 225,
+        "d": 79,
+        "l": 27
+      },
+      "itemRewards": [],
+      "difficulty": 9
+    },
+    {
+      "id": 71,
+      "name": "STR_NPC_Luwyawa",
+      "iconID": "luwyawa",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        667,
+        520
+      ],
+      "cards": [
+        546,
+        397,
+        567,
+        358
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 72,
+      "name": "STR_NPC_Larisa",
+      "iconID": "larisa",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_ALL_OPEN"
+      ],
+      "fetishesCards": [
+        669,
+        405,
+        481
+      ],
+      "cards": [
+        576,
+        370,
+        535
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 73,
+      "name": "STR_NPC_Gavoll_Ja",
+      "iconID": "gavoll-ja",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_CHAOS",
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        670,
+        548,
+        352,
+        569
+      ],
+      "cards": [
+        495,
+        376,
+        528,
+        506
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
+      "MGPReward": {
+        "w": 225,
+        "d": 79,
+        "l": 27
+      },
+      "itemRewards": [],
+      "difficulty": 9
+    },
+    {
+      "id": 74,
+      "name": "STR_NPC_Ylaire",
+      "iconID": "ylaire",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        651,
+        652
+      ],
+      "cards": [
+        653,
+        464,
+        597,
+        277
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 75,
+      "name": "STR_NPC_Maillart",
+      "iconID": "maillart",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_CHAOS",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        655,
+        656
+      ],
+      "cards": [
+        368,
+        465,
+        311,
+        454
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 76,
+      "name": "STR_NPC_Tokimori",
+      "iconID": "tokimori",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_FALLEN_ACE",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        635,
+        495
+      ],
+      "cards": [
+        477,
+        478,
+        491,
+        502
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 77,
+      "name": "STR_NPC_Ruissenaud",
+      "iconID": "ruissenaud",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_DESCENSION"
+      ],
+      "fetishesCards": [
+        639,
+        642,
+        592,
+        595
+      ],
+      "cards": [
+        645,
+        624
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 41,
+      "MGPReward": {
+        "w": 250,
+        "d": 88,
+        "l": 30
+      },
+      "itemRewards": [],
+      "difficulty": 10
+    },
+    {
+      "id": 78,
+      "name": "STR_NPC_Gamingway",
+      "iconID": "gamingway",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        626,
+        588,
+        526
+      ],
+      "cards": [
+        601,
+        260,
+        381,
+        429
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 79,
+      "name": "STR_NPC_Kilfufu",
+      "iconID": "kilfufu",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        615,
+        319,
+        374
+      ],
+      "cards": [
+        284,
+        278,
+        301,
+        434
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 80,
+      "name": "STR_NPC_Ghasa",
+      "iconID": "ghasa",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ROULETTE",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        612,
+        605,
+        593
+      ],
+      "cards": [
+        606,
+        587,
+        444
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 81,
+      "name": "STR_NPC_Prudence",
+      "iconID": "prudence",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        607,
+        608,
+        396
+      ],
+      "cards": [
+        609,
+        610,
+        388,
+        391
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 82,
+      "name": "STR_NPC_Aiglephine",
+      "iconID": "aiglephine",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [
+        584,
+        490
+      ],
+      "cards": [
+        489,
+        425,
+        367,
+        386
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [],
+      "difficulty": 3
+    },
+    {
+      "id": 83,
+      "name": "STR_NPC_Qetanur",
+      "iconID": "qetanur",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        585,
+        257
+      ],
+      "cards": [
+        444,
+        488,
+        360,
+        301,
+        358
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [],
+      "difficulty": 2
+    },
+    {
+      "id": 84,
+      "name": "STR_NPC_Mehryde",
+      "iconID": "mehryde",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        587,
+        593
+      ],
+      "cards": [
+        480,
+        447,
+        441,
+        426,
+        585
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 85,
+      "name": "STR_NPC_Cheatingway",
+      "iconID": "cheatingway",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        588,
+        589
+      ],
+      "cards": [
+        386,
+        350,
+        302,
+        526,
+        525
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 86,
+      "name": "STR_NPC_Worldly_Imperial",
+      "iconID": "worldly-imperial",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [
+        597,
+        550
+      ],
+      "cards": [
+        494,
+        500,
+        436,
+        432,
+        431
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 87,
+      "name": "STR_NPC_Celia",
+      "iconID": "celia",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [
+        595,
+        348,
+        489
+      ],
+      "cards": [
+        598,
+        507,
+        315,
+        316
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 88,
+      "name": "STR_NPC_Sladkey",
+      "iconID": "sladkey",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        578,
+        582,
+        464,
+        579
+      ],
+      "cards": [
+        506,
+        485,
+        465,
+        556
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 89,
+      "name": "STR_NPC_Droyn",
+      "iconID": "droyn",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_DESCENSION"
+      ],
+      "fetishesCards": [
+        566,
+        567,
+        392,
+        295
+      ],
+      "cards": [
+        562,
+        265,
+        278,
+        281
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 90,
+      "name": "STR_NPC_Lewto_Sue",
+      "iconID": "lewto-sue",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        570,
+        571,
+        520,
+        545
+      ],
+      "cards": [
+        558,
+        527,
+        510,
+        513
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 91,
+      "name": "STR_NPC_Arsieu",
+      "iconID": "arsieu",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_ASCENSION"
+      ],
+      "fetishesCards": [
+        555,
+        556,
+        464,
+        436
+      ],
+      "cards": [
+        506,
+        485,
+        465
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 92,
+      "name": "STR_NPC_Cobleva",
+      "iconID": "cobleva",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_REVERSE"
+      ],
+      "fetishesCards": [
+        553,
+        551,
+        521
+      ],
+      "cards": [
+        535,
+        509,
+        517,
+        522,
+        542
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 93,
+      "name": "STR_NPC_Furtive_Former_Imperial",
+      "iconID": "furtive-former-imperial",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        559,
+        500,
+        436,
+        431
+      ],
+      "cards": [
+        548,
+        432,
+        494,
+        448,
+        307
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 94,
+      "name": "STR_NPC_Hanagasa",
+      "iconID": "hanagasa",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_DESCENSION"
+      ],
+      "fetishesCards": [
+        465,
+        464,
+        276,
+        482
+      ],
+      "cards": [
+        506,
+        485,
+        314
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 95,
+      "name": "STR_NPC_Redard",
+      "iconID": "redard",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_REVERSE"
+      ],
+      "fetishesCards": [
+        541,
+        544,
+        532
+      ],
+      "cards": [
+        365,
+        519,
+        342
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
+      "MGPReward": {
+        "w": 225,
+        "d": 79,
+        "l": 27
+      },
+      "itemRewards": [],
+      "difficulty": 9
+    },
+    {
+      "id": 96,
+      "name": "STR_NPC_Eo_Sigun",
+      "iconID": "eo-sigun",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        531,
+        533
+      ],
+      "cards": [
+        514,
+        367,
+        518,
+        359,
+        294
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [],
+      "difficulty": 3
+    },
+    {
+      "id": 97,
+      "name": "STR_NPC_Saushs_Koal",
+      "iconID": "saushs-koal",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN"
+      ],
+      "fetishesCards": [
+        516,
+        509,
+        510
+      ],
+      "cards": [
+        511,
+        522,
+        264,
+        411,
+        515
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [],
+      "difficulty": 1
+    },
+    {
+      "id": 98,
+      "name": "STR_NPC_Ibenart",
+      "iconID": "ibenart",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN",
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        511,
+        521,
+        294
+      ],
+      "cards": [
+        268,
+        263,
+        513,
+        277
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [],
+      "difficulty": 3
+    },
+    {
+      "id": 100,
+      "name": "STR_NPC_Drery",
+      "iconID": "drery",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        510,
+        513,
+        445
+      ],
+      "cards": [
+        263,
+        294,
+        264,
+        426
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [],
+      "difficulty": 4
+    },
+    {
+      "id": 101,
+      "name": "STR_NPC_Gyuf_Uin",
+      "iconID": "gyuf-uin",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN",
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        514,
+        367,
+        518,
+        359
+      ],
+      "cards": [
+        411,
+        263,
+        509
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [],
+      "difficulty": 4
+    },
+    {
+      "id": 102,
+      "name": "STR_NPC_Glynard",
+      "iconID": "glynard",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [
+        509,
+        281,
+        426
+      ],
+      "cards": [
+        264,
+        522,
+        411,
+        257
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 9,
+      "MGPReward": {
+        "w": 50,
+        "d": 18,
+        "l": 6
+      },
+      "itemRewards": [],
+      "difficulty": 2
+    },
+    {
+      "id": 103,
+      "name": "STR_NPC_Lamlyn",
+      "iconID": "lamlyn",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        522
+      ],
+      "cards": [
+        294,
+        517,
+        426,
+        366,
+        281
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 104,
+      "name": "STR_NPC_Hargra",
+      "iconID": "hargra",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [
+        515,
+        525
+      ],
+      "cards": [
+        266,
+        519,
+        426,
+        361,
+        294
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 105,
+      "name": "STR_NPC_Grewenn",
+      "iconID": "grewenn",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        523,
+        527
+      ],
+      "cards": [
+        517,
+        519,
+        520,
+        294,
+        524
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 106,
+      "name": "STR_NPC_Hetsukaze",
+      "iconID": "hetsukaze",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        499,
+        493,
+        498,
+        501
+      ],
+      "cards": [
+        482,
+        492,
+        483,
+        479
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 107,
+      "name": "STR_NPC_Ushiogi",
+      "iconID": "ushiogi",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_ORDER"
+      ],
+      "fetishesCards": [
+        477,
+        478,
+        481
+      ],
+      "cards": [
+        468,
+        440,
+        470,
+        449
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 108,
+      "name": "STR_NPC_Redbill_Storeboy",
+      "iconID": "redbill-storeboy",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        368,
+        408,
+        435
+      ],
+      "cards": [
+        385,
+        371,
+        338,
+        359,
+        337
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 109,
+      "name": "STR_NPC_Ironworks_Hand",
+      "iconID": "ironworks-hand",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [
+        503,
+        453,
+        496
+      ],
+      "cards": [
+        269,
+        341,
+        289,
+        314,
+        356
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 110,
+      "name": "STR_NPC_Mero_Roggo",
+      "iconID": "mero-roggo",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [
+        507,
+        350,
+        417,
+        386
+      ],
+      "cards": [
+        348,
+        363,
+        362,
+        367,
+        489
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 111,
+      "name": "STR_NPC_Hokushin",
+      "iconID": "hokushin",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        487,
+        495,
+        467
+      ],
+      "cards": [
+        439,
+        443,
+        318,
+        440
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 112,
+      "name": "STR_NPC_Botan",
+      "iconID": "botan",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [
+        483,
+        492,
+        455
+      ],
+      "cards": [
+        482,
+        479,
+        290
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 113,
+      "name": "STR_NPC_Hachinan",
+      "iconID": "hachinan",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ASCENSION",
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        494,
+        448,
+        436,
+        432
+      ],
+      "cards": [
+        431,
+        454,
+        457,
+        412,
+        427
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 41,
+      "MGPReward": {
+        "w": 250,
+        "d": 88,
+        "l": 30
+      },
+      "itemRewards": [],
+      "difficulty": 10
+    },
+    {
+      "id": 114,
+      "name": "STR_NPC_Yusui",
+      "iconID": "yusui",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        470,
+        449,
+        364
+      ],
+      "cards": [
+        293,
+        288,
+        378
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [],
+      "difficulty": 3
+    },
+    {
+      "id": 115,
+      "name": "STR_NPC_Umber_Torrent",
+      "iconID": "umber-torrent",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        473,
+        352,
+        393
+      ],
+      "cards": [
+        365,
+        418,
+        430
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 116,
+      "name": "STR_NPC_Masatsuchi",
+      "iconID": "masatsuchi",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        474,
+        392,
+        353
+      ],
+      "cards": [
+        467,
+        371,
+        379
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 117,
+      "name": "STR_NPC_Kikimo",
+      "iconID": "kikimo",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        475,
+        395,
+        320
+      ],
+      "cards": [
+        314,
+        385,
+        369,
+        419
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 118,
+      "name": "STR_NPC_Isobe",
+      "iconID": "isobe",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SWAP"
+      ],
+      "fetishesCards": [
+        476,
+        316,
+        318
+      ],
+      "cards": [
+        468,
+        396,
+        423,
+        407,
+        408
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 119,
+      "name": "STR_NPC_Gyoei",
+      "iconID": "gyoei",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_REVERSE",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        348,
+        397,
+        439
+      ],
+      "cards": [
+        425,
+        273,
+        261,
+        504
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 120,
+      "name": "STR_NPC_Kotokaze",
+      "iconID": "kotokaze",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        343,
+        443,
+        258
+      ],
+      "cards": [
+        284,
+        285,
+        286
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 121,
+      "name": "STR_NPC_Ercanbald",
+      "iconID": "ercanbald",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [],
+      "fetishesCards": [
+        304,
+        442,
+        426
+      ],
+      "cards": [
+        290,
+        270,
+        261
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [],
+      "difficulty": 3
+    },
+    {
+      "id": 122,
+      "name": "STR_NPC_Tsuzura",
+      "iconID": "tsuzura",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_CHAOS",
+        "RULE_ROULETTE"
+      ],
+      "fetishesCards": [
+        345,
+        440,
+        294
+      ],
+      "cards": [
+        310,
+        277,
+        274,
+        411
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
+      "MGPReward": {
+        "w": 125,
+        "d": 44,
+        "l": 15
+      },
+      "itemRewards": [],
+      "difficulty": 5
+    },
+    {
+      "id": 123,
+      "name": "STR_NPC_Kaizan",
+      "iconID": "kaizan",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SWAP",
+        "RULE_DESCENSION"
+      ],
+      "fetishesCards": [
+        449,
+        347,
+        281
+      ],
+      "cards": [
+        405,
+        279,
+        377,
+        350
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 124,
+      "name": "STR_NPC_Garima",
+      "iconID": "garima",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_ASCENSION"
+      ],
+      "fetishesCards": [
+        394,
+        441,
+        304
+      ],
+      "cards": [
+        364,
+        401,
+        275,
+        461
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 125,
+      "name": "STR_NPC_Munglig",
+      "iconID": "munglig",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        309,
+        314,
+        452
+      ],
+      "cards": [
+        298,
+        345,
+        349
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 126,
+      "name": "STR_NPC_Ogodei",
+      "iconID": "ogodei",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_FALLEN_ACE",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        313,
+        435,
+        451
+      ],
+      "cards": [
+        373,
+        366,
+        403
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 127,
+      "name": "STR_NPC_Nigen",
+      "iconID": "nigen",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        312,
+        354,
+        450
+      ],
+      "cards": [
+        381,
+        417,
+        301
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
+      "MGPReward": {
+        "w": 175,
+        "d": 61,
+        "l": 21
+      },
+      "itemRewards": [],
+      "difficulty": 7
+    },
+    {
+      "id": 128,
+      "name": "STR_NPC_Imperial_Deserter",
+      "iconID": "imperial-deserter",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_FALLEN_ACE"
+      ],
+      "fetishesCards": [
+        322,
+        423,
+        454
+      ],
+      "cards": [
+        436,
+        344,
+        304,
+        463
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 129,
+      "name": "STR_NPC_Kiuka",
+      "iconID": "kiuka",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        458,
+        409,
+        315
+      ],
+      "cards": [
+        312,
+        348,
+        340
+      ],
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 33,
+      "MGPReward": {
+        "w": 200,
+        "d": 70,
+        "l": 24
+      },
+      "itemRewards": [],
+      "difficulty": 8
+    },
+    {
+      "id": 130,
+      "name": "STR_NPC_Wyra_Greenhands_Lyehga",
+      "iconID": "wyra",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [
+        291,
+        267,
+        410
+      ],
+      "cards": [
+        286,
+        261,
+        265,
+        269
+      ],
+      "level": "STR_NPC_LEVEL_NOVICE",
+      "matchFee": 5,
+      "MGPReward": {
+        "w": 25,
+        "d": 9,
+        "l": 3
+      },
+      "itemRewards": [],
+      "difficulty": 1
+    },
+    {
+      "id": 131,
+      "name": "STR_NPC_Nell_Half_Full",
+      "iconID": "nell",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        310,
+        420,
+        366
+      ],
+      "cards": [
+        306,
+        401,
+        359,
+        285
+      ],
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
+      "MGPReward": {
+        "w": 150,
+        "d": 53,
+        "l": 18
+      },
+      "itemRewards": [],
+      "difficulty": 6
+    },
+    {
+      "id": 132,
+      "name": "STR_NPC_Prideful_Stag",
+      "iconID": "prideful-stag",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [
+        301,
+        414,
+        282
+      ],
+      "cards": [
+        284,
+        338,
+        264,
+        269
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 13,
+      "MGPReward": {
+        "w": 75,
+        "d": 26,
+        "l": 9
+      },
+      "itemRewards": [],
+      "difficulty": 3
+    },
+    {
+      "id": 133,
+      "name": "STR_NPC_Flichoirel_The_Lordling",
+      "iconID": "flichoirel",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [],
+      "fetishesCards": [
+        423,
+        395
+      ],
+      "cards": [
+        350,
+        294,
+        342,
+        351,
+        301
+      ],
+      "level": "STR_NPC_LEVEL_EXPERT",
+      "matchFee": 37,
+      "MGPReward": {
+        "w": 225,
+        "d": 79,
+        "l": 27
+      },
+      "itemRewards": [],
+      "difficulty": 9
+    },
+    {
+      "id": 134,
+      "name": "STR_NPC_Hall_Overseer",
+      "iconID": "hall-overseer",
+      "formats": [
+        "ff14-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_FALLEN_ACE",
+        "RULE_CHAOS"
+      ],
+      "fetishesCards": [
+        329,
+        376,
+        315
+      ],
+      "cards": [
+        321,
+        314,
+        351
+      ],
+      "level": "STR_NPC_LEVEL_INITIATE",
+      "matchFee": 17,
+      "MGPReward": {
+        "w": 100,
+        "d": 35,
+        "l": 12
+      },
+      "itemRewards": [],
+      "difficulty": 4
     }
   ]
 }

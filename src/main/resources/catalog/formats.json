@@ -3,7 +3,10 @@
     {
       "id": "ff14-standard",
       "nameKey": "APP_FORMAT_FF14_STANDARD",
-      "blocks": [1],
+      "blocks": [
+        1,
+        2
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_ASCENSION",
@@ -23,7 +26,9 @@
     {
       "id": "ff8-standard",
       "nameKey": "APP_FORMAT_FF8_STANDARD",
-      "blocks": [2],
+      "blocks": [
+        8
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_ELEMENTAL",
@@ -39,7 +44,11 @@
       "_comment": "Free play: every released block, and the union of both rule pools. Decided 2026-08-12. RULE_ELEMENTAL is in here on purpose and its effect is lopsided — see FormatCatalog and document 19.",
       "id": "free-play",
       "nameKey": "APP_FORMAT_FREE",
-      "blocks": [1, 2],
+      "blocks": [
+        1,
+        2,
+        8
+      ],
       "rules": [
         "RULE_ALL_OPEN",
         "RULE_ASCENSION",

@@ -39,7 +39,8 @@ class PveMatchRowTest {
 
     // ---- Fixtures ---------------------------------------------------------
 
-    private val set = CardSet(block = BLOCK, slug = "test", nameKey = "APP_TEST", sortOrder = 1)
+    private val set =
+        CardSet(blocks = listOf(BLOCK), slug = "test", nameKey = "APP_TEST", sortOrder = 1)
 
     private fun card(number: Int, power: Int) = Card(
         id = Card.idFor(block = BLOCK, number = number),

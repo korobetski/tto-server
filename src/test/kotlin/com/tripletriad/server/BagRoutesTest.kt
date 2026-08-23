@@ -29,7 +29,6 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -64,7 +63,9 @@ class BagRoutesTest {
         val used = use(session.token, BoosterItem(BoosterType.BRONZE), "op-1")
 
         val opened = assertIs<ItemEffect.PackOpened>(used.effect)
-        assertEquals(BoosterType.BRONZE.size, opened.cardIds.size, "wrong number of cards")
+        // One card. A pack is a single weighted draw, as the real FFXIV Triad Card is — see
+        // `BoosterType`'s KDoc for why, and for why `cardCount` is nonetheless not pinned to 1.
+        assertEquals(BoosterType.BRONZE.cardCount, opened.cardIds.size, "wrong number of cards")
         assertTrue(
             opened.cardIds.all { it in BoosterType.BRONZE.pool },
             "a card came from outside the pack's pool: ${opened.cardIds}",
@@ -171,22 +172,31 @@ class BagRoutesTest {
     /**
      * Two packs opened separately do not come out identical.
      *
-     * A weak assertion on purpose — it is a smoke test against the one implementation mistake that
-     * every other test here would pass: a generator seeded per request, which would make every pack
-     * in the game the same pack. It can in principle fail by chance; with six cards drawn from a
-     * six-card pool that is rare enough to be worth the coverage.
+     * A smoke test against the one implementation mistake every other test here would pass: a
+     * generator seeded per request, which would make every pack in the game the same pack.
+     *
+     * **Why ten packs and not two.** It used to open two and assert they differed, which was sound
+     * while a pack dealt five cards from its pool — two identical hands was a vanishing chance. A
+     * pack deals *one* card now, so two opens collide whenever they draw the same card: for Gold
+     * that is the sum of the squared draw odds, about one time in six, and the test would have
+     * become a flake that fails a clean build every sixth run.
+     *
+     * Ten opens, asserting they are not *all* the same, restores the margin — a correct generator
+     * would have to land the same card ten times running, which for Gold's odds is around three in
+     * ten million. The mistake being guarded against still fails it every single time, because a
+     * per-request seed makes all ten identical by construction.
      */
     @Test
-    fun twoPacksAreNotTheSamePack() = server {
-        val session = registerHolding(BoosterItem(BoosterType.GOLD, stack = 2))
+    fun packsAreNotAllTheSamePack() = server {
+        val session = registerHolding(BoosterItem(BoosterType.GOLD, stack = OPENS))
 
-        val first = use(session.token, BoosterItem(BoosterType.GOLD), "op-1")
-        val second = use(session.token, BoosterItem(BoosterType.GOLD), "op-2")
+        val drawn = (1..OPENS).map { n ->
+            use(session.token, BoosterItem(BoosterType.GOLD), "op-$n").effect
+        }
 
-        assertNotEquals(
-            first.effect,
-            second.effect,
-            "every pack came out identical — seeded twice?",
+        assertTrue(
+            drawn.toSet().size > 1,
+            "all $OPENS packs came out identical — seeded per request? $drawn",
         )
     }
 
@@ -263,5 +273,8 @@ class BagRoutesTest {
 
     private companion object {
         const val PASSWORD = "correct-horse-battery"
+
+        /** How many packs `packsAreNotAllTheSamePack` opens. That test's KDoc says why ten. */
+        const val OPENS = 10
     }
 }
