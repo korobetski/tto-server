@@ -7352,6 +7352,19 @@
       "left": 9,
       "rarity": 5,
       "type": null
+    },
+    {
+      "id": 2159,
+      "block": 8,
+      "number": 111,
+      "nameKey": "STR_FF8_CARD_111",
+      "name": "Mooba",
+      "top": 7,
+      "right": 7,
+      "bottom": 7,
+      "left": 7,
+      "rarity": 4,
+      "type": null
     }
   ]
 }

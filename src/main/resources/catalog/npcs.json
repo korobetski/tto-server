@@ -5022,7 +5022,13 @@
         "d": 9,
         "l": 3
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 663,
+          "type": "card",
+          "rate": 0.2432
+        }
+      ],
       "difficulty": 1
     },
     {
@@ -5054,7 +5060,13 @@
         "d": 9,
         "l": 3
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 664,
+          "type": "card",
+          "rate": 0.3333
+        }
+      ],
       "difficulty": 1
     },
     {
@@ -5087,7 +5099,13 @@
         "d": 35,
         "l": 12
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 668,
+          "type": "card",
+          "rate": 0.2381
+        }
+      ],
       "difficulty": 4
     },
     {
@@ -5118,7 +5136,13 @@
         "d": 18,
         "l": 6
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 665,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
       "difficulty": 2
     },
     {
@@ -5150,7 +5174,13 @@
         "d": 79,
         "l": 27
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 666,
+          "type": "card",
+          "rate": 0.2
+        }
+      ],
       "difficulty": 9
     },
     {
@@ -5182,7 +5212,13 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 667,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -5248,7 +5284,13 @@
         "d": 79,
         "l": 27
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 670,
+          "type": "card",
+          "rate": 0.029
+        }
+      ],
       "difficulty": 9
     },
     {
@@ -5344,7 +5386,13 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 635,
+          "type": "card",
+          "rate": 0.34
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -5376,7 +5424,18 @@
         "d": 88,
         "l": 30
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 642,
+          "type": "card",
+          "rate": 0.1258
+        },
+        {
+          "card": 639,
+          "type": "card",
+          "rate": 0.1132
+        }
+      ],
       "difficulty": 10
     },
     {
@@ -5441,7 +5500,13 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 615,
+          "type": "card",
+          "rate": 0.1608
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -5506,7 +5571,18 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 608,
+          "type": "card",
+          "rate": 0.1509
+        },
+        {
+          "card": 607,
+          "type": "card",
+          "rate": 0.1213
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -5733,7 +5809,18 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 578,
+          "type": "card",
+          "rate": 0.1594
+        },
+        {
+          "card": 579,
+          "type": "card",
+          "rate": 0.1232
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -5767,7 +5854,18 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 566,
+          "type": "card",
+          "rate": 0.1355
+        },
+        {
+          "card": 567,
+          "type": "card",
+          "rate": 0.123
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -5801,7 +5899,18 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 570,
+          "type": "card",
+          "rate": 0.1329
+        },
+        {
+          "card": 571,
+          "type": "card",
+          "rate": 0.0986
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -5834,7 +5943,18 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 556,
+          "type": "card",
+          "rate": 0.1365
+        },
+        {
+          "card": 555,
+          "type": "card",
+          "rate": 0.1067
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -5868,7 +5988,18 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 551,
+          "type": "card",
+          "rate": 0.2333
+        },
+        {
+          "card": 553,
+          "type": "card",
+          "rate": 0.1167
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -5903,7 +6034,13 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 559,
+          "type": "card",
+          "rate": 0.0557
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -5936,7 +6073,28 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 465,
+          "type": "card",
+          "rate": 0.0625
+        },
+        {
+          "card": 485,
+          "type": "card",
+          "rate": 0.0625
+        },
+        {
+          "card": 464,
+          "type": "card",
+          "rate": 0.0313
+        },
+        {
+          "card": 506,
+          "type": "card",
+          "rate": 0.0313
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -5968,7 +6126,18 @@
         "d": 79,
         "l": 27
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 541,
+          "type": "card",
+          "rate": 0.1655
+        },
+        {
+          "card": 544,
+          "type": "card",
+          "rate": 0.1439
+        }
+      ],
       "difficulty": 9
     },
     {
@@ -6000,7 +6169,18 @@
         "d": 26,
         "l": 9
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 531,
+          "type": "card",
+          "rate": 0.2222
+        },
+        {
+          "card": 533,
+          "type": "card",
+          "rate": 0.1429
+        }
+      ],
       "difficulty": 3
     },
     {
@@ -6033,7 +6213,13 @@
         "d": 9,
         "l": 3
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 516,
+          "type": "card",
+          "rate": 0.1481
+        }
+      ],
       "difficulty": 1
     },
     {
@@ -6066,7 +6252,13 @@
         "d": 26,
         "l": 9
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 511,
+          "type": "card",
+          "rate": 0.1667
+        }
+      ],
       "difficulty": 3
     },
     {
@@ -6099,7 +6291,18 @@
         "d": 35,
         "l": 12
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 510,
+          "type": "card",
+          "rate": 0.5
+        },
+        {
+          "card": 513,
+          "type": "card",
+          "rate": 0.1667
+        }
+      ],
       "difficulty": 4
     },
     {
@@ -6132,7 +6335,13 @@
         "d": 35,
         "l": 12
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 514,
+          "type": "card",
+          "rate": 0.0762
+        }
+      ],
       "difficulty": 4
     },
     {
@@ -6164,7 +6373,13 @@
         "d": 18,
         "l": 6
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 509,
+          "type": "card",
+          "rate": 0.2308
+        }
+      ],
       "difficulty": 2
     },
     {
@@ -6195,7 +6410,13 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 522,
+          "type": "card",
+          "rate": 0.087
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6228,7 +6449,18 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 515,
+          "type": "card",
+          "rate": 0.1466
+        },
+        {
+          "card": 525,
+          "type": "card",
+          "rate": 0.0337
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6261,7 +6493,18 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 523,
+          "type": "card",
+          "rate": 0.1053
+        },
+        {
+          "card": 527,
+          "type": "card",
+          "rate": 0.0132
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6295,7 +6538,28 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 499,
+          "type": "card",
+          "rate": 0.0904
+        },
+        {
+          "card": 501,
+          "type": "card",
+          "rate": 0.0816
+        },
+        {
+          "card": 498,
+          "type": "card",
+          "rate": 0.0612
+        },
+        {
+          "card": 493,
+          "type": "card",
+          "rate": 0.0372
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -6328,7 +6592,23 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 477,
+          "type": "card",
+          "rate": 0.3125
+        },
+        {
+          "card": 478,
+          "type": "card",
+          "rate": 0.1875
+        },
+        {
+          "card": 481,
+          "type": "card",
+          "rate": 0.0938
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -6361,7 +6641,13 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 385,
+          "type": "card",
+          "rate": 0.1429
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -6394,7 +6680,23 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 503,
+          "type": "card",
+          "rate": 0.0584
+        },
+        {
+          "card": 453,
+          "type": "card",
+          "rate": 0.0283
+        },
+        {
+          "card": 496,
+          "type": "card",
+          "rate": 0.0142
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -6429,7 +6731,28 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 386,
+          "type": "card",
+          "rate": 0.0241
+        },
+        {
+          "card": 507,
+          "type": "card",
+          "rate": 0.0155
+        },
+        {
+          "card": 417,
+          "type": "card",
+          "rate": 0.0155
+        },
+        {
+          "card": 350,
+          "type": "card",
+          "rate": 0.0137
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6462,7 +6785,18 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 487,
+          "type": "card",
+          "rate": 0.184
+        },
+        {
+          "card": 495,
+          "type": "card",
+          "rate": 0.0105
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -6494,7 +6828,28 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 482,
+          "type": "card",
+          "rate": 0.0787
+        },
+        {
+          "card": 483,
+          "type": "card",
+          "rate": 0.04
+        },
+        {
+          "card": 492,
+          "type": "card",
+          "rate": 0.04
+        },
+        {
+          "card": 479,
+          "type": "card",
+          "rate": 0.0112
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -6529,7 +6884,18 @@
         "d": 88,
         "l": 30
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 494,
+          "type": "card",
+          "rate": 0.036
+        },
+        {
+          "card": 457,
+          "type": "card",
+          "rate": 0.0099
+        }
+      ],
       "difficulty": 10
     },
     {
@@ -6560,7 +6926,13 @@
         "d": 26,
         "l": 9
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 470,
+          "type": "card",
+          "rate": 0.0281
+        }
+      ],
       "difficulty": 3
     },
     {
@@ -6592,7 +6964,18 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 445,
+          "type": "card",
+          "rate": 0.0612
+        },
+        {
+          "card": 473,
+          "type": "card",
+          "rate": 0.0442
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6623,7 +7006,18 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 467,
+          "type": "card",
+          "rate": 0.1918
+        },
+        {
+          "card": 474,
+          "type": "card",
+          "rate": 0.0204
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -6656,7 +7050,13 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 475,
+          "type": "card",
+          "rate": 0.0163
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -6690,7 +7090,18 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 468,
+          "type": "card",
+          "rate": 0.0947
+        },
+        {
+          "card": 476,
+          "type": "card",
+          "rate": 0.0101
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -6723,7 +7134,18 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 439,
+          "type": "card",
+          "rate": 0.1736
+        },
+        {
+          "card": 504,
+          "type": "card",
+          "rate": 0.0392
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -6754,7 +7176,13 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 443,
+          "type": "card",
+          "rate": 0.0436
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -6783,7 +7211,18 @@
         "d": 26,
         "l": 9
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 442,
+          "type": "card",
+          "rate": 0.0755
+        },
+        {
+          "card": 342,
+          "type": "card",
+          "rate": 0.0162
+        }
+      ],
       "difficulty": 3
     },
     {
@@ -6816,7 +7255,13 @@
         "d": 44,
         "l": 15
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 440,
+          "type": "card",
+          "rate": 0.5
+        }
+      ],
       "difficulty": 5
     },
     {
@@ -6849,7 +7294,13 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 449,
+          "type": "card",
+          "rate": 0.0281
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6882,7 +7333,18 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 441,
+          "type": "card",
+          "rate": 0.128
+        },
+        {
+          "card": 461,
+          "type": "card",
+          "rate": 0.0745
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6914,7 +7376,18 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 452,
+          "type": "card",
+          "rate": 0.0203
+        },
+        {
+          "card": 444,
+          "type": "card",
+          "rate": 0.0111
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -6946,7 +7419,18 @@
         "d": 53,
         "l": 18
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 451,
+          "type": "card",
+          "rate": 0.0234
+        },
+        {
+          "card": 444,
+          "type": "card",
+          "rate": 0.0154
+        }
+      ],
       "difficulty": 6
     },
     {
@@ -6978,7 +7462,18 @@
         "d": 61,
         "l": 21
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 444,
+          "type": "card",
+          "rate": 0.0441
+        },
+        {
+          "card": 450,
+          "type": "card",
+          "rate": 0.0252
+        }
+      ],
       "difficulty": 7
     },
     {
@@ -7010,7 +7505,23 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 448,
+          "type": "card",
+          "rate": 0.1471
+        },
+        {
+          "card": 463,
+          "type": "card",
+          "rate": 0.0294
+        },
+        {
+          "card": 454,
+          "type": "card",
+          "rate": 0.0294
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -7041,7 +7552,13 @@
         "d": 70,
         "l": 24
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 458,
+          "type": "card",
+          "rate": 0.0093
+        }
+      ],
       "difficulty": 8
     },
     {
@@ -7201,7 +7718,13 @@
         "d": 35,
         "l": 12
       },
-      "itemRewards": [],
+      "itemRewards": [
+        {
+          "card": 329,
+          "type": "card",
+          "rate": 0.0159
+        }
+      ],
       "difficulty": 4
     }
   ]
