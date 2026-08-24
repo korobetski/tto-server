@@ -14,6 +14,18 @@
 {$TTO_DOMAIN} {
 	encode zstd gzip
 
+	# Nothing this API accepts is large. The biggest honest body is a whole `GameSave` on
+	# `PUT /me/save`, which names its cards by integer id and does not come close to this; the
+	# server refuses the same number itself, in `BodyLimit.kt`, and says there why.
+	#
+	# It is enforced here as well because this is the layer that can refuse a body **before it is
+	# read**, including one sent with `Transfer-Encoding: chunked`, and because the cheapest place
+	# to drop a multi-megabyte upload is the first hop that sees it. The two numbers are meant to
+	# agree; if they ever differ, the smaller one wins and the larger is dead configuration.
+	request_body {
+		max_size 256KB
+	}
+
 	# `/metrics` is unauthenticated by design — it is meant for a scraper on a private network, and
 	# it leaks route names, latencies and traffic volume to anyone who asks. Nothing scrapes it from
 	# outside today, so outside is refused. When something does, this becomes an allow-list of that
@@ -25,6 +37,12 @@
 	@internal path /metrics /health/*
 	respond @internal 404
 
+	# `trusted_proxies` is deliberately absent, and adding it is a security change rather than a
+	# configuration one. With no trusted proxies Caddy discards whatever `X-Forwarded-For` a caller
+	# sent and writes the peer address instead, so the header the server reads is a fact rather than
+	# a claim — and the server's per-address rate limits (sign-in, registration) are keyed on it.
+	# See `Observability.kt`, which reads the *last* entry precisely so that a second hop appearing
+	# here degrades gracefully instead of handing an attacker their own bucket key.
 	reverse_proxy server:8080 {
 		# The server generates one when absent and logs every line under it, so a request can be
 		# followed end to end. Passing the proxy's own id through means the two agree.

@@ -180,11 +180,17 @@ private fun Route.ticketRoutes(store: AccountStore, random: () -> Random) {
      * So that a match can be played with no network. See `SeedTickets` — the alternative is a
      * round trip at match start, which would close the same hole and end offline play with it.
      */
-    get("/tickets") {
-        if (!requireCompatibleClient()) return@get
-        val accountId = authenticate(store) ?: return@get
+    // Throttled despite being a `GET`, because of the paragraph above: it writes. Idempotent by
+    // arithmetic is a reason it is safe to *repeat*, not a reason it is free to call — each request
+    // is a transaction and a batch insert, and it was the only writing endpoint on this server with
+    // no bucket at all. [INTENT] rather than [SUBMIT]: it pays nothing, it stocks a shelf.
+    rateLimit(RateLimitName(INTENT)) {
+        get("/tickets") {
+            if (!requireCompatibleClient()) return@get
+            val accountId = authenticate(store) ?: return@get
 
-        val seeds = store.issueTickets(accountId) { random().nextInt() }
-        call.respond(HttpStatusCode.OK, SeedTickets(seeds))
+            val seeds = store.issueTickets(accountId) { random().nextInt() }
+            call.respond(HttpStatusCode.OK, SeedTickets(seeds))
+        }
     }
 }

@@ -28,7 +28,14 @@ suspend fun RoutingContext.authenticate(store: AccountStore): Long? {
 
     // The token is fingerprinted before it is looked up and is never logged, never echoed, and
     // never put in an error message. It is exactly as good as the password for as long as it lives.
-    val accountId = token?.let { store.accountForToken(Tokens.fingerprint(it)) }
+    //
+    // On a rate-limited route the lookup has already happened: the limiter keys its buckets on the
+    // account, so it resolved this same token a moment ago and left the answer in
+    // [ResolvedAccount]. Reading it is not trusting something the caller supplied: the attribute is
+    // only ever written after a successful lookup in this same request. It is declining to run one
+    // query twice, not skipping the check.
+    val accountId = call.attributes.getOrNull(ResolvedAccount)
+        ?: token?.let { store.accountForToken(Tokens.fingerprint(it)) }
     if (accountId == null) {
         call.respond(
             HttpStatusCode.Unauthorized,

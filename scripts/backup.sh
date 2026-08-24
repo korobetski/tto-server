@@ -62,7 +62,19 @@ if [ -f .env ]; then
     TARGET="$OUT_DIR/${DB_NAME}-${STAMP}.dump"
 fi
 
+# 0700 on the directory and 0600 on everything written into it, from here down.
+#
+# A dump holds every bcrypt digest and every session fingerprint in the database, in the clear, and
+# `compose.prod.yaml` bind-mounts this directory so the files outlive the volume and are carried off
+# the machine in OVH's image. `docs/operations.md` already requires .env to be mode 600; a dump is
+# strictly more sensitive than the password that opens the database it came from.
+#
+# `umask` rather than a `chmod` after the fact, because the window matters: the shell creates the
+# redirection target below before pg_dump writes a byte, and a world-readable file that is chmodded
+# a second later was still world-readable for that second.
+umask 077
 mkdir -p "$OUT_DIR"
+chmod 700 "$OUT_DIR"
 
 # Written under a name no other script looks for, and moved into place only once it has been
 # verified. The shell creates the redirection target *before* running the command, so a dump that

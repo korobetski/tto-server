@@ -33,17 +33,49 @@ object PasswordHasher {
     private const val COST = 12
 
     /**
-     * bcrypt's own limit, and the reason `Credentials.PASSWORD_LENGTH` names it too.
+     * bcrypt's own limit — and it is enforced by **refusal**, not by truncation.
      *
-     * Input past 72 bytes is **ignored**, silently. A limit the algorithm imposes should be one the
-     * player is told about at the form, rather than one that quietly makes a 90-character
-     * passphrase equivalent to its first 72.
+     * This paragraph used to say that input past 72 bytes is "ignored, silently", and it was
+     * wrong about the library underneath. `at.favre.lib:bcrypt` defaults to its strict
+     * long-password strategy and **throws** `IllegalArgumentException`:
+     *
+     *     password must not be longer than 72 bytes plus null terminator encoded in utf-8, was 100
+     *
+     * Which mattered, because the guard the old paragraph argued for was never written on the
+     * strength of it: an over-long password reached bcrypt on every path that hashes, and the
+     * throw surfaced as a `500` from `StatusPages` — on `POST /sessions`, which is
+     * unauthenticated. [isUsable] is that guard, and it is applied here rather than left to each
+     * caller to remember.
+     *
+     * ### Bytes, not characters
+     *
+     * `Credentials.PASSWORD_LENGTH` counts characters and bcrypt counts UTF-8 bytes, so no
+     * character range can stand in for this: sixty emoji are sixty characters and a hundred and
+     * twenty bytes. The two limits are different limits and both have to be checked.
      */
     const val MAX_PASSWORD_BYTES = 72
 
-    /** Hashes [password]. The result contains its own salt and cost; store it as-is. */
-    fun hash(password: String): String =
-        BCrypt.withDefaults().hashToString(COST, password.toCharArray())
+    /**
+     * Whether [password] is short enough for bcrypt to accept.
+     *
+     * Public because registration has to answer a too-long password at the form — see
+     * `AccountRoutes.respondMalformed` — where [verify]'s quiet `false` would be the wrong shape.
+     */
+    fun isUsable(password: String): Boolean =
+        password.toByteArray(Charsets.UTF_8).size <= MAX_PASSWORD_BYTES
+
+    /**
+     * Hashes [password]. The result contains its own salt and cost; store it as-is.
+     *
+     * @throws IllegalArgumentException if [password] is longer than [MAX_PASSWORD_BYTES]. A caller
+     *   that has not checked [isUsable] first is storing a password nobody will ever be able to
+     *   sign in with, so this one is a programming error rather than something to report to a
+     *   player — the report belongs at the form, before the account exists.
+     */
+    fun hash(password: String): String {
+        require(isUsable(password)) { "password exceeds $MAX_PASSWORD_BYTES bytes" }
+        return BCrypt.withDefaults().hashToString(COST, password.toCharArray())
+    }
 
     /**
      * Whether [password] matches [digest].
@@ -51,9 +83,16 @@ object PasswordHasher {
      * A malformed or truncated digest verifies as **false** rather than throwing. A corrupt row is
      * a reason to refuse a sign-in, not to return a 500 that tells the caller their account exists
      * and is broken.
+     *
+     * A password past [MAX_PASSWORD_BYTES] is the same judgement, and it is more than defensive
+     * tidiness: it is the *correct* answer. Every stored digest was made from a password bcrypt
+     * accepted, so one it would refuse cannot be the password for any account — and answering
+     * `false` lets `signIn` and account deletion give their ordinary 401 rather than a 500. The
+     * answer does not depend on whether the account exists, so it tells a caller nothing the
+     * decoy in `AccountRoutes` is hiding.
      */
     fun verify(password: String, digest: String): Boolean =
-        BCrypt.verifyer().verify(password.toCharArray(), digest).verified
+        isUsable(password) && BCrypt.verifyer().verify(password.toCharArray(), digest).verified
 
     /** True when [digest] was made at a weaker cost than the current one and should be replaced. */
     fun needsRehash(digest: String): Boolean = runCatching {

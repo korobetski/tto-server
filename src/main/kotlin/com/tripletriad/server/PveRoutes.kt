@@ -33,6 +33,8 @@ import com.tripletriad.protocol.PveRefusal
 import com.tripletriad.protocol.RewardSummary
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.plugins.ratelimit.RateLimitName
+import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -92,15 +94,28 @@ fun Route.pveRoutes(
  * the gate is right about it: four handlers in one body buries the interesting part of each.
  */
 private fun Route.openRoute(referee: PveReferee, accounts: AccountStore) {
-    /** The server deals, draws the roulette and tosses. */
-    post {
-        if (!requireCompatibleClient()) return@post
-        val accountId = authenticate(accounts) ?: return@post
-        val request = call.receive<PveMatchRequest>()
+    /**
+     * The server deals, draws the roulette and tosses.
+     *
+     * Throttled by [SUBMIT] — the bucket that guards `/matches/submit` — because this is the other
+     * door into the same room. A refereed match ends in `MatchRewards.credit` against the stored
+     * profile exactly as a submitted transcript does, so a cadence limit on one and not the other
+     * is not a limit, it is a signpost to the unlimited endpoint. Every route under `/pve` was
+     * unthrottled until this change.
+     *
+     * Dealing is also the expensive half: it reads the profile, draws the rules, builds two hands
+     * and writes a row, and `abandonLive` leaves the previous attempt behind each time.
+     */
+    rateLimit(RateLimitName(SUBMIT)) {
+        post {
+            if (!requireCompatibleClient()) return@post
+            val accountId = authenticate(accounts) ?: return@post
+            val request = call.receive<PveMatchRequest>()
 
-        when (val dealt = referee.open(accountId, request)) {
-            is Dealt.Playing -> call.respond(HttpStatusCode.Created, dealt.view)
-            else -> call.refusePve(dealt.refusal())
+            when (val dealt = referee.open(accountId, request)) {
+                is Dealt.Playing -> call.respond(HttpStatusCode.Created, dealt.view)
+                else -> call.refusePve(dealt.refusal())
+            }
         }
     }
 }
@@ -133,16 +148,25 @@ private fun Route.liveRoutes(referee: PveReferee, accounts: AccountStore) {
         if (view == null) call.refusePve(Moved.NoSuchMatch.refusal()) else call.respond(view)
     }
 
-    /** Places a card, and answers with the opponent's reply already made. */
-    post("/{id}/moves") {
-        if (!requireCompatibleClient()) return@post
-        val accountId = authenticate(accounts) ?: return@post
-        val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-        val move = call.receive<PveMove>()
+    /**
+     * Places a card, and answers with the opponent's reply already made.
+     *
+     * Throttled by [PLAY]. The ninth placement is the one that settles the match and pays, so this
+     * is not merely a read endpoint that happens to write — it is the second half of the payout
+     * path [SUBMIT] guards next door. The reads above are left alone: a client polls `/active` to
+     * find out whether its match survived being killed, and refusing that is refusing to resume.
+     */
+    rateLimit(RateLimitName(PLAY)) {
+        post("/{id}/moves") {
+            if (!requireCompatibleClient()) return@post
+            val accountId = authenticate(accounts) ?: return@post
+            val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val move = call.receive<PveMove>()
 
-        when (val played = referee.play(id, accountId, move)) {
-            is Moved.Accepted -> call.respond(HttpStatusCode.OK, played.view)
-            else -> call.refusePve(played.refusal())
+            when (val played = referee.play(id, accountId, move)) {
+                is Moved.Accepted -> call.respond(HttpStatusCode.OK, played.view)
+                else -> call.refusePve(played.refusal())
+            }
         }
     }
 }
@@ -381,19 +405,31 @@ class PveReferee(
     /**
      * Ends the match and pays for it, exactly once.
      *
-     * [PveStore.finish] is the gate: it only touches a row that is still `PLAYING`, so two callers
-     * racing to settle the same match — a double tap on the ninth card, say — result in one
-     * settlement and one credit. `AccountStore.creditRefereedMatch` is the belt to that brace, its
-     * unique index refusing a second history row for the same match.
+     * ### The payout is computed under the profile's row lock
      *
-     * The payout is computed **before** the gate because it has to be stored by it, and computing
-     * it writes nothing: `MatchRewards.credit` is a pure function that hands back a profile rather
-     * than saving one. Losing the race therefore costs an arithmetic that is thrown away.
+     * It used to be computed from an `accounts.saveFor(...)` taken in its own transaction and
+     * written back in another, which is a read-modify-write with nothing between the halves: a
+     * purchase committing in the gap was erased by the write, with a `200` for both requests.
+     * `AccountStore.lockSave` exists to end that and this was one of the three paths still doing
+     * it, so everything from the ladder lookup to the credited save now happens inside
+     * `creditRefereedMatch`, against the profile that is about to be written.
+     *
+     * ### Crediting comes first and the gate second, which is the other way round from before
+     *
+     * It has to, now that the reward is computed inside the credit: [PveStore.finish] stores the
+     * summary, and the summary does not exist until the closure has run. That is safe because the
+     * credit is idempotent in its own right — its unique index refuses a second history row for the
+     * same match, so of two callers racing to settle the same board exactly one is paid — and
+     * [PveStore.finish] remains the gate on the *row*, only touching one that is still `PLAYING`.
+     * The loser of the race is told what the winner wrote.
      */
+    // Three guard clauses and the answer: an unreplayable board, an opponent whose icon has gone,
+    // and an account with no character. Folding them into one nested expression to save a keyword
+    // would bury which of the three happened, which is the only thing worth knowing here.
+    @Suppress("ReturnCount")
     private fun settle(row: PveMatchRow): PveMatchRow {
         val state = row.replay(cards) ?: return row
         val npc = npcs.byIcon(row.opponentIconId, row.formatId) ?: return row
-        val save = accounts.saveFor(row.accountId) ?: return row
 
         val score = state.score
         val result = when {
@@ -401,46 +437,57 @@ class PveReferee(
             score.blue < score.red -> MatchResult.LOSE
             else -> MatchResult.DRAW
         }
-        // Null unless this row was dealt as a rung **and** the profile still stands on that run.
-        // See `V11__pve_campaign.sql`: a run that closed underneath a live match settles it as the
-        // ordinary match it turned out to be, rather than crediting a tournament nobody is in.
-        val ladder = runFor(row, save)
         val at = clock()
         val generator = random()
+        // What the closure has to report back out: the row it writes carries the match, but the
+        // summary belongs to `pve_matches` and is stored by the gate below.
+        var summary: RewardSummary? = null
 
-        val credited = MatchRewards.credit(
-            save = save.startingMatch(againstNpc = true),
-            npc = npc,
-            result = result,
-            rules = row.rules,
-            at = at,
-            random = generator,
-            boost = ladder?.let { CampaignRewards.rungBoost(it.campaign, result) }
-                ?: RewardBoost.NONE,
-        )
-        // The run is advanced on the profile the match just wrote, so both land in one save.
-        val climbed = ladder?.let { closing(credited.save, it, result, at, generator) }
-        val summary = summarise(credited.reward, climbed)
-        val settled = climbed?.save ?: credited.save
+        val credited = accounts.creditRefereedMatch(row.accountId, matchKey = row.id) { save ->
+            // Null unless this row was dealt as a rung **and** the profile still stands on that
+            // run. See `V11__pve_campaign.sql`: a run that closed underneath a live match settles
+            // it as the ordinary match it turned out to be, rather than crediting a tournament
+            // nobody is in. Read from the locked profile, so "still stands" is true at the moment
+            // the run is advanced rather than at the moment the request arrived.
+            val ladder = runFor(row, save)
+
+            val paid = MatchRewards.credit(
+                save = save.startingMatch(againstNpc = true),
+                npc = npc,
+                result = result,
+                rules = row.rules,
+                at = at,
+                random = generator,
+                boost = ladder?.let { CampaignRewards.rungBoost(it.campaign, result) }
+                    ?: RewardBoost.NONE,
+            )
+            // The run is advanced on the profile the match just wrote, so both land in one save.
+            val climbed = ladder?.let { closing(paid.save, it, result, at, generator) }
+            summary = summarise(paid.reward, climbed)
+
+            Crediting(
+                match = RecordedMatch(
+                    opponentIconId = row.opponentIconId,
+                    formatId = row.formatId,
+                    seed = row.seed,
+                    blue = score.blue,
+                    red = score.red,
+                    result = result,
+                    mgp = paid.reward.mgp,
+                    xp = paid.reward.xp,
+                ),
+                save = (climbed?.save ?: paid.save)
+                    .copy(lastSave = at, saveNumber = save.saveNumber + 1),
+            )
+        }
+
+        // No character, which registration makes unreachable. The match is left as it is rather
+        // than marked finished: a board nobody can be paid for has not been settled.
+        if (credited == Credited.NotCredited) return row
 
         if (!pve.finish(row.id, PveMatchStatus.FINISHED, summary)) {
             return pve.matchById(row.id, row.accountId) ?: row
         }
-        accounts.creditRefereedMatch(
-            accountId = row.accountId,
-            matchKey = row.id,
-            match = RecordedMatch(
-                opponentIconId = row.opponentIconId,
-                formatId = row.formatId,
-                seed = row.seed,
-                blue = score.blue,
-                red = score.red,
-                result = result,
-                mgp = credited.reward.mgp,
-                xp = credited.reward.xp,
-            ),
-            save = settled.copy(lastSave = at, saveNumber = save.saveNumber + 1),
-        )
         return row.copy(status = PveMatchStatus.FINISHED, reward = summary)
     }
 

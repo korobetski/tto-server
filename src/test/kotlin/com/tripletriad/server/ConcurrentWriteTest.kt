@@ -7,7 +7,9 @@ import com.tripletriad.model.PotionType
 import com.tripletriad.protocol.BuyRequest
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.Credentials
+import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.PlayerState
+import com.tripletriad.protocol.SeedTickets
 import com.tripletriad.protocol.Session
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.client.request.HttpRequestBuilder
@@ -115,6 +117,57 @@ class ConcurrentWriteTest {
         assertEquals(MOVED_AVATAR, after.avatarId, "the purchase erased the profile write")
     }
 
+    /**
+     * A **credited match** and a purchase at once leave both their marks.
+     *
+     * ### The path the lock had never reached
+     *
+     * `AccountStore.lockSave` was written for the pairing above and applied to `PUT /me/save` and
+     * to the intent endpoints. It was not applied to the three paths that *pay*: crediting a
+     * submitted transcript, settling a refereed PvE match, and settling PvP. Each of those read the
+     * profile in one transaction, computed the reward in Kotlin, and wrote it back in another —
+     * which is the very read-modify-write the lock exists to stop, on the writes that carry money.
+     *
+     * The irony is exact: `lockSave`'s own KDoc names "the offline queue draining while the player
+     * taps Buy" as the case it was for, and the offline queue drains through `/matches/submit`,
+     * which was one of the three.
+     *
+     * ### What is asserted, and why it is `stats` rather than the purse
+     *
+     * `GameSave.stats` is written by `MatchRewards.credit` and by nothing else here — a purchase
+     * does not touch it — so a played count that did not move is a credited match that was erased.
+     * The purse would not do: both writes change it, so a lost update would leave a plausible
+     * number. The `matches` row is no use either, since it is inserted in its own statement and
+     * survives the profile being overwritten — which is exactly what made this bug look like "the
+     * match counted but paid nothing".
+     */
+    @Test
+    fun aCreditedMatchAndAPurchaseDoNotEraseEachOther() = server {
+        val session = rich()
+        val potion = onSaleAsPotion()
+        val seed = tickets(session.token).first()
+        val before = me(session.token).save
+        val transcript = Transcripts.honest(before, seed)
+
+        coroutineScope {
+            val credited = async { submit(session.token, transcript) }
+            val bought = async { buy(session.token, potion, "op-with-credit") }
+            credited.await()
+            bought.await()
+        }
+
+        val after = me(session.token).save
+        assertTrue(
+            after.bag.filterIsInstance<PotionItem>().any { it.potionType == potion.potionType },
+            "crediting the match erased the purchase: ${after.bag}",
+        )
+        assertEquals(
+            before.stats.played + 1,
+            after.stats.played,
+            "the purchase erased the credited match",
+        )
+    }
+
     // ---- Harness -----------------------------------------------------------
 
     private fun server(block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
@@ -161,6 +214,25 @@ class ConcurrentWriteTest {
             setBody(json.encodeToString(save))
         }
         assertEquals(HttpStatusCode.NoContent, response.status, response.bodyAsText())
+    }
+
+    /** Tops the account's seeds up and hands back what it now holds. */
+    private suspend fun ApplicationTestBuilder.tickets(token: String): List<Int> {
+        val response = client.get("/matches/tickets") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        return json.decodeFromString<SeedTickets>(response.bodyAsText()).seeds
+    }
+
+    private suspend fun ApplicationTestBuilder.submit(token: String, transcript: MatchTranscript) {
+        val response = client.post("/matches/submit") {
+            protocolHeaders()
+            bearer(token)
+            setBody(json.encodeToString(transcript))
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
     }
 
     private suspend fun ApplicationTestBuilder.me(token: String): PlayerState {
