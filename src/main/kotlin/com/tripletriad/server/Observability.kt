@@ -19,6 +19,7 @@ import io.ktor.server.plugins.ratelimit.RateLimit
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
+import io.ktor.util.AttributeKey
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.serialization.Serializable
@@ -49,17 +50,33 @@ import kotlin.time.Duration.Companion.minutes
  * buckets. That is the honest limit of anything this side of a proxy, and naming it here is better
  * than implying otherwise.
  *
- * ### Why some buckets are keyed on the session and not the address
+ * ### Why some buckets are keyed on the account and not the address
  *
  * An address is the only key available before a request is authenticated, and it is the wrong one
  * afterwards: a household or a campus shares one, and one player's grinding would refuse their
- * flatmate's match. Past sign-in there is a better key — the session — and the fingerprint of the
- * bearer token stands for it without putting the token itself in a map.
+ * flatmate's match. Past sign-in there is a better key, and it is the **account**.
  *
- * Rotating tokens to escape a session bucket means signing in repeatedly, which is what
- * [SIGN_IN] limits. The two are meant to be read together.
+ * ### It used to be the session, and that was a budget an attacker could multiply
+ *
+ * The key was the fingerprint of the bearer token, with the argument that rotating tokens to escape
+ * a bucket means signing in repeatedly, which [SIGN_IN] limits. That answers rotating *now*. It
+ * does not answer having rotated *already*: a session lasts thirty days, so ten sign-ins per five
+ * minutes is not a ceiling on how many live tokens an account holds, it is a **fill rate** for
+ * them. An hour of signing in banks a hundred and twenty tokens, each with its own
+ * thirty-submissions-a-minute allowance, and an attacker then uses them together.
+ *
+ * The account is the thing an anti-farming limit is actually about, and it cannot be multiplied.
+ * `AccountStore.openSession` caps how many sessions one account may hold as well — belt to this
+ * brace, and the thing that bounds the table.
+ *
+ * ### What it costs, and why that is acceptable
+ *
+ * Resolving the account means the same indexed lookup `authenticate` is about to do. It is not done
+ * twice: the answer is left on the call in [ResolvedAccount] and `authenticate` reads it there. A
+ * token that resolves to nothing falls back to the address, which is right — an unauthenticated
+ * caller has no account to be limited by.
  */
-private fun Application.installRateLimits() {
+private fun Application.installRateLimits(accounts: AccountStore) {
     install(RateLimit) {
         // Guessing a password. By address, because there is no session yet by definition.
         register(RateLimitName(SIGN_IN)) {
@@ -73,41 +90,67 @@ private fun Application.installRateLimits() {
             requestKey { call -> call.callerAddress() }
         }
 
-        // Crediting a match. The tightest per-session limit, because it is the one that pays.
+        // Crediting a match, and opening a refereed one. The tightest per-account limit, because
+        // these are the ones that pay.
         register(RateLimitName(SUBMIT)) {
             rateLimiter(limit = SUBMIT_LIMIT, refillPeriod = 1.minutes)
-            requestKey { call -> call.callerKey() }
+            requestKey { call -> call.callerKey(accounts) }
         }
 
         // Opening tables and sending invitations — cheap for the sender, visible to everyone else.
         register(RateLimitName(LOBBY)) {
             rateLimiter(limit = LOBBY_LIMIT, refillPeriod = 1.minutes)
-            requestKey { call -> call.callerKey() }
+            requestKey { call -> call.callerKey(accounts) }
         }
 
         // The intent endpoints. Loosest, because a player emptying a bag of thirty items is doing
         // something ordinary and must not be mistaken for a script.
         register(RateLimitName(INTENT)) {
             rateLimiter(limit = INTENT_LIMIT, refillPeriod = 1.minutes)
-            requestKey { call -> call.callerKey() }
+            requestKey { call -> call.callerKey(accounts) }
+        }
+
+        // Placing a card, conceding, and collecting. See [PLAY_LIMIT] for the number.
+        register(RateLimitName(PLAY)) {
+            rateLimiter(limit = PLAY_LIMIT, refillPeriod = 1.minutes)
+            requestKey { call -> call.callerKey(accounts) }
         }
     }
 }
 
 /**
- * The session this request belongs to, or its address when it has none.
+ * Where the resolved account is left for `authenticate` to find.
  *
- * A **fingerprint** of the bearer token rather than the token, for the reason `Authentication`
- * gives: a token is as good as the password for as long as it lives, and a limiter's key map is
- * still somewhere it would be sitting in memory under its own name.
+ * Set only by [callerKey], and only after a token has been looked up successfully — so its presence
+ * means "this request carried a bearer token that named this account", which is exactly what
+ * `authenticate` is about to establish for itself. Reading it there is not a shortcut past a check;
+ * it is the same check, not run twice.
  */
-private fun ApplicationCall.callerKey(): String = request.headers[HttpHeaders.Authorization]
-    ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
-    ?.removePrefix("Bearer ")
-    ?.trim()
-    ?.takeIf { it.isNotEmpty() }
-    ?.let { "session:" + Tokens.fingerprint(it) }
-    ?: callerAddress()
+internal val ResolvedAccount: AttributeKey<Long> = AttributeKey("tto.resolvedAccount")
+
+/**
+ * The account this request belongs to, or its address when it has none.
+ *
+ * The token is **fingerprinted** before it is used for anything, for the reason `Authentication`
+ * gives: a token is as good as the password for as long as it lives, and a limiter's key map is
+ * somewhere it would otherwise be sitting in memory under its own name. The fingerprint does not
+ * become the key either — see the note on [installRateLimits] about banked tokens — it is only how
+ * the account is found.
+ */
+private fun ApplicationCall.callerKey(accounts: AccountStore): String {
+    val fingerprint = bearerFingerprint() ?: return callerAddress()
+    val accountId = accounts.accountForToken(fingerprint) ?: return callerAddress()
+    attributes.put(ResolvedAccount, accountId)
+    return "account:$accountId"
+}
+
+private fun ApplicationCall.bearerFingerprint(): String? =
+    request.headers[HttpHeaders.Authorization]
+        ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
+        ?.removePrefix("Bearer ")
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.let(Tokens::fingerprint)
 
 private fun ApplicationCall.callerAddress(): String = "ip:" + request.origin.remoteHost
 
@@ -118,7 +161,12 @@ private fun ApplicationCall.callerAddress(): String = "ip:" + request.origin.rem
  * "it is broken *here*" at the moment something goes wrong at three in the morning — which is the
  * only moment any of it is read.
  */
-fun Application.installObservability(meters: PrometheusMeterRegistry) {
+fun Application.installObservability(meters: PrometheusMeterRegistry, accounts: AccountStore) {
+    // First, and before anything reads a byte. An unbounded body is the one failure here that
+    // nothing downstream can recover from — see `BodyLimit`, which is also why this is a plugin of
+    // ours rather than a setting: Ktor ships no limit at all.
+    install(BodyLimit)
+
     install(ContentNegotiation) {
         json(
             Json {
@@ -136,13 +184,28 @@ fun Application.installObservability(meters: PrometheusMeterRegistry) {
     // proxy every request arrives from the same container address, so a per-IP bucket would hold
     // the entire internet and the first ten sign-ins anywhere would lock out the eleventh.
     //
-    // Trusting a client-supplied header is normally a spoofing vector, and here it is not one:
-    // Caddy is the only thing on this host the internet can reach (see `Caddyfile`), it overwrites
-    // the header on every proxied request, and nothing else can present one. A deployment that ever
-    // exposes this port directly must remove this line in the same change.
-    install(XForwardedHeaders)
+    // ### Why the *last* value and not the plugin's default
+    //
+    // The default is `useFirstProxy()`, which takes the entry furthest from this server — the one
+    // a client writes if anything ever passes a client-supplied value through. That was safe only
+    // by arrangement: Caddy declines to keep a prior `X-Forwarded-For` unless the peer is in
+    // `trusted_proxies`, which is empty, so the header arrives holding exactly one entry and first
+    // and last are the same value.
+    //
+    // An arrangement in another file is a poor place for the rate limiter's honesty to live. One
+    // `trusted_proxies` line, or one more hop in front of Caddy, and the first entry becomes
+    // whatever the caller typed — silently, with every per-address bucket keyed by the attacker.
+    // The last entry is the one the nearest hop appended, which is the closest thing to a fact
+    // this server can read. It is identical today and correct in the topologies that would have
+    // broken the default.
+    //
+    // Still not a licence to expose this port directly: with no proxy at all there is no
+    // `X-Forwarded-For`, the plugin leaves the socket address alone, and that is right — but a
+    // deployment that puts this behind something which forwards blindly is back to trusting the
+    // caller, whichever end of the list is read.
+    install(XForwardedHeaders) { useLastProxy() }
 
-    installRateLimits()
+    installRateLimits(accounts)
 
     // A correlation id per request, generated if the caller did not supply one. Without it, the
     // log lines of two concurrent matches interleave into something unreadable; with it, one grep
@@ -152,7 +215,22 @@ fun Application.installObservability(meters: PrometheusMeterRegistry) {
         // back on the response. Adding `replyToHeader` next to it sends the header twice.
         header(CALL_ID_HEADER)
         generate { UUID.randomUUID().toString() }
-        verify { it.isNotBlank() }
+
+        // ### The caller's id is data, and this is where it stops being trusted
+        //
+        // `CallIdConfig` holds **one** verifier, not a list, so a `verify { }` here does not add a
+        // rule — it replaces Ktor's. This used to say `it.isNotBlank()`, which threw away the
+        // default dictionary check and accepted anything at any length that a caller cared to put
+        // in `X-Request-Id`. The value is echoed on the response and pushed into the MDC, so
+        // `logback.xml` then prints it on **every line** of that request: an id of four kilobytes
+        // of punctuation is four kilobytes on every line, and it is the caller who chose it.
+        //
+        // So: the dictionary Ktor generates from, and a length that comfortably clears a UUID.
+        // A failing verifier is not a rejection — the plugin skips that provider and falls through
+        // to `generate` above — which is the right answer for a header nobody was asked to send.
+        verify { id ->
+            id.length in 1..MAX_CALL_ID_LENGTH && id.all { it in CALL_ID_ALPHABET }
+        }
     }
 
     install(CallLogging) {
@@ -203,6 +281,28 @@ const val CALL_ID_HEADER = "X-Request-Id"
 private const val MDC_CALL_ID = "callId"
 
 /**
+ * Long enough for a UUID and for any correlation id a proxy in front of this one would mint,
+ * short enough that a log line stays a log line. Not a round number for its own sake: 36 is the
+ * UUID this server generates, and this is comfortably past anything with a reason to be longer.
+ */
+private const val MAX_CALL_ID_LENGTH = 128
+
+/**
+ * What a call id may be made of.
+ *
+ * Ktor's own `CALL_ID_DEFAULT_DICTIONARY` is the same set without the capitals, and this is written
+ * out rather than imported because that constant is not exported from the plugin's package — an
+ * unresolved reference is a worse dependency than eight visible characters.
+ *
+ * The capitals are the one deliberate addition: uppercase hex and base64 are both ordinary shapes
+ * for a correlation id minted upstream, and rejecting them would silently mint our own instead of
+ * agreeing with whatever produced it. Everything outside this set — whitespace, control characters,
+ * anything that would reformat a log line — is what the check is for.
+ */
+private const val CALL_ID_ALPHABET =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=-"
+
+/**
  * The names the routes throttle themselves by, and the numbers behind them.
  *
  * Public because a route has to name one to be limited, and a typo in a name is a route that is
@@ -218,6 +318,7 @@ const val REGISTER = "register"
 const val SUBMIT = "submit"
 const val LOBBY = "lobby"
 const val INTENT = "intent"
+const val PLAY = "play"
 
 /** Ten tries per address per five minutes. A person who has forgotten their password uses three. */
 private const val SIGN_IN_LIMIT = 10
@@ -258,6 +359,30 @@ private const val SUBMIT_LIMIT = 30
 
 /** Twenty tables or invitations a minute. Opening one and cancelling it is two. */
 private const val LOBBY_LIMIT = 20
+
+/**
+ * A hundred and twenty placements a minute — two a second, sustained.
+ *
+ * ### Why a bucket for this at all
+ *
+ * Because the refereed routes had none, and they pay. `/matches/submit` is throttled on the
+ * argument that a transcript is unforgeable but not slow to produce, and that only the cadence
+ * tells a bot from a player. Every word of that applies to `POST /pve/matches/{id}/moves`, which
+ * plays a real match against a real opponent and settles it — and it was unthrottled, so the
+ * defence [SUBMIT] provides was available to anyone willing to use the other endpoint.
+ *
+ * ### The number
+ *
+ * Two placements a second is about four times a player who is not thinking, and a match is nine
+ * placements — so this bounds a bot to something like thirteen matches a minute where a person
+ * plays one or two. That is deliberately *below* [SUBMIT_LIMIT]'s thirty: the two paths end in the
+ * same payout, and the one the server referees should not be the loose one.
+ *
+ * It also covers conceding and collecting, which are the other two ways a match ends. They are
+ * once-per-match actions and nowhere near this, which is the point — a limit a real player can
+ * reach is a limit that was set wrong.
+ */
+private const val PLAY_LIMIT = 120
 
 /** Sixty intents a minute — a player emptying a bag of thirty items in a hurry. */
 private const val INTENT_LIMIT = 60

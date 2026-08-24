@@ -64,8 +64,15 @@ private fun probeDatabase(dataSource: DataSource): String = runCatching {
         if (connection.isValid(PROBE_TIMEOUT_SECONDS)) OK else "not responding"
     }
 }.getOrElse { failure ->
+    // The driver's own message goes to the log and **not** onto the wire. It can carry the JDBC
+    // URL, the container's hostname and the role the server connects as, and this endpoint is one
+    // Caddy refuses from outside rather than one that is authenticated — so the only thing keeping
+    // that off the internet is a `respond @internal 404` in another file. `Observability.kt`'s
+    // catch-all already declined to describe a cause for this exact reason; the two now agree.
+    //
+    // Whoever is on call reads the warn line, which has the exception and the correlation id.
     logger.warn("Readiness probe failed", failure)
-    failure.message ?: failure::class.simpleName ?: "unavailable"
+    "unavailable"
 }
 
 /**

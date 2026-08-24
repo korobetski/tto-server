@@ -173,12 +173,26 @@ class AccountStore(
     // ---- Sessions ---------------------------------------------------------
 
     /**
-     * Records a session for [tokenFingerprint], and clears out this account's expired ones.
+     * Records a session for [tokenFingerprint], clears out this account's expired ones, and drops
+     * the oldest if the account is now holding more than [MAX_SESSIONS].
      *
      * The cleanup rides along rather than running on a timer: sessions expire on a schedule nobody
      * watches, and a sweep attached to the one event that creates them keeps the table bounded
      * without a scheduler to operate. It is scoped to this account so a busy server does not turn
      * every sign-in into a full-table delete.
+     *
+     * ### Why there is now a cap and not just an expiry
+     *
+     * Expiry alone bounds how *long* a token lives and says nothing about how many an account may
+     * hold at once, and the difference is what an attacker was using. The rate limiter keys its
+     * buckets on the account now, which closes that directly — see `installRateLimits` — and this
+     * is the other half: without a cap, an account can still accumulate unlimited rows by signing
+     * in in a loop for a month, and each of those rows is a session somebody stole one device to
+     * get can still be sitting among.
+     *
+     * Ten is a number of *devices*, not of sessions, and it is generous read that way — a phone, a
+     * tablet, a desktop and a reinstall of each. The eleventh sign-in ends the oldest, which is the
+     * behaviour every service that does this has, and the player it happens to signs in again.
      */
     // The numbers are JDBC parameter positions, which is the one place a bare integer is not a
     // magic number: it is the ordinal of the `?` it fills, and naming it would only add a constant
@@ -197,6 +211,27 @@ class AccountStore(
                 statement.setString(1, tokenFingerprint)
                 statement.setLong(2, accountId)
                 statement.setTimestamp(3, Timestamp(expiresAt))
+                statement.executeUpdate()
+            }
+            // After the insert, so the session just opened is one of the ones counted — a sign-in
+            // that immediately evicted itself would be a strange way to be told the limit.
+            //
+            // `OFFSET` rather than a `NOT IN (… LIMIT …)`: it says "keep this many of the newest,
+            // delete the rest" in one clause, and the tie-break on `token_hash` makes the order
+            // total, so two sessions opened in the same millisecond cannot both survive a cap of
+            // one and cannot both be deleted.
+            db.prepareStatement(
+                """
+                DELETE FROM sessions WHERE token_hash IN (
+                    SELECT token_hash FROM sessions
+                    WHERE account_id = ?
+                    ORDER BY created_at DESC, token_hash DESC
+                    OFFSET ?
+                )
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setLong(1, accountId)
+                statement.setInt(2, MAX_SESSIONS)
                 statement.executeUpdate()
             }
             Unit
@@ -227,6 +262,35 @@ class AccountStore(
         Unit
     }
 
+    /**
+     * Ends every session this account holds, optionally sparing one.
+     *
+     * ### The two things this is for
+     *
+     * A password change, where sparing the caller's own session is the point — changing a password
+     * because somebody else has it should end *their* access without signing the owner out of the
+     * device they are holding. And "sign out everywhere", where nothing is spared, which is what a
+     * player reaches for when they no longer know which devices are signed in.
+     *
+     * Until both existed, a stolen token was good for its full thirty days and the only answer the
+     * server had was deleting the account.
+     *
+     * @param except a token fingerprint to keep, or null to end them all.
+     * @return how many sessions were ended.
+     */
+    // The bare 1, 2, 3 are JDBC parameter positions, as everywhere else in this class.
+    @Suppress("MagicNumber")
+    fun closeSessions(accountId: Long, except: String? = null): Int = transaction { db ->
+        db.prepareStatement(
+            "DELETE FROM sessions WHERE account_id = ? AND (?::text IS NULL OR token_hash <> ?)",
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, except)
+            statement.setString(3, except)
+            statement.executeUpdate()
+        }
+    }
+
     // ---- The player -------------------------------------------------------
 
     /** The profile and its match record, or null if the account has no character. */
@@ -240,24 +304,6 @@ class AccountStore(
     fun saveFor(accountId: Long): GameSave? = transaction { db -> readSave(db, accountId) }
 
     /**
-     * Replaces the stored profile with one the client sent.
-     *
-     * ### This is the trusted-client hole that is left, and it is left knowingly
-     *
-     * Everything about a *match* is now the server's: it replays it, scores it, and decides what it
-     * paid. Everything else a profile records — a card bought in the shop, a deck rearranged, a
-     * potion drunk — still happens entirely on the client, because that is where those rules live
-     * and there is no transcript of a shop visit to replay.
-     *
-     * So this endpoint exists and takes the client at its word, which means a determined player can
-     * still give themselves MGP. That is not a regression: it is exactly where the game was before
-     * accounts, minus the part that mattered most. Closing it means giving the shop and the deck
-     * editor the same treatment matches got — an intent the server can check — and that is a piece
-     * of work in its own right rather than something to do half of here.
-     *
-     * @return false if the account has no character, which is not reachable — see registration.
-     */
-    /**
      * Reads the stored profile under a row lock, applies [change], and writes the result.
      *
      * The shape every write in this class should have had. `PUT /me/save` used to read with
@@ -267,19 +313,94 @@ class AccountStore(
      *
      * @return the profile that was written, or null when the account has no character.
      */
-    fun mutate(accountId: Long, change: (GameSave) -> GameSave): GameSave? = transaction { db ->
-        val stored = lockSave(db, accountId) ?: return@transaction null
-        val next = change(stored)
-        db.prepareStatement(
-            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
-        ).use { statement ->
-            statement.setString(1, json.encodeToString(next))
-            statement.setLong(2, accountId)
-            statement.executeUpdate()
+    fun <T> mutate(accountId: Long, change: (GameSave) -> Outcome<T>): Outcome<T>? =
+        transaction { db ->
+            val stored = lockSave(db, accountId) ?: return@transaction null
+            val outcome = change(stored)
+            writeSave(db, accountId, outcome.save)
+            outcome
         }
-        next
+
+    /**
+     * Locks **two** profiles, applies [change] to both, and writes both — or neither.
+     *
+     * ### Why a PvP settlement needs its own primitive
+     *
+     * Because it is a transfer, and the two halves of a transfer are one fact. Settling used to be
+     * two calls to [saveFor] and two to [replaceSave], in four transactions with no lock among
+     * them, which was wrong twice over: a process that died between the loser's write and the
+     * winner's paid one side and not the other, and — much easier to reach — a player could race
+     * `PUT /me/save` against their own settlement and keep the card they had just lost, because the
+     * settlement was computed from a read that anything could invalidate.
+     *
+     * It also makes the wager arithmetic honest. `MatchRewards.creditPvp` floors a purse at zero,
+     * so what the loser can actually pay has to be read in the same breath as the winner's credit
+     * or the difference is MGP that did not exist before the match — see `PvpReferee.creditBoth`,
+     * which is the whole reason [change] is handed both profiles at once rather than called twice.
+     *
+     * ### The lock order is by account id, always
+     *
+     * Two matches settling at the same instant between the same two players would otherwise take
+     * the two row locks in opposite orders and deadlock. Ascending id is an order both callers
+     * agree on without having to know about each other; the pair is put back the way the caller
+     * asked for it before [change] sees it, so this stays an implementation detail.
+     *
+     * @return what [change] reported for each account, in the order they were passed, or null when
+     *   either account has no character.
+     */
+    fun <T> transfer(
+        first: Long,
+        second: Long,
+        change: (GameSave, GameSave) -> Pair<Outcome<T>, Outcome<T>>,
+    ): Pair<T, T>? {
+        require(first != second) { "a transfer needs two accounts, got $first twice" }
+        return transaction { db ->
+            val ascending = first <= second
+            val lower = if (ascending) first else second
+            val higher = if (ascending) second else first
+
+            val lowerSave = lockSave(db, lower) ?: return@transaction null
+            val higherSave = lockSave(db, higher) ?: return@transaction null
+
+            val (firstOutcome, secondOutcome) = if (ascending) {
+                change(lowerSave, higherSave)
+            } else {
+                change(higherSave, lowerSave)
+            }
+
+            writeSave(db, first, firstOutcome.save)
+            writeSave(db, second, secondOutcome.save)
+            firstOutcome.detail to secondOutcome.detail
+        }
     }
 
+    /**
+     * Replaces the stored profile, unconditionally and **without taking the row lock**.
+     *
+     * ### Nothing in the server calls this any more, and that is the point of the paragraph
+     *
+     * It used to be how `PUT /me/save` and PvP settlement wrote a profile, which made it the shape
+     * of the lost-update bug [lockSave] describes: a read in one transaction, arithmetic, and this
+     * in another, with anything committing in between erased. Every one of those callers now goes
+     * through [mutate], [transfer], [applyOnce] or one of the credit functions, all of which write
+     * under the lock.
+     *
+     * What is left is a **test fixture**: putting a profile into a known state before a scenario
+     * runs, where there is no concurrency to lose to. It is kept rather than deleted because that
+     * use is legitimate and the alternative is every test reaching for the same SQL.
+     *
+     * A new production caller here would be reintroducing the bug. Use [mutate].
+     *
+     * ### What this is *not* about any more
+     *
+     * This used to carry the "trusted-client hole" note — that a client's whole `GameSave` is taken
+     * at its word, so a determined player can give themselves MGP. That is still true, and it is
+     * about `PUT /me/save`, not about this function: the endpoint is where the client's document is
+     * believed, and `GameSave.withServerOwnedFrom` is what decides how much of it. The note lives
+     * there now, where the decision is.
+     *
+     * @return false if the account has no character, which is not reachable — see registration.
+     */
     fun replaceSave(accountId: Long, save: GameSave): Boolean = transaction { db ->
         db.prepareStatement(
             "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
@@ -305,18 +426,33 @@ class AccountStore(
      * identical purpose — `matches_transcript_idx` is what makes crediting happen exactly once —
      * and an id is a better key than a digest: it is unique by construction rather than by hope.
      *
+     * ### The payout is computed **here**, under the lock
+     *
+     * [credit] is handed the stored profile rather than being given one computed from a read the
+     * caller took earlier. That is the whole difference between this and what it replaced: a read
+     * outside the transaction and a write inside it is a read-modify-write with no lock, and the
+     * concurrent purchase or `PUT /me/save` that lands between them is erased with a `200` for
+     * both. [lockSave] says more about the shape; this is one of the three paths that were still
+     * doing it after that fix landed everywhere else.
+     *
      * @param matchKey the `pve_matches.id`. Stored in `transcript_hash`, per the paragraph above.
-     * @return [Credited.Paid], or [Credited.Duplicate] if this match was already credited.
+     * @param credit the reward, as a function of the **locked** profile. Runs inside the
+     *   transaction, so it must not do I/O of its own. Returning null credits nothing.
+     * @return [Credited.Paid], [Credited.Duplicate] if this match was already credited, or
+     *   [Credited.NotCredited] if there is no character or [credit] declined.
      *   [Credited.NoTicket] is never returned — there is no ticket.
      */
     @Suppress("MagicNumber")
     fun creditRefereedMatch(
         accountId: Long,
         matchKey: String,
-        match: RecordedMatch,
-        save: GameSave,
         recent: Int = RECENT_MATCHES,
+        credit: (GameSave) -> Crediting?,
     ): Credited = transaction { db ->
+        val stored = lockSave(db, accountId) ?: return@transaction Credited.NotCredited
+        val crediting = credit(stored) ?: return@transaction Credited.NotCredited
+        val match = crediting.match
+
         val inserted = db.prepareStatement(
             """
             INSERT INTO matches
@@ -339,18 +475,15 @@ class AccountStore(
             statement.executeUpdate()
         }
         // Two settlements of the same match in flight at once — a double tap on the ninth card.
-        // The index picks one; the other pays nothing and says so.
+        // The index picks one; the other pays nothing and says so. The loser of that race did its
+        // arithmetic against the profile the winner had already written, because both took the row
+        // lock above — so nothing it computed can be half-applied here.
         if (inserted == 0) return@transaction Credited.Duplicate
 
-        db.prepareStatement(
-            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
-        ).use { statement ->
-            statement.setString(1, json.encodeToString(save))
-            statement.setLong(2, accountId)
-            statement.executeUpdate()
-        }
-
-        Credited.Paid(PlayerState(save = save, stats = readStats(db, accountId, recent)))
+        writeSave(db, accountId, crediting.save)
+        Credited.Paid(
+            PlayerState(save = crediting.save, stats = readStats(db, accountId, recent)),
+        )
     }
 
     /**
@@ -371,23 +504,41 @@ class AccountStore(
      * same transcript twice by design, and telling the player their real match was fake would be
      * the wrong answer to the client being careful.
      *
-     * @return which of the three things happened. Two of them used to be `null` and must not be:
+     * ### Verifying and crediting happen under the profile's row lock
+     *
+     * [credit] replaces a `GameSave` the caller had read in an earlier transaction. Both the replay
+     * — which reads the owner's collection — and the reward now see the profile as it is at the
+     * moment it is written, rather than as it was when the request started. Without the lock, an
+     * offline queue draining while the player taps Buy wrote a credited profile derived from a read
+     * that the purchase had already superseded, and the purchase vanished. See [lockSave].
+     *
+     * @param credit the verdict and the reward, as a function of the **locked** profile. Runs
+     *   inside the transaction, so it must not do I/O of its own. Returning null credits nothing —
+     *   a rejected transcript, and the caller holds the reason.
+     * @return which of the four things happened. Two of them used to be `null` and must not be:
      *   a duplicate is a client being careful, and a bad ticket is a match that will not be paid.
      */
-    @Suppress("LongParameterList", "MagicNumber")
+    @Suppress("MagicNumber")
     fun creditMatch(
         accountId: Long,
         transcriptHash: String,
-        match: RecordedMatch,
-        save: GameSave,
         recent: Int = RECENT_MATCHES,
+        credit: (GameSave) -> Crediting?,
     ): Credited = transaction { db ->
-        // **The duplicate check comes first, before the ticket is even looked at.** Two failing
-        // tests to get this order right, and the reason is the same both times: a resubmitted
-        // transcript — an offline queue draining twice after a lost acknowledgement — is played on
-        // a seed its own first submission already spent. Reaching for the ticket first finds it
-        // spent and calls a careful client a forger, which is the one thing this endpoint has
-        // always refused to do.
+        val stored = lockSave(db, accountId) ?: return@transaction Credited.NotCredited
+
+        // **Before the duplicate check**, so that a resubmission is still verified and still gets
+        // an accepted verdict to carry back. A client draining its offline queue twice is being
+        // careful, and the answer it deserves is "yes, that match happened, and here is your
+        // profile" — which cannot be assembled if the replay was skipped.
+        val crediting = credit(stored) ?: return@transaction Credited.NotCredited
+        val match = crediting.match
+
+        // **The duplicate check comes before the ticket is looked at.** Two failing tests to get
+        // this order right, and the reason is the same both times: a resubmitted transcript — an
+        // offline queue draining twice after a lost acknowledgement — is played on a seed its own
+        // first submission already spent. Reaching for the ticket first finds it spent and calls a
+        // careful client a forger, which is the one thing this endpoint has always refused to do.
         if (alreadyCredited(db, accountId, transcriptHash)) return@transaction Credited.Duplicate
 
         // Locked rather than read, so two submissions of the same seed are ordered rather than both
@@ -420,16 +571,11 @@ class AccountStore(
         if (inserted == 0) return@transaction Credited.Duplicate
 
         spend(db, accountId, ticket)
+        writeSave(db, accountId, crediting.save)
 
-        db.prepareStatement(
-            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
-        ).use { statement ->
-            statement.setString(1, json.encodeToString(save))
-            statement.setLong(2, accountId)
-            statement.executeUpdate()
-        }
-
-        Credited.Paid(PlayerState(save = save, stats = readStats(db, accountId, recent)))
+        Credited.Paid(
+            PlayerState(save = crediting.save, stats = readStats(db, accountId, recent)),
+        )
     }
 
     /**
@@ -486,14 +632,7 @@ class AccountStore(
 
         val stored = lockSave(db, accountId) ?: return@transaction null
         val outcome = perform(stored)
-
-        db.prepareStatement(
-            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
-        ).use { statement ->
-            statement.setString(1, json.encodeToString(outcome.save))
-            statement.setLong(2, accountId)
-            statement.executeUpdate()
-        }
+        writeSave(db, accountId, outcome.save)
 
         val player = PlayerState(
             save = outcome.save,
@@ -513,6 +652,35 @@ class AccountStore(
             statement.executeUpdate()
         }
         response
+    }
+
+    /**
+     * Forgets applied operations older than [before].
+     *
+     * ### Why the table needs sweeping at all
+     *
+     * One row per intent, for ever, each holding a whole `PlayerState` as its stored answer. The
+     * index on `applied_at` was there from the first migration and nothing ever used it, which is
+     * the shape of a sweep that was intended and not written; `V12` deleted the table wholesale,
+     * which is a migration rather than a policy.
+     *
+     * ### The window is a trade and the trade runs the other way from most retentions
+     *
+     * Deleting a row un-guards the operation it recorded: a client that never saw the answer and
+     * retries afterwards has its intent applied a **second** time, which is the double purchase
+     * `applyOnce` exists to prevent. So this window must comfortably exceed the longest a client
+     * could plausibly sit on an unacknowledged operation, and shortening it is not a tidying
+     * decision. `Application.OPERATION_LIFETIME_DAYS` is where the window is chosen and says so.
+     *
+     * @return how many rows were forgotten.
+     */
+    fun pruneOperations(before: Long): Int = transaction { db ->
+        db.prepareStatement(
+            "DELETE FROM applied_operations WHERE applied_at < ?",
+        ).use { statement ->
+            statement.setTimestamp(1, Timestamp(before))
+            statement.executeUpdate()
+        }
     }
 
     private fun readAnswer(db: Connection, accountId: Long, operationId: String): String? =
@@ -656,6 +824,24 @@ class AccountStore(
         }
     }
 
+    /**
+     * Writes [save] over whatever the row holds.
+     *
+     * Deliberately unconditional, and deliberately private: it is safe only when the caller is
+     * holding the row lock [lockSave] takes, in the same transaction. Every writer in this class
+     * does. It exists as one function so that the SQL — and the `::jsonb` cast, which is easy to
+     * drop and produces a type error a long way from here — is written once.
+     */
+    private fun writeSave(db: Connection, accountId: Long, save: GameSave) {
+        db.prepareStatement(
+            "UPDATE characters SET save = ?::jsonb, updated_at = now() WHERE account_id = ?",
+        ).use { statement ->
+            statement.setString(1, json.encodeToString(save))
+            statement.setLong(2, accountId)
+            statement.executeUpdate()
+        }
+    }
+
     private fun readSave(db: Connection, accountId: Long): GameSave? =
         db.prepareStatement("SELECT save FROM characters WHERE account_id = ?").use { statement ->
             statement.setLong(1, accountId)
@@ -757,6 +943,15 @@ class AccountStore(
     }
 }
 
+/**
+ * How many devices one account may be signed in on at once. See [AccountStore.openSession].
+ *
+ * Internal rather than tucked into the store's private companion because the cap is a property of
+ * the system a test has to be able to state, and a test that hard-codes ten is a test that stops
+ * being about the cap the moment the cap moves.
+ */
+internal const val MAX_SESSIONS = 10
+
 /** An account's id and password digest, as stored. Never leaves this package. */
 data class StoredCredentials(val accountId: Long, val passwordHash: String)
 
@@ -771,6 +966,16 @@ data class RecordedMatch(
     val mgp: Int,
     val xp: Int,
 )
+
+/**
+ * What a credited match writes: the row that records it, and the profile it produced.
+ *
+ * Both at once because they are one fact — [AccountStore.creditMatch] says why at length — and
+ * because the profile can only be computed from the locked one, which is the caller's own
+ * arithmetic. Handing back a pair is how that arithmetic gets to run inside the transaction without
+ * the store having to know what a reward is.
+ */
+data class Crediting(val match: RecordedMatch, val save: GameSave)
 
 /**
  * What an intent did: the profile it produced, and whatever describes it to the caller.
@@ -798,6 +1003,16 @@ sealed interface Credited {
 
     /** The seed was not this account's to use. See `RejectionReason.UNKNOWN_SEED`. */
     data object NoTicket : Credited
+
+    /**
+     * Nothing was written, and nothing is owed.
+     *
+     * Two causes, and the caller can tell them apart because only one of them is its own doing: the
+     * `credit` function it passed returned null — a rejected transcript, and it kept the verdict —
+     * or the account has no character, which registration makes unreachable and which every caller
+     * already treats as a failed invariant rather than as an answer.
+     */
+    data object NotCredited : Credited
 }
 
 /**

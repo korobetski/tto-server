@@ -1,3 +1,10 @@
+// TooManyFunctions counts the route groups this file is made of, which is close to counting a data
+// class's properties. The rule is aimed at a file doing too many *things*; this one does one —
+// everything about an account and the profile behind it — and every function in it is a `Route`
+// extension that exists precisely so that no single one of them is too long to read. Splitting by
+// count would put `sessionRoutes` behind a second file for no reason other than the count.
+@file:Suppress("TooManyFunctions")
+
 package com.tripletriad.server
 
 import com.tripletriad.data.CampaignEntry
@@ -34,6 +41,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
 /**
@@ -74,6 +82,22 @@ fun Route.accountRoutes(
     clock: () -> Long = System::currentTimeMillis,
     random: () -> Random = { Random.Default },
 ) {
+    registrationRoutes(store, clock)
+    sessionRoutes(store, clock)
+    accountSelfRoutes(store)
+
+    profileRoutes(store, tables, random, clock)
+}
+
+/**
+ * Creating an account. One route, and it is the one that makes every other route possible.
+ *
+ * Split out of [accountRoutes] because that function had grown past what fits on a screen — the
+ * password change and "sign out everywhere" both landed in it — and because these three functions
+ * are three different subjects: becoming a player, holding a session, and looking after the
+ * account behind them.
+ */
+private fun Route.registrationRoutes(store: AccountStore, clock: () -> Long) {
     route("/accounts") {
         /**
          * Creates an account, its character, and a session — one round trip, signed in.
@@ -89,7 +113,14 @@ fun Route.accountRoutes(
             post {
                 if (!requireCompatibleClient()) return@post
                 val credentials = call.receive<Credentials>()
-                if (!credentials.looksValid()) return@post call.respondMalformed()
+                // Two checks and not one. `looksValid` counts characters, which is the rule the
+                // form states; `isUsable` counts UTF-8 bytes, which is the rule bcrypt enforces by
+                // throwing. A passphrase of emoji satisfies the first and fails the second, and
+                // without this it reached `PasswordHasher.hash` and became a 500 — see
+                // `PasswordHasher.MAX_PASSWORD_BYTES`.
+                if (!credentials.looksValid() || !PasswordHasher.isUsable(credentials.password)) {
+                    return@post call.respondMalformed()
+                }
 
                 val username = credentials.username.trim()
                 val accountId = store.register(
@@ -112,7 +143,10 @@ fun Route.accountRoutes(
             }
         }
     }
+}
 
+/** Holding a session: signing in, signing out, and signing out everywhere. */
+private fun Route.sessionRoutes(store: AccountStore, clock: () -> Long) {
     route("/sessions") {
         // The one endpoint where guessing *is* the attack. bcrypt's cost makes each guess expensive
         // for the server as well as the attacker, so the limit is protecting this host as much as
@@ -130,6 +164,35 @@ fun Route.accountRoutes(
          */
         delete {
             bearerToken()?.let { store.closeSession(Tokens.fingerprint(it)) }
+            call.respond(HttpStatusCode.NoContent)
+        }
+
+        /**
+         * Signs out **everywhere**, this device included.
+         *
+         * ### Why a player needs this and had no way to ask for it
+         *
+         * A token lasts [SESSION_DAYS] days and is stored on the device in the clear, on the
+         * argument that what a stolen one can do is bounded. That argument holds, and it still left
+         * the owner with nothing to do about it: signing out ended one session, there was no way to
+         * change a password, and the only thing that ended a thief's access was deleting the
+         * account. One irreversible action as the answer to a recoverable problem.
+         *
+         * Authenticated rather than password-checked, deliberately. This is the *safe* direction —
+         * it takes access away and gives none — so it should be as easy to reach as possible for
+         * somebody who is worried and not certain. Account deletion asks for the password because
+         * it cannot be undone; this can, by signing in.
+         */
+        delete("/all") {
+            if (!requireCompatibleClient()) return@delete
+            val accountId = authenticate(store) ?: return@delete
+
+            val ended = store.closeSessions(accountId)
+            call.application.environment.log.info(
+                "Ended all {} sessions for account {} at its own request",
+                ended,
+                accountId,
+            )
             call.respond(HttpStatusCode.NoContent)
         }
     }
@@ -155,6 +218,16 @@ fun Route.accountRoutes(
      * that lost the answer and asked again has got what it wanted, and telling it "no such account"
      * would be reporting success as failure.
      */
+}
+
+/**
+ * Looking after the account itself: changing its password and destroying it.
+ *
+ * Both verify the password even though the caller already holds a token, and both are therefore in
+ * the [SIGN_IN] bucket. Each says why in its own KDoc; what they have in common is that a token
+ * proves a device, and neither of these is a thing a device should be able to do alone.
+ */
+private fun Route.accountSelfRoutes(store: AccountStore) {
     rateLimit(RateLimitName(SIGN_IN)) {
         delete("/accounts/me") {
             if (!requireCompatibleClient()) return@delete
@@ -183,8 +256,85 @@ fun Route.accountRoutes(
         }
     }
 
-    profileRoutes(store, tables, random, clock)
+    /**
+     * Changes the password, and ends every **other** session.
+     *
+     * ### Why the revocation is part of it rather than a second call
+     *
+     * Because a password change is what somebody does when they think another person has their
+     * credentials, and leaving that person's thirty-day token alive would answer the wrong half of
+     * the problem. Every service worth copying does both, and doing them separately means the
+     * player has to know to do the second.
+     *
+     * The caller's own session is spared. Signing somebody out of the device they are holding, as a
+     * consequence of an action they just took on it, reads as a failure rather than as security.
+     *
+     * ### Why the old password, when the caller already holds a token
+     *
+     * The same reason account deletion asks: a token is not proof that the *player* asked. It is
+     * the argument `DELETE /accounts/me` makes at length, and it applies more sharply here, since
+     * changing a password from an unlocked phone would lock the owner out of their own account.
+     *
+     * Throttled by [SIGN_IN], because a request that verifies a password is a place to guess one.
+     *
+     * ### The request shape lives here and not in `:core`
+     *
+     * Nothing on the client calls this yet, so putting the type in the shared protocol would be
+     * publishing a contract before either end has agreed it. `UpgradeRequired` in `VersionGate` is
+     * the precedent. It belongs in `:core` the moment a client screen exists, and this comment is
+     * the reminder to move it rather than to write a second one.
+     */
+
+    rateLimit(RateLimitName(SIGN_IN)) {
+        post("/accounts/me/password") {
+            if (!requireCompatibleClient()) return@post
+            val accountId = authenticate(store) ?: return@post
+            val change = call.receive<PasswordChange>()
+
+            val digest = store.passwordHashFor(accountId)
+            if (digest == null || !PasswordHasher.verify(change.password, digest)) {
+                return@post call.respond(
+                    HttpStatusCode.Unauthorized,
+                    AccountFailure(
+                        AccountError.INVALID_CREDENTIALS,
+                        "that password does not match this account",
+                    ),
+                )
+            }
+
+            // The same two checks registration makes, and for the same reasons: a length the form
+            // states, and a byte count bcrypt enforces by throwing. See `PasswordHasher.isUsable`.
+            if (change.newPassword.length < Credentials.PASSWORD_LENGTH.first ||
+                !PasswordHasher.isUsable(change.newPassword)
+            ) {
+                return@post call.respondMalformed()
+            }
+
+            store.updatePasswordHash(accountId, PasswordHasher.hash(change.newPassword))
+            val ended = store.closeSessions(
+                accountId,
+                except = bearerToken()?.let(Tokens::fingerprint),
+            )
+
+            call.application.environment.log.info(
+                "Account {} changed its password; {} other session(s) ended",
+                accountId,
+                ended,
+            )
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
 }
+
+/**
+ * The body of a password change: the one in use, and the one to replace it with.
+ *
+ * Both named rather than reusing `Credentials`, which carries a username this request has no use
+ * for — the account is the one the token names, and accepting a username here would invite the
+ * question of what happens when it disagrees.
+ */
+@Serializable
+private data class PasswordChange(val password: String, val newPassword: String)
 
 /**
  * The profile itself: reading it, storing one the client changed, and the intent endpoints.
@@ -250,21 +400,31 @@ private fun Route.profileRoutes(
      * quests it was last told about, so rejecting the request would break the ordinary case to
      * punish nobody.
      */
-    put("/me/save") {
-        if (!requireCompatibleClient()) return@put
-        val accountId = authenticate(store) ?: return@put
+    // Under [INTENT] like the endpoints below it. This one takes a whole `GameSave` and writes it
+    // to a JSONB column, so an unthrottled caller is an unthrottled writer of the largest body this
+    // API accepts — and it was the only write on `/me` with no bucket at all.
+    rateLimit(RateLimitName(INTENT)) {
+        put("/me/save") {
+            if (!requireCompatibleClient()) return@put
+            val accountId = authenticate(store) ?: return@put
 
-        val incoming = call.receive<GameSave>()
-        // Read, merge and write in **one locked transaction** — see `AccountStore.mutate`. It used
-        // to be three separate ones, so a match credited between the read and the write was thrown
-        // away by this endpoint: the client's copy of the server-owned fields was stale by exactly
-        // the change that had just landed.
-        val written = store.mutate(accountId) { stored -> incoming.withServerOwnedFrom(stored) }
-        if (written == null) {
-            call.application.environment.log.error("Account {} has no character", accountId)
-            return@put call.respond(HttpStatusCode.InternalServerError, "no character")
+            val incoming = call.receive<GameSave>()
+            // Read, merge and write in **one locked transaction** — see `AccountStore.mutate`. It
+            // used to be three separate ones, so a match credited between the read and the write
+            // was thrown away by this endpoint: the client's copy of the server-owned fields was
+            // stale by exactly the change that had just landed.
+            // `Outcome(…, Unit)` because `mutate` now answers with whatever the change reports as
+            // well as the profile — PvP settlement needs the payout back out of the lock. This one
+            // has nothing to report; the change is the answer.
+            val written = store.mutate(accountId) { stored ->
+                Outcome(incoming.withServerOwnedFrom(stored), Unit)
+            }
+            if (written == null) {
+                call.application.environment.log.error("Account {} has no character", accountId)
+                return@put call.respond(HttpStatusCode.InternalServerError, "no character")
+            }
+            call.respond(HttpStatusCode.NoContent)
         }
-        call.respond(HttpStatusCode.NoContent)
     }
 
     intentRoutes(store, tables, random, clock)
@@ -318,6 +478,7 @@ private fun Route.intentRoutes(
             if (!requireCompatibleClient()) return@post
             val accountId = authenticate(store) ?: return@post
             val request = call.receive<BagItemRequest>()
+            if (!acceptsOperationId(request)) return@post
 
             val response = store.applyOnce(
                 accountId = accountId,
@@ -522,6 +683,7 @@ private suspend fun RoutingContext.respondWithProfile(
     perform: (GameSave) -> GameSave,
 ) {
     val accountId = authenticate(store) ?: return
+    if (!acceptsOperationId(request)) return
     val response = store.applyOnce(
         accountId = accountId,
         operationId = request.operationId,
@@ -534,6 +696,36 @@ private suspend fun RoutingContext.respondWithProfile(
         return call.respond(HttpStatusCode.InternalServerError, "no character")
     }
     call.respondText(response, ContentType.Application.Json, HttpStatusCode.OK)
+}
+
+/**
+ * Whether the client's operation id is one this server will store, answering 400 if not.
+ *
+ * ### Why a client-minted key needs a bound at all
+ *
+ * `applied_operations.operation_id` is unconstrained `TEXT` inside the table's primary key, and the
+ * caller writes it. Two things follow. A btree index entry has a hard maximum of a couple of
+ * kilobytes, so an id past it fails the insert — surfacing as a `500` from a request that is really
+ * the client's mistake, which is precisely the confusion `StatusPages` sorts out for a body that
+ * will not parse. And an unbounded key is unbounded storage, one row per call.
+ *
+ * [MAX_OPERATION_ID] is far past any id a client has a reason to mint — a UUID is 36 characters —
+ * and far below the index limit, so the refusal only ever meets something that was never going to
+ * work.
+ *
+ * The shape is `ErrorResponse`, the one content negotiation already answers a malformed body with,
+ * rather than an `AccountFailure`: this is not a statement about an account, and `AccountError` has
+ * no member that would be true of it.
+ */
+private suspend fun RoutingContext.acceptsOperationId(request: Idempotent): Boolean {
+    if (request.operationId.length in 1..MAX_OPERATION_ID) return true
+
+    call.application.environment.log.info(
+        "Refused an operation id of {} characters",
+        request.operationId.length,
+    )
+    call.respond(HttpStatusCode.BadRequest, ErrorResponse(error = "malformed_request"))
+    return false
 }
 
 /**
@@ -611,9 +803,21 @@ private suspend fun io.ktor.server.application.ApplicationCall.respondMalformed(
     AccountFailure(
         AccountError.MALFORMED_CREDENTIALS,
         "a name of ${Credentials.USERNAME_LENGTH.first}-${Credentials.USERNAME_LENGTH.last} " +
-            "characters and a password of at least ${Credentials.PASSWORD_LENGTH.first}",
+            "characters and a password of at least ${Credentials.PASSWORD_LENGTH.first} " +
+            // The byte limit is named as well as the character one because they are different
+            // limits and a player can satisfy either while failing the other. Saying only
+            // "at least 8" to somebody whose emoji passphrase was refused explains nothing.
+            "characters, and at most ${PasswordHasher.MAX_PASSWORD_BYTES} bytes once encoded",
     ),
 )
+
+/**
+ * The longest operation id this server will store. Generous: a UUID is 36 characters.
+ *
+ * Bounded rather than exact because the id is the client's to choose and its shape is not this
+ * server's business — only that it fits in an index and in a table. See [acceptsOperationId].
+ */
+private const val MAX_OPERATION_ID = 128
 
 /** Thirty days: long enough that a player is not asked again on a device they use weekly. */
 private const val SESSION_DAYS = 30L

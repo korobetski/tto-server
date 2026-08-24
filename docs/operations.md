@@ -262,4 +262,6 @@ on a tag; `:core` is published from the `tto-core` repository and consumed as an
 ## Related
 
 - `deployment.md` — provisioning the VPS, and how a tag becomes the running server
+- `security-review.md` — a read of the whole repository for the ways something could be taken or
+  taken down, with what is already right recorded next to what is not
 - `../../AS3-Triple-Triad/docs/migration/09-PHASE-5-NETWORK.md` — the design this serves

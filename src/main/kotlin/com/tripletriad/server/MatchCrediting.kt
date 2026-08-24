@@ -58,76 +58,108 @@ object MatchCrediting {
         formats: FormatCatalog,
         now: Long,
     ): MatchReceipt {
-        val save = store.saveFor(accountId)
-            ?: error("account $accountId has no character")
-
-        val verdict = TranscriptVerifier.verify(transcript, cards, npcs, formats, owner = save)
-        if (verdict !is MatchVerdict.Accepted) return MatchReceipt(verdict = verdict)
-
-        // The format is resolved the same way the verifier resolves it — from the transcript's own
-        // `formatId`, and then only because the verifier has already accepted it. See
-        // `TranscriptVerifier`, which is where a format a client invented is refused.
-        val format = formats[transcript.formatId]
-            ?: error("verified a transcript in a format that does not exist")
-
-        val npc = npcs.byIcon(transcript.opponentIconId, format.id)
-            ?: error("verified a transcript against an opponent that does not exist")
-
-        // Read off the server's own score, never off the client's claim — and derived here rather
-        // than through `MatchResult.of`, which returns null for a sudden-death draw. A transcript
-        // cannot express a rematch, so one that replays to a draw *is* a completed drawn match;
-        // writing the mapping out says so, where a `!!` would only assume it.
-        val result = when {
-            verdict.blue > verdict.red -> MatchResult.WIN
-            verdict.blue < verdict.red -> MatchResult.LOSE
-            else -> MatchResult.DRAW
-        }
-
-        // The rules the match was played under are **re-derived from the seed**, not taken from the
-        // transcript, which does not carry them. That is the same reason the score is recomputed:
-        // `RULES_W` feeds achievements, so a client that could name its own rules could name the
-        // ones that pay best.
-        val rules = PveMatches.rulesFor(npc, format, Random(transcript.seed))
-
-        // A generator of its own, and deliberately not the replay's. The replay's is consumed to
-        // exactly the position the match ended at, which depends on how the match went — so
-        // continuing it would make the MGP top-up and the drop roll depend on the number of AI
-        // turns. Seeding from the transcript keeps the payout reproducible for an audit while
-        // leaving it independent of the replay.
-        val payout = Random(transcript.seed.inv())
-        val credited = MatchRewards.credit(
-            save = save.startingMatch(againstNpc = true),
-            npc = npc,
-            result = result,
-            rules = rules,
-            at = now,
-            random = payout,
-        )
-
-        val recorded = RecordedMatch(
-            opponentIconId = transcript.opponentIconId,
-            formatId = transcript.formatId,
-            seed = transcript.seed,
-            blue = verdict.blue,
-            red = verdict.red,
-            result = result,
-            mgp = credited.reward.mgp,
-            xp = credited.reward.xp,
-        )
+        // ### Why the whole of this runs inside `creditMatch`
+        //
+        // It used to run against a `store.saveFor(accountId)` read in its own transaction, and the
+        // result was written back in another. That is a read-modify-write with no lock between the
+        // halves: a purchase or a `PUT /me/save` committing in the gap was erased by the write, and
+        // both requests were answered `200`. `AccountStore.lockSave` was added to end exactly this
+        // and named the offline queue as the case it was for — and the offline queue drains through
+        // *here*, which was still doing it.
+        //
+        // The replay reads the owner's collection, so it belongs under the lock too: verifying
+        // against a profile that has since changed is the same staleness one step earlier.
+        //
+        // The two locals below are what the closure has to report back out. A verdict is not a
+        // failure the store can express — it is this file's business — so it is captured rather
+        // than returned, and `Credited.NotCredited` is the store saying "your function declined".
+        var verdict: MatchVerdict? = null
+        var reward: RewardSummary? = null
 
         val paid = store.creditMatch(
             accountId = accountId,
             transcriptHash = fingerprint(transcript),
-            match = recorded,
-            save = credited.save.copy(lastSave = now, saveNumber = save.saveNumber + 1),
-        )
+        ) { save ->
+            val replayed = TranscriptVerifier.verify(transcript, cards, npcs, formats, owner = save)
+            verdict = replayed
+            if (replayed !is MatchVerdict.Accepted) return@creditMatch null
+
+            // The format is resolved the same way the verifier resolves it — from the transcript's
+            // own `formatId`, and then only because the verifier has already accepted it. See
+            // `TranscriptVerifier`, which is where a format a client invented is refused.
+            val format = formats[transcript.formatId]
+                ?: error("verified a transcript in a format that does not exist")
+
+            val npc = npcs.byIcon(transcript.opponentIconId, format.id)
+                ?: error("verified a transcript against an opponent that does not exist")
+
+            // Read off the server's own score, never off the client's claim — and derived here
+            // rather than through `MatchResult.of`, which returns null for a sudden-death draw. A
+            // transcript cannot express a rematch, so one that replays to a draw *is* a completed
+            // drawn match; writing the mapping out says so, where a `!!` would only assume it.
+            val result = when {
+                replayed.blue > replayed.red -> MatchResult.WIN
+                replayed.blue < replayed.red -> MatchResult.LOSE
+                else -> MatchResult.DRAW
+            }
+
+            // The rules the match was played under are **re-derived from the seed**, not taken from
+            // the transcript, which does not carry them. That is the same reason the score is
+            // recomputed: `RULES_W` feeds achievements, so a client that could name its own rules
+            // could name the ones that pay best.
+            val rules = PveMatches.rulesFor(npc, format, Random(transcript.seed))
+
+            // A generator of its own, and deliberately not the replay's. The replay's is consumed
+            // to exactly the position the match ended at, which depends on how the match went — so
+            // continuing it would make the MGP top-up and the drop roll depend on the number of AI
+            // turns. Seeding from the transcript keeps the payout reproducible for an audit while
+            // leaving it independent of the replay.
+            val credited = MatchRewards.credit(
+                save = save.startingMatch(againstNpc = true),
+                npc = npc,
+                result = result,
+                rules = rules,
+                at = now,
+                random = Random(transcript.seed.inv()),
+            )
+
+            reward = RewardSummary(
+                result = credited.reward.result,
+                mgp = credited.reward.mgp,
+                xp = credited.reward.xp,
+                items = credited.reward.items,
+                achievementIds = credited.reward.achievements.map { it.id },
+            )
+
+            Crediting(
+                match = RecordedMatch(
+                    opponentIconId = transcript.opponentIconId,
+                    formatId = transcript.formatId,
+                    seed = transcript.seed,
+                    blue = replayed.blue,
+                    red = replayed.red,
+                    result = result,
+                    mgp = credited.reward.mgp,
+                    xp = credited.reward.xp,
+                ),
+                save = credited.save.copy(lastSave = now, saveNumber = save.saveNumber + 1),
+            )
+        }
 
         val player = when (paid) {
+            // The closure declined. Either the replay rejected the transcript — in which case the
+            // verdict it captured is the answer and there is nothing to pay — or the account has no
+            // character, which registration makes unreachable and which is a broken invariant
+            // rather than something to report to a player.
+            Credited.NotCredited -> return MatchReceipt(
+                verdict = verdict ?: error("account $accountId has no character"),
+            )
+
             // The unique index refused it: this transcript has been credited before. The player's
             // real state is returned with the same verdict and a flag, because an offline queue
             // draining twice after a lost acknowledgement is careful behaviour, not cheating.
             Credited.Duplicate -> return MatchReceipt(
-                verdict = verdict,
+                verdict = requireNotNull(verdict) { "a duplicate was not replayed" },
                 player = store.playerState(accountId),
                 duplicate = true,
             )
@@ -149,15 +181,12 @@ object MatchCrediting {
         }
 
         return MatchReceipt(
-            verdict = verdict,
+            // Both were set by the closure on the path that reaches here — it cannot have returned
+            // a `Paid` without going all the way through. `requireNotNull` rather than `!!` so that
+            // a future edit which breaks that says which of the two it broke.
+            verdict = requireNotNull(verdict) { "credited a match without a verdict" },
             player = player,
-            reward = RewardSummary(
-                result = credited.reward.result,
-                mgp = credited.reward.mgp,
-                xp = credited.reward.xp,
-                items = credited.reward.items,
-                achievementIds = credited.reward.achievements.map { it.id },
-            ),
+            reward = requireNotNull(reward) { "credited a match without a reward" },
         )
     }
 

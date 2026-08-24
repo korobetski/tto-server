@@ -91,11 +91,14 @@ fun Application.module(
     registry: PrometheusMeterRegistry,
     identity: ServerIdentity = ServerIdentity(name = "Triple Triad"),
 ) {
-    installObservability(registry)
-
     // One store for the whole application. It holds no state of its own — the pool does — so this
     // is about there being a single place the SQL lives, not about sharing anything.
+    //
+    // Constructed **before** the plugins, which it did not have to be until the rate limiter began
+    // keying its buckets on the account rather than on the bearer token — see `installRateLimits`.
     val accounts = AccountStore(dataSource)
+
+    installObservability(registry, accounts)
 
     // Separate from `accounts` on the line the two sides of this server fall on: that one owns who
     // a player is and what they have, this one owns what is happening right now. See [PvpStore].
@@ -106,7 +109,7 @@ fun Application.module(
     // lobby, no invitations, no wager, and no deadline, because a program is never waiting.
     val pve = PveStore(dataSource)
 
-    sweepAbandonedMatches(PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp))
+    sweepAbandonedMatches(PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp), accounts)
 
     routing {
         healthRoutes(dataSource)
@@ -146,8 +149,9 @@ fun Application.module(
  * are safe to, because `finish` and `recordClaim` both gate on the status they are changing, so a
  * second sweeper settles nothing twice.
  */
-private fun Application.sweepAbandonedMatches(referee: PvpReferee) {
+private fun Application.sweepAbandonedMatches(referee: PvpReferee, accounts: AccountStore) {
     launch {
+        var sinceOperationPrune = 0L
         while (isActive) {
             delay(SWEEP_INTERVAL_MILLIS)
             // Never let one bad row stop the loop: a match that cannot be replayed would otherwise
@@ -158,6 +162,19 @@ private fun Application.sweepAbandonedMatches(referee: PvpReferee) {
                 val claimed = referee.sweepClaims()
                 if (forfeited + claimed > 0) {
                     logger.info("Swept {} abandoned and {} unclaimed", forfeited, claimed)
+                }
+
+                // Riding along on the loop that already exists rather than getting a scheduler of
+                // its own, for the reason the loop itself gives — but on its own, much longer
+                // interval: nothing here is urgent, and a `DELETE` over a table this size every
+                // thirty seconds would be the most expensive thing this process does.
+                sinceOperationPrune += SWEEP_INTERVAL_MILLIS
+                if (sinceOperationPrune >= OPERATION_PRUNE_INTERVAL_MILLIS) {
+                    sinceOperationPrune = 0
+                    val forgotten = accounts.pruneOperations(
+                        System.currentTimeMillis() - OPERATION_LIFETIME_MILLIS,
+                    )
+                    if (forgotten > 0) logger.info("Forgot {} applied operations", forgotten)
                 }
             } catch (failure: Exception) {
                 logger.error("The sweep failed; retrying at the next interval", failure)
@@ -173,6 +190,24 @@ private fun Application.sweepAbandonedMatches(referee: PvpReferee) {
  * is never more than this long overdue, and far enough apart that the queries are noise.
  */
 private const val SWEEP_INTERVAL_MILLIS = 30_000L
+
+/**
+ * How long an applied operation is remembered.
+ *
+ * **Thirty days, matching the session lifetime**, and the number is a floor rather than a target.
+ * Forgetting an operation un-guards it: a client that never saw the answer and retries afterwards
+ * has its intent applied a second time, which is the double purchase `AccountStore.applyOnce`
+ * exists to prevent. So the question is not "how long is worth keeping" but "how long could a
+ * client hold an unacknowledged operation", and a session is the longest a client can go without
+ * signing in again.
+ *
+ * Raising it costs storage — one whole `PlayerState` per row. Lowering it costs correctness.
+ */
+private const val OPERATION_LIFETIME_DAYS = 30L
+private const val OPERATION_LIFETIME_MILLIS = OPERATION_LIFETIME_DAYS * 24 * 60 * 60 * 1000
+
+/** Once an hour. The rows being deleted are already a month old; nothing is waiting for them. */
+private const val OPERATION_PRUNE_INTERVAL_MILLIS = 60 * 60 * 1000L
 
 // sysexits.h conventions: 78 is a configuration error, 70 an internal failure, 69 a service the
 // process depends on being unavailable. Distinct codes so a supervisor's log says which of the

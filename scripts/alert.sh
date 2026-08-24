@@ -107,7 +107,11 @@ case "$CODE" in
         echo "notification sent (HTTP $CODE)" >&2
         ;;
     000)
-        echo "FAILED to reach $URL - the journal above is the only record" >&2
+        # The URL is **not** printed. A Discord webhook URL is the whole credential — anyone
+        # holding it can post to that channel — and this line lands in the journal, which is
+        # collected, shipped and pasted into issues. The fact that it could not be reached is the
+        # part that helps; the address is in .env, where whoever is debugging can read it.
+        echo "FAILED to reach TTO_ALERT_URL - the journal above is the only record" >&2
         ;;
     *)
         echo "FAILED to notify: HTTP $CODE - the journal above is the only record" >&2
