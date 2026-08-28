@@ -1,6 +1,6 @@
 # tto-server
 
-The authority for [Triple Triad Online](../AS3-Triple-Triad) — the server that holds player
+The authority for [Triple Triad Client](../tto-client) — the server that holds player
 progression and decides whether a match really happened.
 
 > **Status: it can judge a match, and nothing else.** It starts, migrates an empty schema, reports
@@ -63,7 +63,7 @@ To try an *unreleased* engine change instead, publish `:core` locally from the c
 `settings.gradle.kts` prefers that copy over the published one, on purpose:
 
 ```
-cd ../AS3-Triple-Triad && ./gradlew :core:publishToMavenLocal
+cd ../tto-client && ./gradlew :core:publishToMavenLocal
 ```
 
 `.env` has no working defaults on purpose: compose refuses to start rather than fall back to a

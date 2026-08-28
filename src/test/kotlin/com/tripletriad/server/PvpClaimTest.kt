@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.model.CardColor
+import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.TradeRule
@@ -17,8 +18,8 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -114,9 +115,19 @@ class PvpClaimTest {
         assertEquals(before, purses(host, joiner), "a match awaiting a claim paid out early")
     }
 
-    /** And the loser's five are on the wire, to the winner only, so there is something to pick. */
+    /**
+     * **The loser's five go to both sides**: one picks from them, the other watches them.
+     *
+     * It went to the winner alone, and that was half a rule. Cards are about to leave the loser's
+     * collection and *which* is not a question the final board answers — it says who owns what now
+     * and nothing about what was dealt — so the loser watched a name and a countdown and found out
+     * afterwards by noticing something missing.
+     *
+     * Nothing is leaked by the second half: the loser's own hand is what the loser is shown.
+     * [PvpOutcome.picksOwed] is what still separates them, and it stays zero for the loser.
+     */
     @Test
-    fun theLosersHandIsOfferedToTheWinnerAndNobodyElse() {
+    fun theLosersHandIsShownToBothSidesWhileTheClaimIsOwed() {
         val (host, joiner) = twoPlayers("offer")
 
         val match = playOut(host, joiner, PvpStake(trade = TradeRule.ONE))
@@ -125,11 +136,28 @@ class PvpClaimTest {
 
         val toWinner = assertNotNull(settled.outcomeFor(winner, Catalogs.cards))
         val toLoser = assertNotNull(settled.outcomeFor(winner.opposite(), Catalogs.cards))
+        val atStake = settled.dealtHand(winner.opposite())
 
-        assertContentEquals(settled.dealtHand(winner.opposite()), toWinner.pickFrom)
-        assertTrue(toLoser.pickFrom.isEmpty(), "the loser was shown a hand to pick from")
+        assertContentEquals(atStake, toWinner.pickFrom)
+        assertContentEquals(atStake, toLoser.pickFrom, "the loser was not shown what is at stake")
+        // The choice is still the winner's alone, which is the half that must not move.
+        assertEquals(0, toLoser.picksOwed, "the loser was offered a choice")
         assertNotNull(toWinner.claimDeadline)
-        assertNull(toLoser.claimDeadline)
+        assertNotNull(toLoser.claimDeadline, "the loser was not told how long they have to watch")
+    }
+
+    /** And a match with nothing owed offers no hand to anybody. */
+    @Test
+    fun aMatchWithNoClaimShowsNoHand() {
+        val (host, joiner) = twoPlayers("no-claim")
+
+        val match = playOut(host, joiner, PvpStake(mgp = WAGER))
+        val settled = assertNotNull(pvp.matchById(match))
+
+        for (side in CardColor.entries) {
+            val outcome = assertNotNull(settled.outcomeFor(side, Catalogs.cards))
+            assertTrue(outcome.pickFrom.isEmpty(), "$side was shown a hand for a settled match")
+        }
     }
 
     /** Claiming credits both sides: the card arrives on one profile and leaves the other. */
@@ -385,6 +413,74 @@ class PvpClaimTest {
         assertContentEquals(WEAKEST, joined.match.redHand)
     }
 
+    /**
+     * **Under Random the deck is ignored and the hand is drawn from the collection.**
+     *
+     * `RULE_RANDOM` does not draw from a deck — it splices from everything the player owns, and the
+     * deck selector never opens. PvE has done this since it was refereed; multiplayer did not, so a
+     * table could be opened under Random, the caption could announce it, and both sides were dealt
+     * the decks they had picked. The rule was offered, named on screen, and did nothing.
+     *
+     * Asserted as a pair, because either half alone proves nothing: without the rule the hand is
+     * *exactly* the named deck, and with it the hand is something else drawn from the wider
+     * collection. The generator is the class's fixed one, so "something else" is a specific
+     * something — a change to the dealing strands this loudly rather than quietly passing.
+     */
+    @Test
+    fun theRandomRuleDealsFromTheCollectionRatherThanTheDeck() {
+        // A pair each: a player already in a match cannot open a second table, so the two halves
+        // of this comparison cannot share accounts.
+        val plain = dealt(stocked("rand-ha"), stocked("rand-ja"), GameRules())
+        assertContentEquals(WEAKEST, plain, "without Random the named deck is what is dealt")
+
+        val host = stocked("rand-hb")
+        val drawn = dealt(host, stocked("rand-jb"), GameRules(random = true))
+
+        assertNotEquals(WEAKEST, drawn, "Random dealt the deck it was supposed to ignore")
+        // The whole collection, which is [STOCK] **plus** the cards `GameSave.new` starts everybody
+        // with — the draw is entitled to those too, and reading it off the save says so rather than
+        // assuming the fixture is all there is.
+        assertTrue(
+            drawn.all { it in save(host).ownedCardIds() },
+            "Random dealt a card outside the collection it draws from: $drawn",
+        )
+        assertEquals(HAND, drawn.toSet().size, "Random dealt the same card twice")
+    }
+
+/**
+     * **A drawn match under Sudden Death starts a second board rather than settling.**
+     *
+     * The rule was offerable on a multiplayer table from the day tables existed and did nothing:
+     * `PvpMatchRow` had no notion of a second board, so nine cards and a 5-5 score settled as a
+     * draw. PvE has replayed the rematch since it was refereed — the regrouping is a function of
+     * the finished board — and this is that same walk, on the same shared [MatchPosition].
+     *
+     * The draw is **constructed, not hoped for**. Both sides bring five copies of a card whose four
+     * sides are equal, so no placement can ever capture — a capture needs a strictly greater digit.
+     * Nine cards down with nobody taking anything leaves each side owning exactly what it played,
+     * which is five against four-plus-one-in-hand: 5-5, every time, with no seed to go stale.
+     */
+    @Test
+    fun aDrawUnderSuddenDeathStartsASecondBoard() {
+        val host = mirrored("sd-h")
+        val joiner = mirrored("sd-j")
+
+        val matchId = playOut(host, joiner, rules = GameRules(suddenDeath = true))
+        val row = assertNotNull(pvp.matchById(matchId))
+        val at = assertNotNull(row.position(Catalogs.cards))
+
+        assertEquals(
+            PvpMatchStatus.PLAYING,
+            row.status,
+            "a Sudden Death draw settled instead of being replayed",
+        )
+        assertEquals(1, at.rematch, "the second board never began")
+        assertEquals(0, at.state.placement, "the second board is not empty")
+        // And the count reaches the client, which needs it to tell a fresh board from the opening.
+        val wire = assertNotNull(row.wireFor(CardColor.BLUE, NOBODY, Catalogs.cards))
+        assertEquals(1, wire.rematch)
+    }
+
     /** A table's public row says nothing about the deck waiting behind it. */
     @Test
     fun theDeckIsNotAdvertisedWithTheTable() {
@@ -398,6 +494,38 @@ class PvpClaimTest {
     }
 
     // ---- Harness ----------------------------------------------------------
+
+    /** An account whose only deck is five copies of [UNCAPTURABLE]. See the draw test. */
+    private fun mirrored(prefix: String): Long {
+        val name = Postgres.freshAccount(prefix)
+        val hand = List(HAND) { UNCAPTURABLE }
+        val save = hand
+            .fold(GameSave.new(name, createdAt = START)) { profile, id -> profile.withCard(id) }
+            .let { profile ->
+                profile.copy(decks = listOf(profile.decks.first().copy(cards = hand)))
+            }
+        return assertNotNull(accounts.register(name, "hash-$name", save))
+    }
+
+    /** An account owning [STOCK] — more than a hand — whose only deck names [WEAKEST]. */
+    private fun stocked(prefix: String): Long {
+        val name = Postgres.freshAccount(prefix)
+        val save = STOCK
+            .fold(GameSave.new(name, createdAt = START)) { profile, id -> profile.withCard(id) }
+            .let { profile ->
+                profile.copy(decks = listOf(profile.decks.first().copy(cards = WEAKEST)))
+            }
+        return assertNotNull(accounts.register(name, "hash-$name", save))
+    }
+
+    /** The hand [host] is dealt when a table on [rules] is joined. */
+    private fun dealt(host: Long, joiner: Long, rules: GameRules): List<Int> {
+        val opened = referee.openTable(host, PvpTableRequest(FORMAT, rules = rules))
+        assertTrue(opened is Tabled.Opened, "the table was refused: $opened")
+        val joined = referee.joinTable(opened.table.id, joiner)
+        assertTrue(joined is Joined.Playing, "the join was refused: $joined")
+        return joined.match.blueHand
+    }
 
     /**
      * Two registered accounts, one of which is going to win.
@@ -462,8 +590,13 @@ class PvpClaimTest {
      * settlement, not the play — and a fixed strategy against a fixed seed makes the result the
      * same on every run, which is what lets a wager assertion be exact rather than approximate.
      */
-    private fun playOut(host: Long, joiner: Long, stake: PvpStake): String {
-        val opened = referee.openTable(host, PvpTableRequest(FORMAT, stake = stake))
+    private fun playOut(
+        host: Long,
+        joiner: Long,
+        stake: PvpStake = PvpStake.None,
+        rules: GameRules = GameRules(),
+    ): String {
+        val opened = referee.openTable(host, PvpTableRequest(FORMAT, rules = rules, stake = stake))
         assertTrue(opened is Tabled.Opened, "the table was refused: $opened")
 
         val joined = referee.joinTable(opened.table.id, joiner)
@@ -491,6 +624,15 @@ class PvpClaimTest {
         /** The widest authored format. `FormatCatalog.default`. */
         const val FORMAT = "free-play"
 
+        /**
+         * Fat Chocobo — four sides of 5, the only card in the pool that cannot take or be taken by
+         * a copy of itself. A hand of five makes a board that always draws.
+         */
+        const val UNCAPTURABLE = 341
+
+        /** Nobody in particular, for a wire read that is not about who is on the other side. */
+        val NOBODY = Opponent(name = "", avatarId = null)
+
         /** A wager a starting purse of 100 MGP covers. */
         const val WAGER = 50
 
@@ -507,6 +649,9 @@ class PvpClaimTest {
             .sortedBy { it.total }
             .map { it.id }
         val WEAKEST: List<Int> = RANKED.take(HAND)
+
+        /** A collection wider than a hand, so a draw from it can differ from the deck. */
+        val STOCK: List<Int> = RANKED.take(HAND * 4)
         val STRONGEST: List<Int> = RANKED.takeLast(HAND)
 
         const val HAND = 5

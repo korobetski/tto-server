@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.model.GameRules
+import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.TradeRule
 import com.tripletriad.protocol.CURRENT_VERSION
@@ -20,6 +21,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -82,6 +84,31 @@ class PvpFlowTest {
         assertEquals(matchId, fromBob.matchId)
         assertEquals(fromAlice.side.opposite(), fromBob.side)
         assertEquals(stake, fromAlice.stake, "the match was not opened on the table's terms")
+    }
+
+    /**
+     * **Each side is told the other's face, not just their name.**
+     *
+     * A board draws its opponent, and against a program that is the NPC portrait the roster already
+     * showed. Against a person there was nothing to draw: the wire carried `opponentName` and
+     * stopped there, which is why the multiplayer board could not use the chrome the solo board
+     * uses. `AccountStore.opponentFor` reads the avatar out of the save's JSONB alongside the
+     * username, so a poll costs one query rather than a whole parsed save document.
+     */
+    @Test
+    fun eachSideIsToldTheOthersAvatar() = server {
+        val alice = register(Postgres.freshAccount("face-a"))
+        val bob = register(Postgres.freshAccount("face-b"))
+        setAvatar(alice.token, ALICE_AVATAR)
+        setAvatar(bob.token, BOB_AVATAR)
+
+        val table = openTable(alice.token)
+        join(bob.token, table.id)
+
+        val fromAlice = assertNotNull(currentMatch(alice.token))
+        val fromBob = assertNotNull(currentMatch(bob.token))
+        assertEquals(BOB_AVATAR, fromAlice.opponentAvatarId, "Alice was not shown Bob's face")
+        assertEquals(ALICE_AVATAR, fromBob.opponentAvatarId, "Bob was not shown Alice's face")
     }
 
     /** A joined table stops being on offer, so nobody turns up to a match that already started. */
@@ -507,6 +534,48 @@ class PvpFlowTest {
     }
 
     /**
+     * **What a match unlocked survives crediting and reaches both players.**
+     *
+     * `MatchRewards.creditPvp` has awarded achievements and daily quests since PvP was refereed,
+     * and every one of them was dropped: `Payout` had nowhere to put them and `PvpOutcome` had no
+     * field to carry them. They cannot be recomputed after the fact either — an achievement unlocks
+     * once — so the settlement is the only moment they exist, and they are stored with the money.
+     *
+     * Played under **Roulette**, because `ac-wof1` — win one Roulette match — is the only unlock in
+     * the shipped catalogue whose threshold a single match can cross. Everything else needs a
+     * career, and a test that has to stage one is a test that stops being run.
+     */
+    @Test
+    fun aSettlementCarriesWhatItUnlocked() = server {
+        val alice = register(Postgres.freshAccount("unlock-a"))
+        val bob = register(Postgres.freshAccount("unlock-b"))
+        val table = openTable(alice.token, roulette = true)
+        val matchId = assertNotNull(join(bob.token, table.id).matchId)
+
+        // Decided by a forfeit rather than by playing it out. Both sides bring the same starting
+        // deck and `playOut` plays them the same way, so a played-out fixture draws — and a draw
+        // wins no Roulette match, which is the thing being measured. A forfeit is a settled match
+        // and `creditPvp` credits the rule win for it exactly as it does for a board played out.
+        val response = client.post("/pvp/match/$matchId/forfeit") {
+            protocolHeaders()
+            bearer(bob.token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+
+        val toAlice = assertNotNull(assertNotNull(currentMatch(alice.token)).outcome)
+        val toBob = assertNotNull(assertNotNull(currentMatch(bob.token)).outcome)
+        assertEquals(MatchResult.WIN, toAlice.result, "Bob left; Alice should have won")
+        assertTrue(
+            WHEEL_OF_FORTUNE in toAlice.achievementIds,
+            "a Roulette win carried no unlock: ${toAlice.achievementIds}",
+        )
+        assertTrue(
+            WHEEL_OF_FORTUNE !in toBob.achievementIds,
+            "the loser was credited the winner's achievement",
+        )
+    }
+
+    /**
      * And a finished match does not stop either of them starting another.
      *
      * The reason the readable window is a **separate** query: reusing the live one would answer
@@ -653,6 +722,28 @@ class PvpFlowTest {
         block()
     }
 
+    /** Puts [avatarId] on the account's save, the way the avatar screen does. */
+    private suspend fun ApplicationTestBuilder.setAvatar(token: String, avatarId: String) {
+        val save = saveOf(token).copy(avatarId = avatarId)
+        val response = client.put("/me/save") {
+            protocolHeaders()
+            bearer(token)
+            setBody(json.encodeToString(save))
+        }
+        assertEquals(HttpStatusCode.NoContent, response.status, response.bodyAsText())
+    }
+
+    private suspend fun ApplicationTestBuilder.saveOf(token: String): GameSave {
+        val response = client.get("/me") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        return json.decodeFromString<com.tripletriad.protocol.PlayerState>(
+            response.bodyAsText(),
+        ).save
+    }
+
     private suspend fun ApplicationTestBuilder.register(name: String): Session {
         val response = client.post("/accounts") {
             protocolHeaders()
@@ -769,6 +860,13 @@ class PvpFlowTest {
 
     private companion object {
         const val PASSWORD = "not-a-real-password"
+
+        /** Two of the shipped avatars, so each side is told a face the other did not pick. */
+        const val ALICE_AVATAR = "ffxiv_twi01001"
+
+        /** "Win one Roulette match" — the one unlock a single match can reach. */
+        const val WHEEL_OF_FORTUNE = "ac-wof1"
+        const val BOB_AVATAR = "ffxiv_twi02003"
         val UNIQUE: Long = System.nanoTime()
 
         /** The widest authored format — every block, every rule. `FormatCatalog.default`. */

@@ -1,12 +1,15 @@
 package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
+import com.tripletriad.data.Format
 import com.tripletriad.data.FormatCatalog
 import com.tripletriad.data.MatchRewards
 import com.tripletriad.data.PveMatches
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
+import com.tripletriad.model.HAND_SIZE
+import com.tripletriad.model.MatchPreparation
 import com.tripletriad.model.Roulette
 import com.tripletriad.protocol.ANY_DECK
 import com.tripletriad.protocol.PvpChallenge
@@ -780,7 +783,7 @@ class PvpReferee(
         val settled = settleIfOverdue(row) ?: row
         val side = settled.sideOf(accountId) ?: return null
 
-        return settled.wireFor(side, opponentName(settled, side), cards)
+        return settled.wireFor(side, opponent(settled, side), cards)
     }
 
     /** Places a card, if it is this player's turn and the move is one the rules allow. */
@@ -829,7 +832,7 @@ class PvpReferee(
 
     /** A row as an answer, or `NoSuchMatch` when it cannot be rendered at all. */
     private fun report(row: PvpMatchRow, side: CardColor): Played {
-        val view = row.wireFor(side, opponentName(row, side), cards) ?: return Played.NoSuchMatch
+        val view = row.wireFor(side, opponent(row, side), cards) ?: return Played.NoSuchMatch
         return Played.Accepted(view)
     }
 
@@ -838,11 +841,11 @@ class PvpReferee(
         val row = pvp.matchById(matchId) ?: return null
         val side = row.sideOf(accountId) ?: return null
         if (row.status != PvpMatchStatus.PLAYING) {
-            return row.wireFor(side, opponentName(row, side), cards)
+            return row.wireFor(side, opponent(row, side), cards)
         }
 
         val settled = settle(row, PvpMatchStatus.FORFEITED, side)
-        return settled.wireFor(side, opponentName(settled, side), cards)
+        return settled.wireFor(side, opponent(settled, side), cards)
     }
 
     /**
@@ -858,7 +861,7 @@ class PvpReferee(
         // the two apart — it is indexed on the status, and both players share it — so without this
         // the loser is offered their opponent's prize and sent to a screen with nothing on it.
         if (settled.picksOwedBy(side, cards) == 0) return@mapNotNull null
-        settled.wireFor(side, opponentName(settled, side), cards)
+        settled.wireFor(side, opponent(settled, side), cards)
     }
 
     /** Names the cards taken, or says why they cannot be. */
@@ -882,7 +885,7 @@ class PvpReferee(
     }
 
     private fun reportClaim(row: PvpMatchRow, side: CardColor): Claimed {
-        val view = row.wireFor(side, opponentName(row, side), cards) ?: return Claimed.NoSuchMatch
+        val view = row.wireFor(side, opponent(row, side), cards) ?: return Claimed.NoSuchMatch
         return Claimed.Settled(view)
     }
 
@@ -1075,7 +1078,19 @@ class PvpReferee(
             cardsWon = spoils.won,
             random = random(),
         )
-        return Outcome(credited.save, Payout(mgp = credited.reward.mgp, xp = credited.reward.xp))
+        return Outcome(
+            credited.save,
+            Payout(
+                mgp = credited.reward.mgp,
+                xp = credited.reward.xp,
+                // Recorded here because here is where they happen. `creditPvp` has unlocked
+                // achievements and finished daily quests since PvP was refereed, and both were
+                // dropped on the floor: the payout row had nowhere to put them and `PvpOutcome`
+                // had no field, so a player earned them and was never told.
+                achievementIds = credited.reward.achievements.map { it.id },
+                questIds = credited.reward.quests.map { it.id },
+            ),
+        )
     }
 
     /**
@@ -1118,21 +1133,26 @@ class PvpReferee(
         val seed = generator.nextInt()
         val settled = Random(seed)
 
+        // Drawn before the hands, because the draw can *add* Random — the rule that decides where
+        // a hand comes from. Reading `declared` for that would let a roulette that lands on Random
+        // deal from the deck anyway, which is the rule not happening.
+        // `Roulette.pools` is gone — a rule pool is a property of the format now, and the engine is
+        // handed one rather than looking one up.
+        val rules = if (roulette && format.rules.isNotEmpty()) {
+            Roulette.augment(declared, format.rules, settled)
+        } else {
+            declared
+        }
+
         return PvpMatchRow(
             id = newId(),
             blueAccount = blue,
             redAccount = red,
             formatId = format.id,
-            // `Roulette.pools` is gone — a rule pool is a property of the format now, and the
-            // engine is handed one rather than looking one up.
-            rules = if (roulette && format.rules.isNotEmpty()) {
-                Roulette.augment(declared, format.rules, settled)
-            } else {
-                declared
-            },
+            rules = rules,
             seed = seed,
-            blueHand = PveMatches.playerDeck(blueSave, blueDeck),
-            redHand = PveMatches.playerDeck(redSave, redDeck),
+            blueHand = handFor(blueSave, blueDeck, rules, format, settled),
+            redHand = handFor(redSave, redDeck, rules, format, settled),
             first = if (settled.nextBoolean()) CardColor.BLUE else CardColor.RED,
             moves = emptyList(),
             stake = stake,
@@ -1141,8 +1161,51 @@ class PvpReferee(
         )
     }
 
-    private fun opponentName(row: PvpMatchRow, side: CardColor): String =
-        accounts.usernameFor(row.accountOf(side.opposite())).orEmpty()
+    /**
+     * Where one player's five cards come from, which is the Random rule's whole job.
+     *
+     * `RULE_RANDOM` does not draw from a deck: it splices from the player's **collection**, and the
+     * deck they chose is ignored entirely. PvE has done this since it was refereed — see
+     * `PveRoutes.deal` — and multiplayer did not, so a table could be opened under Random, the
+     * caption could announce it, and both sides would be dealt the decks they picked. The rule was
+     * offered, named on screen, and did nothing.
+     *
+     * Confined to what the **format** admits before drawing, for the reason the deck path is: a
+     * collection spans every block a player owns, and a hand dealt outside the table's pool is a
+     * hand the engine refuses.
+     *
+     * Falls back to the chosen deck when the admitted collection cannot fill a hand.
+     * `MatchPreparation.randomHand` refuses fewer than five rather than dealing a duplicate, and a
+     * player who owns four cards in this format should get a match rather than a refusal.
+     */
+    private fun handFor(
+        save: GameSave,
+        deck: Int,
+        rules: GameRules,
+        format: Format,
+        random: Random,
+    ): List<Int> {
+        if (!rules.random) return PveMatches.playerDeck(save, deck)
+
+        val legal = cards.admittedBy(format).associateBy { it.id }
+        val collection = save.ownedCardIds().mapNotNull { legal[it] }
+        return if (collection.size >= HAND_SIZE) {
+            MatchPreparation.randomHand(collection, random).map { it.id }
+        } else {
+            PveMatches.playerDeck(save, deck)
+        }
+    }
+
+    /**
+     * Who [side] is up against — the name and the face, which a board needs together.
+     *
+     * An account that has vanished between being paired and being read answers an empty name and
+     * no face rather than stopping the board: the match is still a row, still replayable and still
+     * settleable, and "who was that" is the one question it can afford not to answer.
+     */
+    private fun opponent(row: PvpMatchRow, side: CardColor): Opponent =
+        accounts.opponentFor(row.accountOf(side.opposite()))
+            ?: Opponent(name = "", avatarId = null)
 
     // `generator` is pulled out rather than called inside `buildString`, and not for tidiness:
     // the builder's receiver is a `CharSequence`, so `random()` in there resolves to

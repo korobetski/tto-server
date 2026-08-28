@@ -93,55 +93,106 @@ data class PvpMatchRow(
     fun dealtHand(side: CardColor): List<Int> = if (side == CardColor.BLUE) blueHand else redHand
 
     /**
-     * The match as it stands, replayed from the inputs.
+     * Where this match stands, replayed from the inputs.
      *
-     * Returns null when a card id names nothing in [cards], which is a corrupt row rather than a
-     * playable match — better surfaced as a refused request than as a board with a hole in it.
+     * Returns null when a card id names nothing in [cards], or when a stored move is not one the
+     * rules allow. Both are a corrupt row rather than a playable match, and better surfaced as a
+     * refused request than as a board with a hole in it.
+     *
+     * ### Sudden Death is replayed, not stored
+     *
+     * A drawn match under `RULE_SUDDEN_DEATH` is not over: each side takes the cards it ended up
+     * owning and a new board begins. The rematch is derived here rather than recorded, because
+     * everything it needs is already in the row — the regrouping is a function of the finished
+     * board, and the new elements, swap and Open draws come out of the same generator this replay
+     * is already walking. So [moves] runs on past the ninth placement, and how many boards have
+     * been played is something [MatchPosition.rematch] counts rather than a column to keep in step.
+     *
+     * This is `PveMatchRow.position` almost line for line, and deliberately: the two kinds of
+     * refereed match are the same match with a different opponent, and Sudden Death was offerable
+     * on a multiplayer table while settling a draw as a draw.
      */
-    fun replay(cards: CardCatalog): MatchState? {
+    fun position(cards: CardCatalog): MatchPosition? {
         val blue = blueHand.map { cards.byId[it] ?: return null }
         val red = redHand.map { cards.byId[it] ?: return null }
-        var state = MatchPreparation
-            .prepareVersus(blue, red, first, rules, Random(seed))
-            .state
 
-        for (move in moves) {
-            val hand = state.currentHand
-            val card = hand.getOrNull(move.handIndex) ?: return null
-            state = state.play(card, move.position)
-        }
-        return state
+        // One generator for the whole row, walked in the order the deal walked it. A rematch draws
+        // from where the previous board left it, so a fresh `Random(seed)` per board would replay
+        // the same elements and the same Three Open slots every time.
+        val random = Random(seed)
+        val opening = MatchPreparation.prepareVersus(blue, red, first, rules, random)
+
+        return walk(
+            MatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0),
+            random,
+        )
     }
+
+    /**
+     * Applies every stored placement in order, starting a new board wherever one ended.
+     *
+     * The trailing [boardFor] is not redundant — see `PveMatchRow.walk`, which explains it at
+     * length: without it a Sudden Death draw would leave the position on the board that *drew*,
+     * and every caller asking whose turn it is would be told nobody's.
+     */
+    private fun walk(from: MatchPosition, random: Random): MatchPosition? {
+        var at = from
+        for (move in moves) {
+            at = boardFor(at, random)?.advanced(move.handIndex, move.position) ?: return null
+        }
+        return boardFor(at, random) ?: at
+    }
+
+    /** The board the next placement lands on: this one, or the next after a Sudden Death draw. */
+    private fun boardFor(at: MatchPosition, random: Random): MatchPosition? = when {
+        !at.state.isFinished -> at
+        !continuesAfter(at.state) -> null
+        else -> MatchPreparation.prepareRematch(at.state, random).let { next ->
+            MatchPosition(
+                state = next.state,
+                blueSeesRed = next.opponentVisibility,
+                redSeesBlue = next.playerVisibility,
+                rematch = at.rematch + 1,
+            )
+        }
+    }
+
+    private fun continuesAfter(state: MatchState): Boolean =
+        state.rules.suddenDeath && state.score.winner() == null
+
+    /** The board as it stands, or null on a row that cannot be replayed. */
+    fun replay(cards: CardCatalog): MatchState? = position(cards)?.state
 
     /**
      * What [side] may see, or null if the row cannot be replayed.
      *
-     * The visibility comes back out of [MatchPreparation.prepareVersus], which draws the two sides
-     * separately — so this is not blue's view mirrored.
+     * The visibility comes out of the replay rather than out of the opening deal, which is what
+     * makes it right after a card has been played: `HandVisibility` names *positions*, and a hand
+     * closes up over the slot that was played. Reading the opening's draw meant that under Three
+     * Open a card face down all match turned face up the moment the hand shifted under it. See
+     * [MatchPosition.advanced].
      */
-    fun viewFor(side: CardColor, cards: CardCatalog): MatchView? {
-        val blue = blueHand.map { cards.byId[it] ?: return null }
-        val red = redHand.map { cards.byId[it] ?: return null }
-        val prepared = MatchPreparation.prepareVersus(blue, red, first, rules, Random(seed))
-        val state = replay(cards) ?: return null
+    fun viewFor(side: CardColor, cards: CardCatalog): MatchView? =
+        position(cards)?.viewFor(side, turnRandom())
 
-        return MatchView.of(
-            state = state,
-            side = side,
-            opponentVisibility = prepared.visibilityFor(side),
-            random = turnRandom(),
-        )
-    }
-
-    /** [viewFor] on the wire, with the opponent's name and everything the screen needs. */
-    fun wireFor(side: CardColor, opponentName: String, cards: CardCatalog): PvpMatchView? {
-        val view = viewFor(side, cards) ?: return null
+    /** [viewFor] on the wire, with the opponent and everything else the screen needs. */
+    fun wireFor(side: CardColor, opponent: Opponent, cards: CardCatalog): PvpMatchView? {
+        val at = position(cards) ?: return null
+        val view = at.viewFor(side, turnRandom())
 
         return PvpMatchView.of(
             view = view,
+            // Which board this is. A Sudden Death rematch resets the cells and the placement count,
+            // so without it a client cannot tell a fresh board from the opening one — and will not
+            // replay the announcements for it.
+            rematch = at.rematch,
             matchId = id,
-            opponentName = opponentName,
+            opponentName = opponent.name,
             formatId = formatId,
+            // Blank rather than null on the wire: a client draws the opponent's initial for a
+            // player who has no character yet, which is a face of sorts, and one absent-value
+            // convention per field is one too many.
+            opponentAvatarId = opponent.avatarId.orEmpty(),
             status = status,
             stake = stake,
             // Only the side that is on the clock is given one. A player who is waiting has no
@@ -173,16 +224,29 @@ data class PvpMatchRow(
             forfeitedBy = forfeitedBy,
             mgp = payout[side]?.mgp ?: 0,
             xp = payout[side]?.xp ?: 0,
+            achievementIds = payout[side]?.achievementIds.orEmpty(),
+            questIds = payout[side]?.questIds.orEmpty(),
             stakeMgp = spoils.mgp,
             cardsWon = spoils.won,
             cardsLost = spoils.lost,
             picksOwed = owed,
-            // The loser's hand, and **only** to the side that still owes a choice. It is the one
-            // place this server puts a hand it has spent the whole match hiding on the wire, so the
-            // gate is two conditions rather than one: you must be owed picks, and being owed picks
-            // means you won.
-            pickFrom = if (owed > 0) dealtHand(side.opposite()) else emptyList(),
-            claimDeadline = claimDeadline.takeIf { owed > 0 },
+            /*
+             * The loser's dealt hand — **the cards this claim is being made from** — sent to both
+             * sides while one is still owed.
+             *
+             * It went to the winner only, and that was half a rule. The winner needs it because you
+             * cannot choose from cards you have not been shown; the loser needs it because cards
+             * are about to leave their collection and "which ones" is not a question they can
+             * answer from the board. The final position says who owns what *now* and nothing about
+             * what was dealt, so a loser watching the claim screen was watching a name and a
+             * countdown.
+             *
+             * No hand is leaked by the second half: it is the loser's own, and they are the one
+             * being shown it. The list is identical for both readers, which is the honest shape —
+             * it describes the claim, not the reader.
+             */
+            pickFrom = if (awaitsClaim(cards)) dealtHand(loserOf(score)) else emptyList(),
+            claimDeadline = claimDeadline.takeIf { awaitsClaim(cards) },
         )
     }
 
@@ -272,6 +336,16 @@ data class PvpMatchRow(
     }
 
     /** Whether this match still owes somebody a choice before it can be paid. */
+    /**
+     * Which side lost, for a match a claim is owed on.
+     *
+     * Read off the score rather than off `forfeitedBy`, because only [TradeRule.ONE] and
+     * [TradeRule.DIFF] reach a claim at all and a forfeit settles straight to `FINISHED` — so by
+     * construction there is a board here and it was decided on it.
+     */
+    private fun loserOf(score: MatchScore): CardColor =
+        if (score.blue > score.red) CardColor.RED else CardColor.BLUE
+
     fun awaitsClaim(cards: CardCatalog): Boolean =
         CardColor.entries.any { picksOwedBy(it, cards) > 0 }
 
@@ -389,9 +463,21 @@ data class PvpMatchRow(
  * [won] and [lost] can both be non-empty at once — that is Direct, where each side keeps whatever
  * it captured — which is the reason this is a pair of lists rather than a single signed thing.
  */
-/** What a match paid one side, as credited. See `PvpMatchRow.payout`. */
+/**
+ * What a match paid one side, as credited. See `PvpMatchRow.payout`.
+ *
+ * The two id lists are **stored** rather than recomputed, for the same reason the MGP is: crediting
+ * is what decides them — an achievement unlocks once, a daily quest completes once — so asking
+ * again later would answer "nothing" for the very match that earned them. This row is the record of
+ * what was paid, and they were paid.
+ */
 @Serializable
-data class Payout(val mgp: Int, val xp: Int)
+data class Payout(
+    val mgp: Int,
+    val xp: Int,
+    val achievementIds: List<String> = emptyList(),
+    val questIds: List<String> = emptyList(),
+)
 
 data class Spoils(
     val mgp: Int = 0,

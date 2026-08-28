@@ -160,6 +160,41 @@ class AccountStore(
         }
     }
 
+    /**
+     * The name **and face** an account goes by — what a board needs to draw its opponent.
+     *
+     * One query rather than [usernameFor] plus a [saveFor], and the difference is not tidiness: a
+     * PvP board is polled once a second per player, `readSave` parses the whole save document, and
+     * the board wants one string out of it. `->>` reaches into the JSONB for that one field and
+     * leaves the rest in the database.
+     *
+     * A `LEFT JOIN`, because an account without a character is a real state — it is every account
+     * between signing up and creating one — and the right answer for it is a name with no face
+     * rather than no opponent at all.
+     *
+     * The avatar is public by the same argument the username is: it is what a player chose to be
+     * seen as, and the lobby already shows their name to anyone listing the tables.
+     */
+    fun opponentFor(accountId: Long): Opponent? = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT a.username, c.save ->> 'AVATAR_ID'
+            FROM accounts a
+            LEFT JOIN characters c ON c.account_id = a.id
+            WHERE a.id = ?
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.executeQuery().use { rows ->
+                if (rows.next()) {
+                    Opponent(name = rows.getString(1).orEmpty(), avatarId = rows.getString(2))
+                } else {
+                    null
+                }
+            }
+        }
+    }
+
     /** Replaces a password digest, when [PasswordHasher.needsRehash] says the cost has risen. */
     fun updatePasswordHash(accountId: Long, passwordHash: String) = transaction { db ->
         db.prepareStatement("UPDATE accounts SET password_hash = ? WHERE id = ?").use { statement ->
@@ -953,6 +988,14 @@ class AccountStore(
 internal const val MAX_SESSIONS = 10
 
 /** An account's id and password digest, as stored. Never leaves this package. */
+/**
+ * Who is on the other side of a board, as far as drawing them goes.
+ *
+ * @property avatarId null when the account has no character yet, which the board renders as a name
+ *   with no face rather than as a missing opponent.
+ */
+data class Opponent(val name: String, val avatarId: String?)
+
 data class StoredCredentials(val accountId: Long, val passwordHash: String)
 
 /** The columns of one `matches` row that the caller decides. */

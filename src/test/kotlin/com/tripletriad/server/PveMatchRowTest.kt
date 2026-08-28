@@ -99,7 +99,7 @@ class PveMatchRowTest {
      *
      * `HandVisibility` names *positions*, and `MatchState.play` closes the hand over the slot that
      * was played rather than leaving a hole — so a set of three positions starts naming different
-     * cards the moment one is played. [PveMatchPosition.advanced] was not calling
+     * cards the moment one is played. [MatchPosition.advanced] was not calling
      * [HandVisibility.afterPlaying], and the result was visible from the sofa: the opponent played,
      * their hand shifted down, and a card that had been face down all match turned face up.
      *

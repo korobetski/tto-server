@@ -390,7 +390,7 @@ class PveReferee(
 
         // The opponent's **own view**, which is all it is entitled to. Handing it `onMove` would
         // hand it both hands, which is how a program ends up ignoring All Open and Three Open
-        // rather than obeying them — see `PveMatchPosition.viewFor`, and `MatchSearch`, which
+        // rather than obeying them — see `MatchPosition.viewFor`, and `MatchSearch`, which
         // substitutes for everything the visibility does not name.
         val chosen = MatchSearch(options).choose(
             state = onMove,

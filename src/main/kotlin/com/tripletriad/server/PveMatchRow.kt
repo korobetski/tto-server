@@ -3,7 +3,6 @@ package com.tripletriad.server
 import com.tripletriad.data.CardCatalog
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
-import com.tripletriad.model.HandVisibility
 import com.tripletriad.model.MatchPreparation
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.MatchState
@@ -111,10 +110,10 @@ data class PveMatchRow(
      * rather than recorded, because everything it needs is already in the row — the regrouping is a
      * function of the finished board, and the new elements, swap and Open draws come out of the
      * same generator this replay is already walking. So [moves] runs on past the ninth placement,
-     * and how many boards have been played is something [PveMatchPosition.rematch] counts rather
+     * and how many boards have been played is something [MatchPosition.rematch] counts rather
      * than a column to be kept in step.
      */
-    fun position(cards: CardCatalog): PveMatchPosition? {
+    fun position(cards: CardCatalog): MatchPosition? {
         val blue = blueHand.map { cards.byId[it] ?: return null }
         val red = redHand.map { cards.byId[it] ?: return null }
 
@@ -125,7 +124,7 @@ data class PveMatchRow(
         val opening = MatchPreparation.prepareVersus(blue, red, first, rules, random)
 
         return walk(
-            PveMatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0),
+            MatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0),
             random,
         )
     }
@@ -143,10 +142,10 @@ data class PveMatchRow(
      * nothing in determinism: the rematch is prepared from the generator at exactly the point the
      * next `walk` will prepare it from, so both reads produce the same board.
      */
-    private fun walk(from: PveMatchPosition, random: Random): PveMatchPosition? {
+    private fun walk(from: MatchPosition, random: Random): MatchPosition? {
         var at = from
         for (move in moves) {
-            at = boardFor(at, random)?.advanced(move) ?: return null
+            at = boardFor(at, random)?.advanced(move.handIndex, move.position) ?: return null
         }
         // Null here means the match is genuinely over, and the finished board is the answer.
         return boardFor(at, random) ?: at
@@ -158,11 +157,11 @@ data class PveMatchRow(
      * Null is the corrupt-row answer — moves left over on a board that was full *and settled* are
      * placements the match had no room for.
      */
-    private fun boardFor(at: PveMatchPosition, random: Random): PveMatchPosition? = when {
+    private fun boardFor(at: MatchPosition, random: Random): MatchPosition? = when {
         !at.state.isFinished -> at
         !continuesAfter(at.state) -> null
         else -> MatchPreparation.prepareRematch(at.state, random).let { next ->
-            PveMatchPosition(
+            MatchPosition(
                 state = next.state,
                 blueSeesRed = next.opponentVisibility,
                 redSeesBlue = next.playerVisibility,
@@ -180,7 +179,7 @@ data class PveMatchRow(
      * The visibility comes back out of the replay, which draws the two sides separately — so this
      * is not the opponent's view mirrored. See [MatchPreparation.prepareVersus]. For the opponent's
      * own view, which is all the AI is entitled to, ask [position] and then
-     * [PveMatchPosition.viewFor].
+     * [MatchPosition.viewFor].
      */
     fun viewFor(cards: CardCatalog): MatchView? =
         position(cards)?.viewFor(CardColor.BLUE, turnRandom())
@@ -219,7 +218,7 @@ data class PveMatchRow(
     }
 
     /** How this ended from the player's side, or null while it is still being played. */
-    private fun outcomeFrom(at: PveMatchPosition): PveOutcome? {
+    private fun outcomeFrom(at: MatchPosition): PveOutcome? {
         if (status == PveMatchStatus.PLAYING) return null
         val score = at.state.score
         val result = when {
@@ -257,74 +256,5 @@ data class PveMatchRow(
         fun isLegal(view: MatchView, move: PveMove): Boolean =
             move.handIndex in view.playableHandIndices &&
                 move.position in view.playablePositions()
-    }
-}
-
-/**
- * Where a row stands: the board, what each side may see of the other, and how many boards in.
- *
- * One value rather than three returns, because they are derived together and cost the same replay.
- * A caller asking for the state and then for the visibility would walk the whole match twice and
- * could be handed two answers from different points in it.
- *
- * @property rematch how many Sudden Death rematches have been played. 0 on the first board.
- */
-data class PveMatchPosition(
-    val state: MatchState,
-    val blueSeesRed: HandVisibility,
-    val redSeesBlue: HandVisibility,
-    val rematch: Int,
-) {
-    /** What [side] may see of the other hand — the argument [MatchView.of] wants. */
-    fun visibilityFor(side: CardColor): HandVisibility =
-        if (side == CardColor.BLUE) blueSeesRed else redSeesBlue
-
-    /**
-     * This position as [side] sees it.
-     *
-     * The **only** way the opponent's turn should reach the AI. Handing it the `MatchState` would
-     * hand it both hands, which is how a program ends up ignoring All Open and Three Open rather
-     * than obeying them.
-     */
-    fun viewFor(side: CardColor, random: Random): MatchView =
-        MatchView.of(state, side, visibilityFor(side), random)
-
-    /**
-     * This position after [move], or null if the move is not one the rules allow.
-     *
-     * Both halves are needed and they fail differently: a slot outside the hand is a corrupt row,
-     * and a cell that is taken is what an off-by-one produces. Neither may reach `MatchState.play`,
-     * which throws.
-     */
-    fun advanced(move: PveMove): PveMatchPosition? {
-        val mover = state.currentPlayer
-        val card = state.currentHand
-            .getOrNull(move.handIndex)
-            ?.takeIf { mover != null && move.position in state.playablePositions() }
-        return card?.let {
-            copy(
-                state = state.play(it, move.position),
-                // **The visibility follows the hand, and forgetting that is a real bug this had.**
-                // `HandVisibility` names *positions*, and `MatchState.play` closes the gap rather
-                // than leaving a hole — so a set of three positions keeps pointing at whatever now
-                // sits at them. Under Three Open the effect was visible from the sofa: the
-                // opponent played, the hand shifted down, and a card that had been face down all
-                // match turned face up. See `HandVisibility.afterPlaying`, which exists for exactly
-                // this and which this function was not calling.
-                //
-                // Only the mover's side re-indexes. `blueSeesRed` is indexed into *red's* hand, so
-                // it moves when red plays and not when blue does.
-                blueSeesRed = if (mover == CardColor.RED) {
-                    blueSeesRed.afterPlaying(move.handIndex)
-                } else {
-                    blueSeesRed
-                },
-                redSeesBlue = if (mover == CardColor.BLUE) {
-                    redSeesBlue.afterPlaying(move.handIndex)
-                } else {
-                    redSeesBlue
-                },
-            )
-        }
     }
 }
