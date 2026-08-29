@@ -51,14 +51,22 @@ interface Mailer {
      *
      * A developer needs the code to finish the flow on a laptop, and there is no inbox there. This
      * is how they get it, and the boot check is why it cannot follow them to a real deployment.
+     *
+     * ### Why the recipient is not in the line
+     *
+     * It was, and `LogSecrecyTest` caught it. The code is a credential that expires in ten minutes
+     * and says nothing on its own; the address is personal data that does not expire, and pairing
+     * the two in a file is the record `docs/data-inventory.md` says the logs do not keep — every
+     * other line in this server names an account **id** for that reason. Dropping the recipient
+     * costs a developer nothing: on a laptop, the code they are waiting for is the last one
+     * printed.
      */
     object Disabled : Mailer {
         private val log = LoggerFactory.getLogger("com.tripletriad.server.Mailer")
 
         override suspend fun send(to: String, message: MailMessage): Boolean {
             log.warn(
-                "No mail provider configured; not sending to {}. Subject: {}\n{}",
-                to,
+                "No mail provider configured; a message was not sent. Subject: {}\n{}",
                 message.subject,
                 message.body,
             )

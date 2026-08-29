@@ -213,7 +213,10 @@ class CredentialRecoveryTest {
             bearer(session.token)
         }
         assertEquals(HttpStatusCode.Accepted, resent.status, resent.bodyAsText())
-        val second = mailer.codeFor(address(name))
+        // Index 1, not 0: registration already mailed one code, so the resent one is the *second*
+        // message to this address. Reading index 0 here compares the first code with itself and
+        // passes for a server that never resent anything.
+        val second = mailer.codeFor(address(name), index = 1)
         assertNotEquals(first, second, "the resend sent the same code again")
 
         assertEquals(HttpStatusCode.BadRequest, verify(session.token, first).status)
