@@ -13,19 +13,37 @@
 -- account. The measure that actually catches collusion is after the fact and lives in the match
 -- rows, not here.
 
+-- ### Why these are four statements and not one ALTER TABLE
+--
+-- They were one, and it did not parse. Two reasons, both worth keeping written down because the
+-- shape that fails is the shape that looks right:
+--
+--   * Inside CREATE TABLE a table constraint is spelled `CONSTRAINT x CHECK (...)`; inside ALTER
+--     TABLE the verb is not optional and it is `ADD CONSTRAINT x CHECK (...)`. Dropping the ADD is
+--     a plain syntax error, which Flyway reports as a failed migration and not as a bad line.
+--   * A generated column's expression is resolved against the table as it stands when the statement
+--     is planned, so `lower(email)` in the same ALTER TABLE that adds `email` cannot see it. Adding
+--     the column first and generating from it second is the only order that holds.
+--
+-- Flyway runs the whole file in one transaction, so four statements are still all-or-nothing.
+
+-- Nullable, and it stays nullable forever: see the grandfathering below. A registration is refused
+-- without one by the route, which is where the rule belongs — a NOT NULL here would also refuse
+-- every row that predates this file.
+ALTER TABLE accounts ADD COLUMN email TEXT;
+
+-- The same trick as `username_key`: matched case-insensitively, because nobody thinks of
+-- Kuplu@example.org and kuplu@example.org as two addresses, and letting them be two accounts would
+-- hand a farmer a free doubling.
+ALTER TABLE accounts ADD COLUMN email_key TEXT GENERATED ALWAYS AS (lower(email)) STORED;
+
+-- When it was confirmed, not whether. A timestamp answers "is it confirmed" as well as a boolean
+-- does and also answers "when", which is the question asked when something looks wrong.
+ALTER TABLE accounts ADD COLUMN email_verified_at TIMESTAMPTZ;
+
 ALTER TABLE accounts
-    -- Nullable, and it stays nullable forever: see the grandfathering below. A registration is
-    -- refused without one by the route, which is where the rule belongs — a NOT NULL here would
-    -- also refuse every row that predates this file.
-    ADD COLUMN email             TEXT,
-    -- The same trick as `username_key`: matched case-insensitively, because nobody thinks of
-    -- Kuplu@example.org and kuplu@example.org as two addresses, and letting them be two accounts
-    -- would hand a farmer a free doubling.
-    ADD COLUMN email_key         TEXT GENERATED ALWAYS AS (lower(email)) STORED,
-    -- When it was confirmed, not whether. A timestamp answers "is it confirmed" as well as a
-    -- boolean does and also answers "when", which is the question asked when something looks wrong.
-    ADD COLUMN email_verified_at TIMESTAMPTZ,
-    CONSTRAINT accounts_email_length CHECK (email IS NULL OR char_length(email) BETWEEN 6 AND 254);
+    ADD CONSTRAINT accounts_email_length
+        CHECK (email IS NULL OR char_length(email) BETWEEN 6 AND 254);
 
 -- Partial, so the unbounded number of rows with no address do not collide with each other.
 CREATE UNIQUE INDEX accounts_email_key_idx ON accounts (email_key) WHERE email_key IS NOT NULL;
