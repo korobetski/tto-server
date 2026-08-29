@@ -2,6 +2,7 @@ package com.tripletriad.server
 
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.ServerInfo
+import com.tripletriad.protocol.Unlocks
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -38,7 +39,13 @@ import javax.sql.DataSource
  * "usable", which is all a client can act on anyway. The check names stay in `/health/ready`, where
  * whoever is on call reads them.
  */
-fun Route.serverRoutes(identity: ServerIdentity, dataSource: DataSource) {
+fun Route.serverRoutes(
+    identity: ServerIdentity,
+    dataSource: DataSource,
+    // Defaulted, so a test that only cares about readiness need not name them. A deployment always
+    // passes its own — see `ServerConfig.unlocksFrom`.
+    unlocks: Unlocks = Unlocks(),
+) {
     get("/server") {
         // Sent even though nothing here is refused, so a client that reads only headers — or that
         // fails to decode a body from a future version of this server — still learns the number
@@ -55,6 +62,11 @@ fun Route.serverRoutes(identity: ServerIdentity, dataSource: DataSource) {
                 minimumClient = CURRENT_VERSION,
                 ready = isDatabaseReachable(dataSource),
                 release = identity.release,
+                // What this deployment gates player-to-player play and trade at. Sent so a client
+                // can say "unlocks at level 8" when that is what this server means, rather than
+                // drawing a number compiled into it months ago. The server refuses on its own copy
+                // regardless — see [Unlocks], and `PvpRoutes` for where it does.
+                unlocks = unlocks,
             ),
         )
     }

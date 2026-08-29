@@ -72,6 +72,17 @@ services:
       TTO_CLIENT_DOWNLOAD_DESKTOP: ${TTO_CLIENT_DOWNLOAD_DESKTOP:-}
       TTO_CLIENT_DOWNLOAD_IOS: ${TTO_CLIENT_DOWNLOAD_IOS:-}
       TTO_CLIENT_NOTES: ${TTO_CLIENT_NOTES:-}
+      # Required, and stated with `:?` for that reason: the server refuses to boot outside
+      # development without a key, because its fallback writes each confirmation code into the
+      # log. Failing here, before the container starts, says which variable is missing — failing
+      # inside says only that the process exited 1.
+      BREVO_API_KEY: ${BREVO_API_KEY:?set BREVO_API_KEY in .env - see .env.prod.sample}
+      MAIL_FROM: ${MAIL_FROM:?set MAIL_FROM in .env - a sender Brevo has verified}
+      MAIL_SENDER_NAME: ${MAIL_SENDER_NAME:-Triple Triad}
+      # Blank means `:core`'s defaults, and blank is the normal state. See Unlocks in the core
+      # package; raising one of these is a restart, not a client release.
+      TTO_UNLOCK_MULTIPLAYER: ${TTO_UNLOCK_MULTIPLAYER:-}
+      TTO_UNLOCK_AUCTION: ${TTO_UNLOCK_AUCTION:-}
     # No published port either: Caddy reaches it as `server:8080` on this network. Publishing it
     # would put a plaintext HTTP server on the VPS's public address, next to the HTTPS one, and
     # every client that found it would work — which is how a TLS deployment stays untested.

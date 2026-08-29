@@ -135,7 +135,7 @@ class LogSecrecyTest {
     ): Session {
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name, PASSWORD)))
+            setBody(json.encodeToString(Credentials(name, PASSWORD, address(name))))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         return json.decodeFromString(response.bodyAsText())

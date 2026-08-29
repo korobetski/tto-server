@@ -13,7 +13,6 @@ import com.tripletriad.protocol.BagItemRequest
 import com.tripletriad.protocol.BuyRequest
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.ClaimStarterRequest
-import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.EnterCampaignRequest
 import com.tripletriad.protocol.PlayerState
 import com.tripletriad.protocol.SellCardRequest
@@ -360,9 +359,10 @@ class IntentRoutesTest {
         ).potionType
 
     private suspend fun ApplicationTestBuilder.register(): Session {
+        val who = Postgres.freshAccount("intent")
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(Postgres.freshAccount("intent"), PASSWORD)))
+            setBody(json.encodeToString(credentials(who)))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         return json.decodeFromString(response.bodyAsText())

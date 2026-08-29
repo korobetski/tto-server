@@ -24,6 +24,7 @@ import com.tripletriad.protocol.PvpRefusal
 import com.tripletriad.protocol.PvpStake
 import com.tripletriad.protocol.PvpTable
 import com.tripletriad.protocol.PvpTableRequest
+import com.tripletriad.protocol.Unlocks
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.plugins.BadRequestException
@@ -86,30 +87,28 @@ fun Route.pvpRoutes(
     pvp: PvpStore,
     clock: () -> Long = System::currentTimeMillis,
     random: () -> Random = { Random.Default },
+    // Defaulted so every existing test keeps its call shape. A deployment passes its own — see
+    // `ServerConfig.unlocksFrom`, and `Unlocks` for why the number travels rather than being
+    // compiled in.
+    unlocks: Unlocks = Unlocks(),
 ) {
     val referee = PvpReferee(cards, formats, accounts, pvp, clock, random)
 
     route("/pvp") {
-        lobbyRoutes(referee, accounts, pvp, clock)
+        lobbyRoutes(referee, accounts, pvp, clock, unlocks)
         liveMatchRoutes(referee, accounts)
     }
 }
 
-/**
- * Finding an opponent: the open tables and the invitations.
- *
- * Split from [liveMatchRoutes] along the line the player experiences — before a match and during
- * one — rather than to satisfy a complexity counter, though it does that too. Nothing here reads a
- * board and nothing there reads the lobby.
- */
 private fun Route.lobbyRoutes(
     referee: PvpReferee,
     accounts: AccountStore,
     pvp: PvpStore,
     clock: () -> Long,
+    unlocks: Unlocks,
 ) {
-    challengeRoutes(referee, accounts, pvp, clock)
-    tableRoutes(referee, accounts, pvp, clock)
+    challengeRoutes(referee, accounts, pvp, clock, unlocks)
+    tableRoutes(referee, accounts, pvp, clock, unlocks)
 }
 
 /**
@@ -132,6 +131,7 @@ private fun Route.tableRoutes(
     accounts: AccountStore,
     pvp: PvpStore,
     clock: () -> Long,
+    unlocks: Unlocks,
 ) {
     /** Every table still open, the caller's own included — they need to see it to withdraw it. */
     get("/tables") {
@@ -150,7 +150,7 @@ private fun Route.tableRoutes(
     rateLimit(RateLimitName(LOBBY)) {
         post("/tables") {
             if (!requireCompatibleClient()) return@post
-            val accountId = authenticate(accounts) ?: return@post
+            val accountId = authenticateUnlocked(accounts, unlocks) ?: return@post
             val request = call.receive<PvpTableRequest>()
 
             when (val outcome = referee.openTable(accountId, request)) {
@@ -160,7 +160,7 @@ private fun Route.tableRoutes(
         }
     }
 
-    tableAnswerRoutes(referee, accounts, pvp)
+    tableAnswerRoutes(referee, accounts, pvp, unlocks)
 }
 
 /**
@@ -170,7 +170,12 @@ private fun Route.tableRoutes(
  * advertising and answering are two players' halves of one screen, and each function is short
  * enough to read whole.
  */
-private fun Route.tableAnswerRoutes(referee: PvpReferee, accounts: AccountStore, pvp: PvpStore) {
+private fun Route.tableAnswerRoutes(
+    referee: PvpReferee,
+    accounts: AccountStore,
+    pvp: PvpStore,
+    unlocks: Unlocks,
+) {
     /** Withdraws it. Harmless if it is already gone — the host wanted to not be waiting. */
     delete("/tables/{id}") {
         if (!requireCompatibleClient()) return@delete
@@ -190,7 +195,7 @@ private fun Route.tableAnswerRoutes(referee: PvpReferee, accounts: AccountStore,
      */
     post("/tables/{id}/join") {
         if (!requireCompatibleClient()) return@post
-        val accountId = authenticate(accounts) ?: return@post
+        val accountId = authenticateUnlocked(accounts, unlocks) ?: return@post
         val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
 
         when (val outcome = referee.joinTable(id, accountId, call.seatedDeck())) {
@@ -210,6 +215,7 @@ private fun Route.challengeRoutes(
     accounts: AccountStore,
     pvp: PvpStore,
     clock: () -> Long,
+    unlocks: Unlocks,
 ) {
     /** The invitations standing either way, so one screen can show both. */
     get("/challenges") {
@@ -228,7 +234,7 @@ private fun Route.challengeRoutes(
     rateLimit(RateLimitName(LOBBY)) {
         post("/challenges") {
             if (!requireCompatibleClient()) return@post
-            val accountId = authenticate(accounts) ?: return@post
+            val accountId = authenticateUnlocked(accounts, unlocks) ?: return@post
             val request = call.receive<ChallengeRequest>()
 
             when (val outcome = referee.challenge(accountId, request)) {
@@ -262,7 +268,7 @@ private fun Route.challengeRoutes(
 
     /** Accepts an invitation, which opens the match. The body names a deck, as joining does. */
 
-    challengeAnswerRoutes(referee, accounts, pvp)
+    challengeAnswerRoutes(referee, accounts, pvp, unlocks)
 }
 
 /**
@@ -277,10 +283,11 @@ private fun Route.challengeAnswerRoutes(
     referee: PvpReferee,
     accounts: AccountStore,
     pvp: PvpStore,
+    unlocks: Unlocks,
 ) {
     post("/challenges/{id}/accept") {
         if (!requireCompatibleClient()) return@post
-        val accountId = authenticate(accounts) ?: return@post
+        val accountId = authenticateUnlocked(accounts, unlocks) ?: return@post
         val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
 
         when (val outcome = referee.accept(id, accountId, call.seatedDeck())) {

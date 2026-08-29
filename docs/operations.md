@@ -55,6 +55,87 @@ server.
 | `DATABASE_USER` | `tripletriad` | compose supplies `tto_app`, an unprivileged role — see below |
 | `DATABASE_PASSWORD` | `tripletriad` | the code default no longer matches any real database |
 | `DATABASE_POOL_SIZE` | `10` | raise in response to a measurement, not a worry |
+| `BREVO_API_KEY` | — | **secret.** Required outside development; see below |
+| `MAIL_FROM` | `no-reply@localhost` | the envelope sender, and a sender Brevo has verified |
+| `MAIL_SENDER_NAME` | `Triple Triad` | what the recipient sees in the From line |
+| `TTO_UNLOCK_MULTIPLAYER` | `5` | the level refereed play opens at |
+| `TTO_UNLOCK_AUCTION` | `5` | the level the auction house opens at |
+
+### Mail, and why the server refuses to start without a provider
+
+Confirmation codes and password resets go out through Brevo's transactional API. Without
+`BREVO_API_KEY` the server falls back to a mailer that **writes each code to the log** — which is
+how a developer finishes a registration on a laptop with no inbox, and which would be a standing
+way into every account on a real host. So `MailConfig.from` refuses to boot outside development
+when the key is absent, the same way the database defaults are refused, and for the same reason:
+the failure it prevents is silent in both directions. A player who never gets a mail waits; an
+operator whose log holds codes does not find out.
+
+Sending through a provider rather than from this host is not a convenience. A VPS sits in a
+hosting provider's address space, outbound port 25 is restricted at OVH, and mail that does leave
+such a range lands in spam often enough that a password-reset mail in a spam folder means a
+locked-out player. Port 443 is never the port anybody blocks.
+
+`MAIL_FROM` wants to be a subdomain carrying no other traffic — `mail.example.com` — so this
+mail's sending reputation stands on its own, and it has to be a sender Brevo has verified or
+every send is refused. SPF, DKIM and DMARC records for that subdomain are a DNS task on the
+operator's side; Brevo's console states the exact records.
+
+### The unlock thresholds are configuration, not a release
+
+`TTO_UNLOCK_MULTIPLAYER` and `TTO_UNLOCK_AUCTION` are levels, and the server enforces them on
+every endpoint that starts refereed play. The **rule** is in `:core` so the client and the server
+cannot disagree about what a threshold means; the **numbers** are these, and they are sent to
+clients on `GET /server`. Raising one is this variable and a restart — a client that has not been
+updated asks the same question and gets the new answer.
+
+An unparseable value falls back to `:core`'s default rather than stopping the boot, which is the
+opposite judgement from `DATABASE_URL` and deliberately so: a wrong database is a server that
+cannot work, a wrong threshold costs a door being open too early.
+
+### Changing a value on the deployed host
+
+Every setting above lives in one file on the VPS, `/srv/tto/.env`, and it is read **once at
+start-up** — so an edit does nothing until the container is recreated. Edit it in place, on the
+host, over SSH:
+
+```bash
+ssh deploy@tto.example.com
+cd /srv/tto
+cp .env .env.bak          # restoring is `mv .env.bak .env`, which matters at 2am
+nano .env
+docker compose -f compose.prod.yaml up -d server
+```
+
+Four things about that sequence are not incidental:
+
+* **`up -d server`, not `restart`.** `docker compose restart` restarts the process with the
+  environment the container was *created* with — the edit is read, the file is right, and nothing
+  changes. `up -d` recreates the container, which is the only thing that re-reads `.env`. This is
+  the single commonest way an environment change appears not to work.
+* **Only `server`.** Naming it leaves Postgres and Caddy untouched, so a mail key change costs a
+  second of API downtime rather than a database restart and a certificate reload.
+* **Never `TTO_IMAGE` by hand.** `scripts/deploy.sh` owns that line; editing it is how the file
+  and the running container stop agreeing about what this host runs.
+* **The file's mode is part of it.** `chmod 600`, owned by `deploy`. If you ever recreate it from
+  the sample, set that again — `scp` does not preserve it.
+
+Two variables ignore all of this, and it is worth knowing which before an evening is spent on
+them: `POSTGRES_PASSWORD` and `DATABASE_PASSWORD` are read by the Postgres image **only when the
+data directory is empty**. On a host that has ever started, changing them in `.env` changes
+nothing at all, and `.env.sample` carries the `ALTER ROLE` that actually does it.
+
+Check the change took, rather than assuming:
+
+```bash
+docker compose -f compose.prod.yaml logs --tail 50 server
+curl -s https://tto.example.com/server
+```
+
+`GET /server` is the honest confirmation for the two unlock thresholds, because it answers with
+what the process actually parsed. There is no such route for `BREVO_API_KEY` on purpose — the way
+to confirm a mail key is to ask for a code and watch for the mail, not to have the server read a
+credential back to you.
 
 ### The server does not connect as the superuser
 

@@ -351,7 +351,7 @@ class AccountFlowTest {
         // scoreboard.
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name.uppercase(), PASSWORD)))
+            setBody(json.encodeToString(credentials(name.uppercase())))
         }
 
         assertEquals(HttpStatusCode.Conflict, response.status)
@@ -392,7 +392,7 @@ class AccountFlowTest {
 
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name, "short")))
+            setBody(json.encodeToString(Credentials(name, "short", address(name))))
         }
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertEquals(AccountError.MALFORMED_CREDENTIALS, response.failure().error)
@@ -400,7 +400,7 @@ class AccountFlowTest {
         // And the name is still free, which is what "refused before an account exists" means.
         val retry = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name, PASSWORD)))
+            setBody(json.encodeToString(Credentials(name, PASSWORD, address(name))))
         }
         assertEquals(HttpStatusCode.Created, retry.status)
     }
@@ -435,7 +435,7 @@ class AccountFlowTest {
     private suspend fun ApplicationTestBuilder.register(name: String): Session {
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name, PASSWORD)))
+            setBody(json.encodeToString(Credentials(name, PASSWORD, address(name))))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         return json.decodeFromString<Session>(response.bodyAsText())

@@ -6,7 +6,6 @@ import com.tripletriad.model.PotionItem
 import com.tripletriad.model.PotionType
 import com.tripletriad.protocol.BuyRequest
 import com.tripletriad.protocol.CURRENT_VERSION
-import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.MatchTranscript
 import com.tripletriad.protocol.PlayerState
 import com.tripletriad.protocol.SeedTickets
@@ -177,9 +176,10 @@ class ConcurrentWriteTest {
 
     /** An account that can afford the whole burst. */
     private suspend fun ApplicationTestBuilder.rich(): Session {
+        val who = Postgres.freshAccount("race")
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(Postgres.freshAccount("race"), PASSWORD)))
+            setBody(json.encodeToString(credentials(who)))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         val session = json.decodeFromString<Session>(response.bodyAsText())

@@ -1,7 +1,6 @@
 package com.tripletriad.server
 
 import com.tripletriad.protocol.CURRENT_VERSION
-import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.MatchReceipt
 import com.tripletriad.protocol.MatchVerdict
 import com.tripletriad.protocol.RejectionReason
@@ -180,9 +179,10 @@ class SeedTicketTest {
     }
 
     private suspend fun ApplicationTestBuilder.register(prefix: String): Session {
+        val who = Postgres.freshAccount(prefix)
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(Postgres.freshAccount(prefix), PASSWORD)))
+            setBody(json.encodeToString(credentials(who)))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         return json.decodeFromString(response.bodyAsText())

@@ -29,6 +29,19 @@ each:
 The line numbers in the findings are the ones from **before** the fixes, since that is what they
 describe. Follow the names, not the numbers.
 
+### What this review has not looked at
+
+**Email confirmation and password reset, added 2026-08-29, are not covered by anything below.**
+They arrived after the read and they are the largest new attack surface since it: two endpoints
+that take no session by design (`POST /accounts/password/forgot` and `/reset`), a six-digit
+secret, a table of code digests, and an outbound call to a third party. The reasoning behind each
+bound is written where it is implemented — `CodeStore`, `CodeChannel`, the `CODES` bucket in
+`Observability.kt` — and `CredentialRecoveryTest` pins the behaviour. None of that is a review.
+The questions a next pass should ask: whether the rate limit and the attempt ceiling are still
+inseparable after any later change to either; whether the forgotten-password endpoint is still
+indistinguishable between a known and an unknown username in *timing* as well as in its answer;
+and whether anything has started logging a code.
+
 ## How this was done, and what it could not check
 
 Everything below comes from reading the source. The findings were **found** by reading; they were

@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.protocol.Unlocks
 import io.ktor.server.application.Application
 import io.ktor.server.engine.addShutdownHook
 import io.ktor.server.engine.embeddedServer
@@ -68,7 +69,7 @@ fun main() {
 
     val registry = prometheusRegistry()
     val server = embeddedServer(Netty, port = config.port, host = config.host) {
-        module(dataSource, registry, config.identity)
+        module(dataSource, registry, config.identity, config.mail.mailer(), config.unlocks)
     }
 
     // Closes the pool on SIGTERM, which is what `docker stop` and every orchestrator send first.
@@ -90,6 +91,10 @@ fun Application.module(
     dataSource: DataSource,
     registry: PrometheusMeterRegistry,
     identity: ServerIdentity = ServerIdentity(name = "Triple Triad"),
+    // Both defaulted so the test seam stays a two-argument call. The defaults are the safe ones:
+    // no mail leaves the process, and the thresholds are `:core`'s own.
+    mailer: Mailer = Mailer.Disabled,
+    unlocks: Unlocks = Unlocks(),
 ) {
     // One store for the whole application. It holds no state of its own — the pool does — so this
     // is about there being a single place the SQL lives, not about sharing anything.
@@ -109,14 +114,23 @@ fun Application.module(
     // lobby, no invitations, no wager, and no deadline, because a program is never waiting.
     val pve = PveStore(dataSource)
 
-    sweepAbandonedMatches(PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp), accounts)
+    // The codes mailed out for confirmation and password resets. Its own store for the same
+    // reason the two above are: a different table, and one whose rows live for ten minutes
+    // rather than for years.
+    val codes = CodeStore(dataSource)
+
+    sweepAbandonedMatches(
+        PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp),
+        accounts,
+        codes,
+    )
 
     routing {
         healthRoutes(dataSource)
-        serverRoutes(identity, dataSource)
-        accountRoutes(accounts, ShopTables.shipped())
+        serverRoutes(identity, dataSource, unlocks)
+        accountRoutes(accounts, ShopTables.shipped(), CodeChannel(codes, mailer))
         matchRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts)
-        pvpRoutes(Catalogs.cards, Catalogs.formats, accounts, pvp)
+        pvpRoutes(Catalogs.cards, Catalogs.formats, accounts, pvp, unlocks = unlocks)
         pveRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts, pve)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
@@ -149,7 +163,11 @@ fun Application.module(
  * are safe to, because `finish` and `recordClaim` both gate on the status they are changing, so a
  * second sweeper settles nothing twice.
  */
-private fun Application.sweepAbandonedMatches(referee: PvpReferee, accounts: AccountStore) {
+private fun Application.sweepAbandonedMatches(
+    referee: PvpReferee,
+    accounts: AccountStore,
+    codes: CodeStore,
+) {
     launch {
         var sinceOperationPrune = 0L
         while (isActive) {
@@ -175,6 +193,13 @@ private fun Application.sweepAbandonedMatches(referee: PvpReferee, accounts: Acc
                         System.currentTimeMillis() - OPERATION_LIFETIME_MILLIS,
                     )
                     if (forgotten > 0) logger.info("Forgot {} applied operations", forgotten)
+
+                    // On the same slow interval, and for the same reason. Expired codes are
+                    // already refused on sight — see `CodeStore.consume`, which checks the
+                    // expiry rather than trusting the row to be gone — so this is tidiness, not
+                    // correctness, and tidiness does not need to run every thirty seconds.
+                    val stale = codes.purgeExpired(System.currentTimeMillis())
+                    if (stale > 0) logger.info("Purged {} expired codes", stale)
                 }
             } catch (failure: Exception) {
                 logger.error("The sweep failed; retrying at the next interval", failure)

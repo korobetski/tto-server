@@ -149,3 +149,42 @@ object Tokens {
         MessageDigest.getInstance("SHA-256").digest(token.toByteArray(Charsets.UTF_8)),
     )
 }
+
+/**
+ * The short numeric codes mailed to an address, and the digest stored in their place.
+ *
+ * ### Why a code and not a link, and what that costs
+ *
+ * A link would carry 256 bits and be unguessable; six digits carry about twenty. That is a real
+ * loss and it is paid for elsewhere — five attempts per code, ten minutes of life, and a rate limit
+ * on asking for more. What it buys is a flow that works identically on desktop, Android and iOS
+ * with no page to serve, no deep link to register and no browser handoff. See
+ * `protocol/Accounts.kt`'s `AccountCode` for the same argument from the client's side.
+ *
+ * ### Why `SecureRandom` for six digits
+ *
+ * Because the alternative is `Random`, whose sequence is predictable from a couple of outputs — and
+ * a code generator whose next value can be computed from the last one is not a code generator. The
+ * cost of getting this right is the word `Secure`.
+ */
+object Codes {
+
+    private val random = SecureRandom()
+
+    /** A fresh code, zero-padded so that every one is exactly [AccountCode.LENGTH] digits. */
+    fun issue(): String = random.nextInt(CODE_SPACE).toString().padStart(DIGITS, '0')
+
+    /**
+     * What goes in `account_codes.code_hash`.
+     *
+     * SHA-256, like a session token, and the migration's own comment is honest about what that
+     * does not buy: a million-entry rainbow table for six digits is trivial, so this protects
+     * against a code leaking *without* the database leaking — a backup, a log, a support query —
+     * and not against a stolen dump. The attempt ceiling is the defence that counts.
+     */
+    fun fingerprint(code: String): String = Tokens.fingerprint(code.filterNot { it.isWhitespace() })
+
+    private const val DIGITS = 6
+
+    private const val CODE_SPACE = 1_000_000
+}

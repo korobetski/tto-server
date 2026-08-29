@@ -110,6 +110,13 @@ private fun Application.installRateLimits(accounts: AccountStore) {
             requestKey { call -> call.callerKey(accounts) }
         }
 
+        // Asking for a code, and typing one back. By address, because two of the four endpoints
+        // have no session by definition — a player resetting a forgotten password cannot have one.
+        register(RateLimitName(CODES)) {
+            rateLimiter(limit = CODES_LIMIT, refillPeriod = CODES_WINDOW)
+            requestKey { call -> call.callerAddress() }
+        }
+
         // Placing a card, conceding, and collecting. See [PLAY_LIMIT] for the number.
         register(RateLimitName(PLAY)) {
             rateLimiter(limit = PLAY_LIMIT, refillPeriod = 1.minutes)
@@ -319,6 +326,23 @@ const val SUBMIT = "submit"
 const val LOBBY = "lobby"
 const val INTENT = "intent"
 const val PLAY = "play"
+const val CODES = "codes"
+
+/**
+ * Ten code requests or code attempts per address per five minutes.
+ *
+ * ### Why this bucket exists on top of the per-code attempt ceiling
+ *
+ * Because the ceiling alone is not one. Five guesses per code is only a bound if the number of
+ * codes is bounded too — otherwise the attack is *guess five, ask for a new one, repeat*, and a
+ * six-digit space falls in an afternoon. `CodeStore.MAX_ATTEMPTS` bounds the guesses and
+ * this bounds the resends, and neither is worth anything without the other.
+ *
+ * It also bounds the thing that costs money: every resend is a mail somebody pays for, and an
+ * unthrottled resend button is an unthrottled bill.
+ */
+private const val CODES_LIMIT = 10
+private val CODES_WINDOW = 5.minutes
 
 /** Ten tries per address per five minutes. A person who has forgotten their password uses three. */
 private const val SIGN_IN_LIMIT = 10

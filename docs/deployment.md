@@ -140,6 +140,16 @@ openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 32; echo
 The `tr` is not decoration. Compose expands `$` and treats `#` as a comment, so a generated password
 containing either fails in a way that looks exactly like a wrong password.
 
+One blank is not generated here and has to be fetched first: `BREVO_API_KEY`, from the Brevo
+dashboard. `compose.prod.yaml` states it with `:?`, so without it the stack refuses to start rather
+than starting a server that would write confirmation codes into its log. `MAIL_FROM` must be a
+sender Brevo has verified, on a subdomain whose SPF, DKIM and DMARC records are in place — do that
+before the first deployment, not after the first player cannot reset a password.
+
+Changing any of these later is `docs/operations.md` § *Changing a value on the deployed host*; the
+short version is that `docker compose restart` does **not** re-read this file and `up -d server`
+does.
+
 ### 7. Let the host read the registry
 
 The image is private, so the host needs a token to pull it: a GitHub PAT with `read:packages` and

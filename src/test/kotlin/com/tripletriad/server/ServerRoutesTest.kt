@@ -5,6 +5,7 @@ import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.ClientPlatform
 import com.tripletriad.protocol.ClientRelease
 import com.tripletriad.protocol.ServerInfo
+import com.tripletriad.protocol.Unlocks
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -134,6 +135,38 @@ class ServerRoutesTest {
         application { module(UnreachableDataSource, prometheusRegistry()) }
 
         assertNull(info(client.get("/server")).release)
+    }
+
+    /**
+     * A client is told where the gated doors are rather than compiling in its own numbers.
+     *
+     * The *rule* is `:core`'s — `Unlocks.allowsMultiplayer` is one function both ends call — and
+     * the numbers are this deployment's. That split is the point: raising the multiplayer level is
+     * an environment variable and a restart, not a client release, and a client that has not been
+     * updated still asks the same question and gets the new answer.
+     */
+    @Test
+    fun theThresholdsThisDeploymentUsesAreOnTheWire() = testApplication {
+        application {
+            module(
+                UnreachableDataSource,
+                prometheusRegistry(),
+                unlocks = Unlocks(multiplayer = 12, auction = 20),
+            )
+        }
+
+        val info = info(client.get("/server"))
+
+        assertEquals(12, info.unlocks.multiplayer)
+        assertEquals(20, info.unlocks.auction)
+    }
+
+    /** A deployment that states nothing states `:core`'s defaults, not an empty object. */
+    @Test
+    fun aDeploymentThatStatesNoThresholdsSendsTheDefaults() = testApplication {
+        application { module(UnreachableDataSource, prometheusRegistry()) }
+
+        assertEquals(Unlocks(), info(client.get("/server")).unlocks)
     }
 
     // ---- The identity, read from the environment --------------------------

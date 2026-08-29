@@ -7,7 +7,6 @@ import com.tripletriad.model.GameSave
 import com.tripletriad.model.Item
 import com.tripletriad.protocol.BagItemRequest
 import com.tripletriad.protocol.CURRENT_VERSION
-import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.ItemEffect
 import com.tripletriad.protocol.ItemUsed
 import com.tripletriad.protocol.PlayerState
@@ -216,9 +215,10 @@ class BagRoutesTest {
      * each item through the shop, which would make every test here depend on the shop's prices.
      */
     private suspend fun ApplicationTestBuilder.registerHolding(vararg items: Item): Session {
+        val who = Postgres.freshAccount("bag")
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(Postgres.freshAccount("bag"), PASSWORD)))
+            setBody(json.encodeToString(credentials(who)))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         val session = json.decodeFromString<Session>(response.bodyAsText())

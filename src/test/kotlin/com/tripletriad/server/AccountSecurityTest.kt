@@ -69,11 +69,14 @@ class AccountSecurityTest {
      */
     @Test
     fun aPassphraseOfEmojiIsRefusedAtTheFormRatherThanAtBcrypt() = server {
+        val emoji = Postgres.freshAccount("emoji")
         val response = client.post("/accounts") {
             protocolHeaders()
             setBody(
                 json.encodeToString(
-                    Credentials(Postgres.freshAccount("emoji"), "🂡".repeat(EMOJI_COUNT)),
+                    // The name is taken once and reused, so the address matches the account it
+                    // names — and the refusal under test is about the password, not either.
+                    emoji.let { Credentials(it, "🂡".repeat(EMOJI_COUNT), address(it)) },
                 ),
             )
         }
@@ -221,7 +224,7 @@ class AccountSecurityTest {
     private suspend fun ApplicationTestBuilder.register(name: String, password: String): Session {
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name, password)))
+            setBody(json.encodeToString(Credentials(name, password, address(name))))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         val session = json.decodeFromString<Session>(response.bodyAsText())

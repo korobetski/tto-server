@@ -15,6 +15,7 @@ import com.tripletriad.data.ShopCatalog
 import com.tripletriad.data.StarterPack
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.questDayOf
+import com.tripletriad.protocol.AccountCode
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
 import com.tripletriad.protocol.BagItemRequest
@@ -24,6 +25,8 @@ import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.EnterCampaignRequest
 import com.tripletriad.protocol.Idempotent
 import com.tripletriad.protocol.ItemUsed
+import com.tripletriad.protocol.PasswordReset
+import com.tripletriad.protocol.PasswordResetRequest
 import com.tripletriad.protocol.SellCardRequest
 import com.tripletriad.protocol.Session
 import com.tripletriad.protocol.effect
@@ -69,9 +72,6 @@ import kotlin.random.Random
  *
  * ### What is deliberately not here
  *
- * - **Password reset and email.** Both need a channel to send to, and there is none. An account is
- *   currently a username, a password and a character; adding recovery is adding a second system.
- *   This is the gap that remains — rate limiting is no longer one, see `installRateLimits`.
  * - **Refresh tokens.** A session lasts [SESSION_DAYS] days and then the player signs in again.
  *   Rotation buys something real, and it buys it against an attacker who has already taken the
  *   token; there are cheaper things to fix first.
@@ -79,15 +79,147 @@ import kotlin.random.Random
 fun Route.accountRoutes(
     store: AccountStore,
     tables: ShopTables,
+    codes: CodeChannel,
     clock: () -> Long = System::currentTimeMillis,
     random: () -> Random = { Random.Default },
 ) {
-    registrationRoutes(store, clock)
+    registrationRoutes(store, codes, clock)
     sessionRoutes(store, clock)
     accountSelfRoutes(store)
+    credentialRecoveryRoutes(store, codes, clock)
 
     profileRoutes(store, tables, random, clock)
 }
+
+/**
+ * Confirming an address, and getting back in without a password.
+ *
+ * ### Why two of these four are unauthenticated
+ *
+ * Because a player who has forgotten their password cannot authenticate — that is the whole
+ * premise. So `/accounts/password/forgot` and `/accounts/password/reset` are open, and what stands
+ * in for a session is the code: it is sent to an address the account already holds, so answering it
+ * proves the same thing a password would.
+ *
+ * ### Why the forgotten-password endpoint always answers the same way
+ *
+ * 202 whether or not the account exists, with no detail. The alternative turns the form into a way
+ * of asking which usernames are registered — the leak `AccountError.INVALID_CREDENTIALS` closes on
+ * the sign-in form, reopened on a form nobody was watching.
+ */
+private fun Route.credentialRecoveryRoutes(
+    store: AccountStore,
+    codes: CodeChannel,
+    clock: () -> Long,
+) {
+    rateLimit(RateLimitName(CODES)) {
+        emailConfirmationRoutes(store, codes, clock)
+        passwordResetRoutes(store, codes, clock)
+    }
+}
+
+/** Confirming the address on an account you are already signed in to. */
+private fun Route.emailConfirmationRoutes(
+    store: AccountStore,
+    codes: CodeChannel,
+    clock: () -> Long,
+) {
+    route("/me/email") {
+        /** Types the code back in. 204: there is nothing to say that is not the state. */
+        post("/verify") {
+            if (!requireCompatibleClient()) return@post
+            val accountId = authenticate(store) ?: return@post
+            val submitted = call.receive<AccountCode>()
+            if (!AccountCode.looksValid(submitted.code)) return@post call.respondBadCode()
+
+            val outcome =
+                codes.spend(accountId, CodePurpose.VERIFY_EMAIL, submitted.code, clock())
+            if (outcome != CodeOutcome.ACCEPTED) return@post call.respondBadCode()
+
+            store.markVerified(accountId, clock())
+            call.respond(HttpStatusCode.NoContent)
+        }
+
+        /**
+         * Sends another one. 202 even when there is nothing to send to, for the same reason the
+         * forgotten-password endpoint does: an account with no address is one that predates the
+         * requirement, and saying so serves nobody.
+         */
+        post("/resend") {
+            if (!requireCompatibleClient()) return@post
+            val accountId = authenticate(store) ?: return@post
+            val identity = store.identity(accountId)
+
+            if (identity?.email != null && !identity.verified) {
+                codes.issue(
+                    this,
+                    accountId,
+                    identity.email,
+                    CodePurpose.VERIFY_EMAIL,
+                    clock(),
+                )
+            }
+            call.respond(HttpStatusCode.Accepted)
+        }
+    }
+}
+
+/**
+ * Getting back in without a password, which is the flow that has no session by definition.
+ *
+ * ### Why the forgotten-password endpoint always answers the same way
+ *
+ * 202 whether or not the account exists, with no detail. The alternative turns the form into a way
+ * of asking which usernames are registered — the leak `AccountError.INVALID_CREDENTIALS` closes on
+ * the sign-in form, reopened on a form nobody was watching.
+ */
+private fun Route.passwordResetRoutes(store: AccountStore, codes: CodeChannel, clock: () -> Long) {
+    route("/accounts/password") {
+        /** *I have forgotten it.* Always 202 — see this function's own KDoc. */
+        post("/forgot") {
+            if (!requireCompatibleClient()) return@post
+            val request = call.receive<PasswordResetRequest>()
+            val accountId = store.accountIdFor(request.username.trim())
+            val email = accountId?.let { store.identity(it)?.email }
+
+            if (accountId != null && email != null) {
+                codes.issue(this, accountId, email, CodePurpose.RESET_PASSWORD, clock())
+            }
+            call.respond(HttpStatusCode.Accepted)
+        }
+
+        /** The code, and the new password. Every session on the account ends with it. */
+        post("/reset") {
+            if (!requireCompatibleClient()) return@post
+            val request = call.receive<PasswordReset>()
+            if (!request.looksValid() || !PasswordHasher.isUsable(request.password)) {
+                return@post call.respondMalformed()
+            }
+
+            val accountId = store.accountIdFor(request.username.trim())
+                ?: return@post call.respondBadCode()
+            val outcome =
+                codes.spend(accountId, CodePurpose.RESET_PASSWORD, request.code, clock())
+            if (outcome != CodeOutcome.ACCEPTED) return@post call.respondBadCode()
+
+            store.replacePassword(accountId, PasswordHasher.hash(request.password))
+            // Confirmed by the same stroke. Answering a code sent to the address proves the player
+            // holds it, which is exactly what confirmation asks — and an account that has just
+            // proved it should not then be nagged to prove it again.
+            store.markVerified(accountId, clock())
+            call.application.environment.log.info("Password reset for account {}", accountId)
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+}
+
+/**
+ * One answer for every way a code can fail — see [CodeOutcome] for why they are not distinguished.
+ */
+private suspend fun io.ktor.server.application.ApplicationCall.respondBadCode() = respond(
+    HttpStatusCode.BadRequest,
+    AccountFailure(AccountError.INVALID_CODE, "that code is not valid"),
+)
 
 /**
  * Creating an account. One route, and it is the one that makes every other route possible.
@@ -97,7 +229,7 @@ fun Route.accountRoutes(
  * are three different subjects: becoming a player, holding a session, and looking after the
  * account behind them.
  */
-private fun Route.registrationRoutes(store: AccountStore, clock: () -> Long) {
+private fun Route.registrationRoutes(store: AccountStore, codes: CodeChannel, clock: () -> Long) {
     route("/accounts") {
         /**
          * Creates an account, its character, and a session — one round trip, signed in.
@@ -121,6 +253,19 @@ private fun Route.registrationRoutes(store: AccountStore, clock: () -> Long) {
                 if (!credentials.looksValid() || !PasswordHasher.isUsable(credentials.password)) {
                     return@post call.respondMalformed()
                 }
+                // Separately from the two above, so the refusal names the field that is wrong. A
+                // player told "malformed credentials" when their password was fine and their
+                // address had a typo has been told nothing.
+                val email = credentials.email?.trim()
+                if (email == null || !Credentials.looksLikeEmail(email)) {
+                    return@post call.respond(
+                        HttpStatusCode.BadRequest,
+                        AccountFailure(
+                            AccountError.MALFORMED_EMAIL,
+                            "an email address is required to create an account",
+                        ),
+                    )
+                }
 
                 val username = credentials.username.trim()
                 val accountId = store.register(
@@ -129,20 +274,44 @@ private fun Route.registrationRoutes(store: AccountStore, clock: () -> Long) {
                     // The character is created from the account's own name, so the profile a player
                     // signs into is already theirs rather than `Kuplu Kopo` waiting to be renamed.
                     save = GameSave.new(username = username, createdAt = clock()),
+                    email = email,
                 )
 
-                if (accountId == null) {
-                    return@post call.respond(
-                        HttpStatusCode.Conflict,
-                        AccountFailure(AccountError.USERNAME_TAKEN, "that name is already taken"),
-                    )
-                }
+                if (accountId == null) return@post call.respondCollision(store, username, email)
 
                 call.application.environment.log.info("Registered account {}", accountId)
+                codes.issue(this, accountId, email, CodePurpose.VERIFY_EMAIL, clock())
                 call.respond(HttpStatusCode.Created, store.newSession(accountId, clock()))
             }
         }
     }
+}
+
+/**
+ * Which of the two unique columns collided, asked only after the insert has already failed.
+ *
+ * Two queries on a path nobody takes twice, rather than reading a constraint name out of the
+ * driver's error message — which would work today and break on a Postgres that words it
+ * differently. The username is checked first because it is the likelier of the two and because a
+ * player who has taken both has to be told about one of them anyway.
+ */
+private suspend fun io.ktor.server.application.ApplicationCall.respondCollision(
+    store: AccountStore,
+    username: String,
+    email: String,
+) {
+    val failure = when {
+        store.usernameTaken(username) ->
+            AccountFailure(AccountError.USERNAME_TAKEN, "that name is already taken")
+
+        store.emailTaken(email) ->
+            AccountFailure(AccountError.EMAIL_TAKEN, "that address already has an account")
+
+        // Neither, which means the row that collided was deleted between the insert and this
+        // check. Vanishingly rare and not worth a retry loop; the honest answer is the generic one.
+        else -> AccountFailure(AccountError.USERNAME_TAKEN, "that name is already taken")
+    }
+    respond(HttpStatusCode.Conflict, failure)
 }
 
 /** Holding a session: signing in, signing out, and signing out everywhere. */

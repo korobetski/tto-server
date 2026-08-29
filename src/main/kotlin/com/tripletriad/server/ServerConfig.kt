@@ -3,6 +3,7 @@ package com.tripletriad.server
 import com.tripletriad.protocol.AppVersion
 import com.tripletriad.protocol.ClientPlatform
 import com.tripletriad.protocol.ClientRelease
+import com.tripletriad.protocol.Unlocks
 import org.slf4j.LoggerFactory
 
 /**
@@ -28,6 +29,8 @@ data class ServerConfig(
     val port: Int,
     val database: DatabaseConfig,
     val identity: ServerIdentity,
+    val mail: MailConfig,
+    val unlocks: Unlocks,
 ) {
     companion object {
         /**
@@ -58,8 +61,25 @@ data class ServerConfig(
                     maxPoolSize = lookup("DATABASE_POOL_SIZE")?.toIntOrNull() ?: 10,
                 ),
                 identity = ServerIdentity.from(lookup),
+                mail = MailConfig.from(environment, lookup),
+                unlocks = unlocksFrom(lookup),
             )
         }
+
+        /**
+         * The two thresholds, read from the environment rather than compiled in.
+         *
+         * `:core` holds the rule and the defaults; this holds the numbers *this deployment* uses,
+         * and sends them to clients in `ServerInfo` so a change here does not need a client
+         * release. A value that is not a number is ignored in favour of the default and not a
+         * failure to boot — the same judgement `TTO_CLIENT_VERSION` makes, and for the same reason:
+         * a typo here should cost the default, not the server.
+         */
+        private fun unlocksFrom(lookup: (String) -> String?) = Unlocks(
+            multiplayer = lookup("TTO_UNLOCK_MULTIPLAYER")?.toIntOrNull()
+                ?: Unlocks.DEFAULT_MULTIPLAYER,
+            auction = lookup("TTO_UNLOCK_AUCTION")?.toIntOrNull() ?: Unlocks.DEFAULT_AUCTION,
+        )
 
         private const val DEV_DATABASE_URL = "jdbc:postgresql://localhost:5432/tripletriad"
 
@@ -195,5 +215,55 @@ enum class DeploymentEnvironment {
             "dev", "development", "local" -> DEVELOPMENT
             else -> PRODUCTION
         }
+    }
+}
+
+/**
+ * Where confirmation and password-reset mail goes out through.
+ *
+ * ### Why an absent provider is fatal in production and fine in development
+ *
+ * Because of what each costs. On a laptop there is no inbox and no API key, and demanding one would
+ * mean nobody could run the server without signing up to a third party — so [Mailer.Disabled] logs
+ * the code and the flow completes. In production that same fallback would write a live credential
+ * into a log file *and* silently stop every password reset from arriving, which is the failure
+ * nobody notices until a player is locked out. So it is refused at boot, in the same breath as a
+ * missing database password, and for the same reason: the process either starts correctly
+ * configured or does not start.
+ *
+ * @property apiKey **secret**. It reaches [Mailer.Brevo] and nothing else; it is never logged and
+ *   never sent to a client.
+ * @property from the envelope sender. Wants to be a subdomain that carries no other traffic, so
+ *   this mail's reputation stands on its own.
+ */
+data class MailConfig(
+    val apiKey: String?,
+    val from: String,
+    val senderName: String,
+) {
+    /** The [Mailer] this configuration describes. */
+    fun mailer(): Mailer =
+        apiKey?.let { Mailer.Brevo(apiKey = it, from = from, senderName = senderName) }
+            ?: Mailer.Disabled
+
+    companion object {
+        fun from(environment: DeploymentEnvironment, lookup: (String) -> String?): MailConfig {
+            val apiKey = lookup("BREVO_API_KEY")?.takeIf { it.isNotBlank() }
+
+            check(apiKey != null || environment == DeploymentEnvironment.DEVELOPMENT) {
+                "BREVO_API_KEY is required outside development: without it no confirmation or " +
+                    "password-reset mail is sent, and the fallback writes codes to the log"
+            }
+
+            return MailConfig(
+                apiKey = apiKey,
+                from = lookup("MAIL_FROM")?.takeIf { it.isNotBlank() } ?: DEV_FROM,
+                senderName = lookup("MAIL_SENDER_NAME")?.takeIf { it.isNotBlank() } ?: DEV_NAME,
+            )
+        }
+
+        private const val DEV_FROM = "no-reply@localhost"
+
+        private const val DEV_NAME = "Triple Triad"
     }
 }

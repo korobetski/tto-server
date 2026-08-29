@@ -48,40 +48,56 @@ class AccountStore(
      * the profile the same thing: there is no window in which an account exists with nothing to
      * play, and no code path that has to invent a profile for an account that somehow lacks one.
      *
-     * @return the new account's id, or null if the username is taken.
+     * @param email the address the confirmation code goes to. Nullable in the signature and not
+     *   in practice — the route refuses a registration without one — because the column is
+     *   nullable for the accounts that predate it, and a non-null parameter here would be a
+     *   promise this class cannot keep for every row it reads back.
+     * @return the new account's id, or null if **either** unique column collides. Which one is not
+     *   answered here on purpose: finding out costs two cheap queries, the failure path is the only
+     *   place that needs them, and the alternative is reading a constraint name out of a driver's
+     *   error message. See [usernameTaken] and [emailTaken].
      */
-    fun register(username: String, passwordHash: String, save: GameSave): Long? =
-        transaction { db ->
-            val accountId = try {
-                db.prepareStatement(
-                    "INSERT INTO accounts (username, password_hash) VALUES (?, ?) RETURNING id",
-                ).use { statement ->
-                    statement.setString(1, username)
-                    statement.setString(2, passwordHash)
-                    statement.executeQuery().use { rows ->
-                        if (rows.next()) rows.getLong(1) else null
-                    }
-                }
-            } catch (failure: SQLException) {
-                // 23505 is unique_violation, and it is the SQL **standard's** code rather than
-                // Postgres's own — which is why this catches `SQLException` rather than
-                // `PSQLException`. The driver is a runtime dependency here; compiling against its
-                // exception type would put the whole of it on the compile classpath to read one
-                // field JDBC already exposes. Narrowed to this one code deliberately: any other
-                // constraint failing here is a bug that should surface as a 500, not be reported
-                // to the player as "that name is taken".
-                if (failure.sqlState == UNIQUE_VIOLATION) return@transaction null else throw failure
-            } ?: return@transaction null
-
+    // JDBC parameter positions, which is the one place a bare integer is not a magic number —
+    // see `openSession`, which says it at length.
+    @Suppress("MagicNumber")
+    fun register(
+        username: String,
+        passwordHash: String,
+        save: GameSave,
+        email: String? = null,
+    ): Long? = transaction { db ->
+        val accountId = try {
             db.prepareStatement(
-                "INSERT INTO characters (account_id, save) VALUES (?, ?::jsonb)",
+                "INSERT INTO accounts (username, password_hash, email) " +
+                    "VALUES (?, ?, ?) RETURNING id",
             ).use { statement ->
-                statement.setLong(1, accountId)
-                statement.setString(2, json.encodeToString(save))
-                statement.executeUpdate()
+                statement.setString(1, username)
+                statement.setString(2, passwordHash)
+                statement.setString(3, email)
+                statement.executeQuery().use { rows ->
+                    if (rows.next()) rows.getLong(1) else null
+                }
             }
-            accountId
+        } catch (failure: SQLException) {
+            // 23505 is unique_violation, and it is the SQL **standard's** code rather than
+            // Postgres's own — which is why this catches `SQLException` rather than
+            // `PSQLException`. The driver is a runtime dependency here; compiling against its
+            // exception type would put the whole of it on the compile classpath to read one
+            // field JDBC already exposes. Narrowed to this one code deliberately: any other
+            // constraint failing here is a bug that should surface as a 500, not be reported
+            // to the player as "that name is taken".
+            if (failure.sqlState == UNIQUE_VIOLATION) return@transaction null else throw failure
+        } ?: return@transaction null
+
+        db.prepareStatement(
+            "INSERT INTO characters (account_id, save) VALUES (?, ?::jsonb)",
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, json.encodeToString(save))
+            statement.executeUpdate()
         }
+        accountId
+    }
 
     /** The stored digest and id for [username], or null if there is no such account. */
     fun credentialsFor(username: String): StoredCredentials? = transaction { db ->
@@ -332,7 +348,104 @@ class AccountStore(
     fun playerState(accountId: Long, recent: Int = RECENT_MATCHES): PlayerState? =
         transaction { db ->
             val save = readSave(db, accountId) ?: return@transaction null
-            PlayerState(save = save, stats = readStats(db, accountId, recent))
+            val identity = readIdentity(db, accountId)
+            PlayerState(
+                save = save,
+                stats = readStats(db, accountId, recent),
+                email = identity?.email,
+                // An account with no row is not reachable — [readSave] would have returned null
+                // first — so the elvis is defensive rather than meaningful. True rather than false
+                // for the reason `PlayerState.verified` gives: this field decides whether a client
+                // nags, and nagging about a state we failed to read is worse than staying quiet.
+                verified = identity?.verified ?: true,
+            )
+        }
+
+    // ---- Addresses and the codes that confirm them ------------------------
+
+    /**
+     * Whether this name is already on an account. Asked **only** after a failed registration.
+     *
+     * Not exposed as an endpoint and it must not become one: a way to ask whether a username exists
+     * is a way to enumerate them, which is the leak `AccountError.INVALID_CREDENTIALS` exists to
+     * close on the sign-in form.
+     */
+    fun usernameTaken(username: String): Boolean = transaction { db ->
+        db.prepareStatement("SELECT 1 FROM accounts WHERE username_key = lower(?)").use { st ->
+            st.setString(1, username)
+            st.executeQuery().use { it.next() }
+        }
+    }
+
+    /** The same question for an address, and the same warning. */
+    fun emailTaken(email: String): Boolean = transaction { db ->
+        db.prepareStatement("SELECT 1 FROM accounts WHERE email_key = lower(?)").use { st ->
+            st.setString(1, email)
+            st.executeQuery().use { it.next() }
+        }
+    }
+
+    /** The account this name belongs to, for the flows that have no session to authenticate. */
+    fun accountIdFor(username: String): Long? = transaction { db ->
+        db.prepareStatement("SELECT id FROM accounts WHERE username_key = lower(?)").use { st ->
+            st.setString(1, username)
+            st.executeQuery().use { if (it.next()) it.getLong(1) else null }
+        }
+    }
+
+    /** The address on an account and whether it has been confirmed. */
+    fun identity(accountId: Long): AccountIdentity? =
+        transaction { db -> readIdentity(db, accountId) }
+
+    /** Records that the address on this account has been confirmed. */
+    fun markVerified(accountId: Long, at: Long) {
+        transaction { db ->
+            db.prepareStatement(
+                "UPDATE accounts SET email_verified_at = ? WHERE id = ?",
+            ).use { st ->
+                st.setTimestamp(1, Timestamp(at))
+                st.setLong(2, accountId)
+                st.executeUpdate()
+            }
+        }
+    }
+
+    /**
+     * Replaces the password and **ends every session on the account**, in one transaction.
+     *
+     * The sign-out is not a nicety. A password is reset because it may be known to somebody else,
+     * and whoever knew it may be holding a thirty-day token that the new password does nothing
+     * about. Leaving those alive would make a reset feel like a remedy while being none.
+     */
+    fun replacePassword(accountId: Long, passwordHash: String) {
+        transaction { db ->
+            db.prepareStatement("UPDATE accounts SET password_hash = ? WHERE id = ?").use { st ->
+                st.setString(1, passwordHash)
+                st.setLong(2, accountId)
+                st.executeUpdate()
+            }
+            db.prepareStatement("DELETE FROM sessions WHERE account_id = ?").use { st ->
+                st.setLong(1, accountId)
+                st.executeUpdate()
+            }
+        }
+    }
+
+    private fun readIdentity(db: Connection, accountId: Long): AccountIdentity? =
+        db.prepareStatement(
+            "SELECT email, email_verified_at FROM accounts WHERE id = ?",
+        ).use { st ->
+            st.setLong(1, accountId)
+            st.executeQuery().use { rows ->
+                if (!rows.next()) {
+                    null
+                } else {
+                    AccountIdentity(
+                        email = rows.getString(1),
+                        verified = rows.getTimestamp(2) != null,
+                    )
+                }
+            }
         }
 
     /** The profile alone, without the match record — what crediting needs to read. */
@@ -1094,3 +1207,6 @@ internal val ApiJson = Json {
     ignoreUnknownKeys = false
     explicitNulls = false
 }
+
+/** The address on an account and whether it has been confirmed. */
+data class AccountIdentity(val email: String?, val verified: Boolean)

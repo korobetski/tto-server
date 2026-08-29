@@ -747,9 +747,13 @@ class PvpFlowTest {
     private suspend fun ApplicationTestBuilder.register(name: String): Session {
         val response = client.post("/accounts") {
             protocolHeaders()
-            setBody(json.encodeToString(Credentials(name, PASSWORD)))
+            setBody(json.encodeToString(Credentials(name, PASSWORD, address(name))))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
+        // Every test in this file is about what two players can do to each other once they are
+        // both allowed in the lobby. Getting them in is `unlockForPvp`'s job, and the gate that
+        // keeps them out is `PvpUnlockTest`'s.
+        unlockForPvp(name)
         return json.decodeFromString<Session>(response.bodyAsText())
     }
 

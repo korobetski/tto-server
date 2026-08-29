@@ -1,5 +1,7 @@
 package com.tripletriad.server
 
+import com.tripletriad.protocol.Credentials
+import com.tripletriad.protocol.Unlocks
 import com.zaxxer.hikari.HikariDataSource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
@@ -49,3 +51,45 @@ object Postgres {
     private const val IMAGE = "postgres:17-alpine"
     private const val POOL_SIZE = 4
 }
+
+/**
+ * A unique address for a test account, derived from its equally unique name.
+ *
+ * Registration requires one, and it has to be *unique* — `accounts_email_key_idx` is a unique
+ * index, so a shared literal would make the second test in a run collide with the first and be
+ * refused with `EMAIL_TAKEN`. `Postgres.freshAccount` already solves that problem for names, so
+ * this borrows its answer instead of inventing a second one.
+ *
+ * `.test` is reserved by RFC 2606 precisely so that it can never resolve, which matters more than
+ * it looks: if a test ever reached a real mailer with a real-looking domain, it would be sending
+ * mail to a stranger.
+ */
+internal fun address(username: String): String = "$username@example.test"
+
+/**
+ * Registration credentials for [username], address included.
+ *
+ * The password is the one every test uses; a test that is *about* the password passes its own.
+ */
+internal fun credentials(username: String, password: String = TEST_PASSWORD) =
+    Credentials(username, password, address(username))
+
+/**
+ * Confirms [username]'s address and levels the account enough to start refereed play.
+ *
+ * A fresh registration is level 1 with an unconfirmed address, and `authenticateUnlocked` refuses
+ * on both counts — so without this every PvP test would be measuring the gate rather than the
+ * lobby. Reaching past the API to do it is deliberate: the two honest routes are consuming a code
+ * out of a mailer no test is running, and playing a career's worth of matches, and neither has
+ * anything to do with what those tests are about. `PvpUnlockTest` is where the gate itself is
+ * measured, and it does **not** call this.
+ */
+internal fun unlockForPvp(username: String, level: Int = Unlocks.DEFAULT_MULTIPLAYER) {
+    val store = AccountStore(Postgres.dataSource)
+    val accountId = requireNotNull(store.accountIdFor(username)) { "no account named $username" }
+    store.markVerified(accountId, System.currentTimeMillis())
+    store.mutate(accountId) { save -> Outcome(save.copy(level = level), Unit) }
+}
+
+/** Long enough for `Credentials.PASSWORD_LENGTH`, and not a real password anywhere. */
+internal const val TEST_PASSWORD = "correct-horse-battery"
