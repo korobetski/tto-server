@@ -172,6 +172,7 @@ stored and logged as fingerprints and never in the clear. This is that rule, app
 `docs/operations.md` (configuration, exit codes, backups, alerting) and `docs/deployment.md` are
 current and worth reading before touching compose files, `scripts/` or `deploy/`.
 `docs/data-inventory.md` tracks what personal data the schema holds and is derived per migration —
-update it when a migration adds a column about a player. Two documents are **stale** and should not
-be trusted: the status paragraph at the top of `README.md` and the "Why this directory is empty"
-section of `src/main/resources/db/migration/README.md` both predate accounts, the economy and PvP.
+update it when a migration adds a column about a player. `README.md` was rewritten against the
+current surface and is trustworthy again; one document is still **stale** and should not be trusted:
+the "Why this directory is empty" section of `src/main/resources/db/migration/README.md` predates
+accounts, the economy and PvP.
