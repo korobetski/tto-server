@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.XpTable
 import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.Unlocks
 import com.zaxxer.hikari.HikariDataSource
@@ -83,12 +84,28 @@ internal fun credentials(username: String, password: String = TEST_PASSWORD) =
  * out of a mailer no test is running, and playing a career's worth of matches, and neither has
  * anything to do with what those tests are about. `PvpUnlockTest` is where the gate itself is
  * measured, and it does **not** call this.
+ *
+ * ### Why the XP is set as well as the level
+ *
+ * Because a level without the XP behind it does not survive being played with, and the way it fails
+ * is a test that passes until it does not. `GameSave.level` is a *derived* field — `withXp`
+ * recomputes it from `xp` on every credit, which is the design (`withServerOwnedFrom` says so: two
+ * numbers that can disagree are one number too many). So an account handed `level = 5` on `xp = 0`
+ * falls straight back to level 1 the moment anything pays it experience — and the first thing that
+ * does is a **daily quest completing at the end of a match**, which happens or does not depending
+ * on the day's quests and on who won. That is how `aFinishedMatchDoesNotBlockTheNextOne` came to
+ * fail on CI and pass here: the same profile, gated after a match it had been allowed to start.
+ *
+ * Setting `xp` to the level's own threshold makes the profile self-consistent, so every recompute
+ * is a no-op and the fixture describes a player who could exist.
  */
 internal fun unlockForPvp(username: String, level: Int = Unlocks.DEFAULT_MULTIPLAYER) {
     val store = AccountStore(Postgres.dataSource)
     val accountId = requireNotNull(store.accountIdFor(username)) { "no account named $username" }
     store.markVerified(accountId, System.currentTimeMillis())
-    store.mutate(accountId) { save -> Outcome(save.copy(level = level), Unit) }
+    store.mutate(accountId) { save ->
+        Outcome(save.copy(xp = XpTable.thresholdFor(level), level = level), Unit)
+    }
 }
 
 /** Long enough for `Credentials.PASSWORD_LENGTH`, and not a real password anywhere. */
