@@ -22,6 +22,7 @@ import com.tripletriad.protocol.PvpOutcome
 import com.tripletriad.protocol.PvpQueueState
 import com.tripletriad.protocol.PvpRefusal
 import com.tripletriad.protocol.PvpStake
+import com.tripletriad.protocol.PvpStakePolicy
 import com.tripletriad.protocol.PvpTable
 import com.tripletriad.protocol.PvpTableRequest
 import com.tripletriad.protocol.Unlocks
@@ -91,8 +92,9 @@ fun Route.pvpRoutes(
     // `ServerConfig.unlocksFrom`, and `Unlocks` for why the number travels rather than being
     // compiled in.
     unlocks: Unlocks = Unlocks(),
+    stakes: PvpStakePolicy = PvpStakePolicy(),
 ) {
-    val referee = PvpReferee(cards, formats, accounts, pvp, clock, random)
+    val referee = PvpReferee(cards, formats, accounts, pvp, stakes, clock, random)
 
     route("/pvp") {
         lobbyRoutes(referee, accounts, pvp, clock, unlocks)
@@ -253,6 +255,11 @@ private fun Route.challengeRoutes(
                     call.respond(
                         HttpStatusCode.Conflict,
                         Refusal(PvpRefusal.CANNOT_AFFORD, "you cannot cover that stake"),
+                    )
+                Challenged.StakeTooHigh ->
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        Refusal(PvpRefusal.STAKE_TOO_HIGH, "that stake is above the limit"),
                     )
                 Challenged.BadTerms ->
                     call.respond(
@@ -487,6 +494,7 @@ sealed interface Challenged {
     data object NoSuchPlayer : Challenged
     data object Yourself : Challenged
     data object CannotAfford : Challenged
+    data object StakeTooHigh : Challenged
     data object BadTerms : Challenged
 }
 
@@ -496,6 +504,7 @@ sealed interface Tabled {
     data object NoSuchFormat : Tabled
     data object RulesNotAllowed : Tabled
     data object CannotAfford : Tabled
+    data object StakeTooHigh : Tabled
     data object AlreadyWaiting : Tabled
     data object AlreadyPlaying : Tabled
 }
@@ -505,6 +514,7 @@ sealed interface Joined {
     data class Playing(val match: PvpMatchRow) : Joined
     data object NoSuchTable : Joined
     data object CannotAfford : Joined
+    data object StakeTooHigh : Joined
     data object AlreadyPlaying : Joined
 }
 
@@ -536,12 +546,18 @@ sealed interface Claimed {
 // two-line private helpers — resolving a name, building an id — that exist so the five public
 // entry points read as prose. Splitting them across two classes would mean passing the same four
 // collaborators to both.
-@Suppress("TooManyFunctions")
+// Seven, and the seventh is a policy record. Six of them are collaborators this class cannot be
+// built without — two catalogues, two stores, a clock and a source of randomness — and the last is
+// the deployment's own numbers, which travel rather than being compiled in for the reason
+// `PvpStakePolicy` gives. A holder grouping two of them would put an indirection between the
+// composition root and the thing it configures without removing anything from this list.
+@Suppress("TooManyFunctions", "LongParameterList")
 class PvpReferee(
     private val cards: CardCatalog,
     private val formats: FormatCatalog,
     private val accounts: AccountStore,
     private val pvp: PvpStore,
+    private val stakes: PvpStakePolicy = PvpStakePolicy(),
     private val clock: () -> Long = System::currentTimeMillis,
     private val random: () -> Random = { Random.Default },
 ) {
@@ -583,9 +599,25 @@ class PvpReferee(
     private fun refuseTable(accountId: Long, request: PvpTableRequest): Tabled? = when {
         checkTerms(request) != null -> checkTerms(request)
         accounts.saveFor(accountId) == null -> Tabled.NoSuchFormat
+        // Before the purse, because the two are fixed by different things and a host told the
+        // wrong one waits for the wrong change — see `PvpStakePolicy` and `PvpRefusal`.
+        !allowsStake(accountId, request.stake) -> Tabled.StakeTooHigh
         (accounts.saveFor(accountId)?.mgp ?: 0) < request.stake.mgp -> Tabled.CannotAfford
         pvp.liveMatchFor(accountId) != null -> Tabled.AlreadyPlaying
         else -> null
+    }
+
+    /**
+     * Whether [accountId] may be a party to [stake] at all — see `PvpStakePolicy`.
+     *
+     * Asked of *each* player rather than of the table, because the ceiling climbs with the level
+     * and the two sides need not be at the same one. An account with no save wagers nothing rather
+     * than anything: every caller has already refused a missing save for its own reason, so this
+     * branch is unreachable, and the reachable reading of it is the conservative one.
+     */
+    private fun allowsStake(accountId: Long, stake: PvpStake): Boolean {
+        val save = accounts.saveFor(accountId) ?: return stake.mgp == 0
+        return stakes.allows(save, stake)
     }
 
     /**
@@ -620,6 +652,13 @@ class PvpReferee(
         val match = pvp.claimTableAndOpen(tableId, accountId, clock()) { table, joiner ->
             val joinerSave = accounts.saveFor(joiner)
             val hostSave = accounts.saveFor(table.hostAccount)
+            // Against the *joiner's* level, which is the whole point of a ceiling that
+            // climbs: a table opened by somebody at the top of the ladder is not one a fresh
+            // account may sit down at, however much it happens to be holding.
+            if (joinerSave != null && !stakes.allows(joinerSave, table.stake)) {
+                refusal = Joined.StakeTooHigh
+                return@claimTableAndOpen null
+            }
             if (joinerSave == null || joinerSave.mgp < table.stake.mgp) {
                 refusal = Joined.CannotAfford
                 return@claimTableAndOpen null
@@ -714,6 +753,8 @@ class PvpReferee(
      */
     private fun refuse(accountId: Long, target: Long, stake: PvpStake): Challenged? = when {
         target == accountId -> Challenged.Yourself
+        !allowsStake(accountId, stake) || !allowsStake(target, stake) ->
+            Challenged.StakeTooHigh
         stake.mgp == 0 -> null
         (accounts.saveFor(accountId)?.mgp ?: 0) < stake.mgp -> Challenged.CannotAfford
         (accounts.saveFor(target)?.mgp ?: 0) < stake.mgp -> Challenged.CannotAfford
@@ -1181,9 +1222,18 @@ class PvpReferee(
      * collection spans every block a player owns, and a hand dealt outside the table's pool is a
      * hand the engine refuses.
      *
-     * Falls back to the chosen deck when the admitted collection cannot fill a hand.
-     * `MatchPreparation.randomHand` refuses fewer than five rather than dealing a duplicate, and a
-     * player who owns four cards in this format should get a match rather than a refusal.
+     * Falls back to the chosen deck when the admitted collection cannot fill a hand — too few
+     * cards in the format, or too few the caps below admit. `MatchPreparation.randomHand` refuses
+     * fewer than five rather than dealing a duplicate, and a player who owns four cards in this
+     * format should get a match rather than a refusal.
+     *
+     * **`DeckLimits` binds both paths**, which is why the table is resolved before either is
+     * taken. `playerDeck` refuses a deck over the caps; `randomHand` draws under them. Exempting
+     * the Random path would have turned selling into the way around the caps — empty the
+     * collection of everything but five-stars and the splice is forced into the hand the deck
+     * editor refuses to build — and a cap that punishes a wide collection is the opposite of the
+     * one that was written. Random still guarantees no ace; it guarantees only that what it deals
+     * is a hand its owner could have brought. `RULE_SWAP` remains the one way past the caps.
      */
     private fun handFor(
         save: GameSave,
@@ -1192,15 +1242,16 @@ class PvpReferee(
         format: Format,
         random: Random,
     ): List<Int> {
-        if (!rules.random) return PveMatches.playerDeck(save, deck)
-
         val legal = cards.admittedBy(format).associateBy { it.id }
+        if (!rules.random) return PveMatches.playerDeck(save, deck, legal)
+
         val collection = save.ownedCardIds().mapNotNull { legal[it] }
-        return if (collection.size >= HAND_SIZE) {
+        val drawn = if (collection.size >= HAND_SIZE) {
             MatchPreparation.randomHand(collection, random).map { it.id }
         } else {
-            PveMatches.playerDeck(save, deck)
+            emptyList()
         }
+        return drawn.takeIf { it.size == HAND_SIZE } ?: PveMatches.playerDeck(save, deck, legal)
     }
 
     /**

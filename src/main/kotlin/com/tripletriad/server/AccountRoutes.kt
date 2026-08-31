@@ -76,16 +76,23 @@ import kotlin.random.Random
  *   Rotation buys something real, and it buys it against an attacker who has already taken the
  *   token; there are cheaper things to fix first.
  */
+// Six, and the sixth is the auction house. It is here rather than folded into `AccountStore`
+// because the dependency only points one way — `AuctionStore` is built on `AccountStore` — and a
+// registry that let it point back would make the order the two are constructed in load-bearing.
+@Suppress("LongParameterList")
 fun Route.accountRoutes(
     store: AccountStore,
     tables: ShopTables,
     codes: CodeChannel,
     clock: () -> Long = System::currentTimeMillis,
     random: () -> Random = { Random.Default },
+    // Null in the tests that have no house to unwind, which is most of them. A deployment always
+    // passes one: see `deleteAccount`, whose contract this completes.
+    auctions: AuctionStore? = null,
 ) {
     registrationRoutes(store, codes, clock)
     sessionRoutes(store, clock)
-    accountSelfRoutes(store)
+    accountSelfRoutes(store, auctions)
     credentialRecoveryRoutes(store, codes, clock)
 
     profileRoutes(store, tables, random, clock)
@@ -365,28 +372,6 @@ private fun Route.sessionRoutes(store: AccountStore, clock: () -> Long) {
             call.respond(HttpStatusCode.NoContent)
         }
     }
-
-    /**
-     * Deletes the account and everything belonging to it. **Irreversible.**
-     *
-     * ### Why it asks for the password when the caller already holds a token
-     *
-     * Because a token is not proof that the *player* asked. It is stored on the device in the clear
-     * — `SessionStore` argues for that, and the argument holds only because what a stolen token can
-     * do is bounded. Letting it destroy an account would put "somebody picked up an unlocked phone"
-     * and "the owner asked to be forgotten" behind the same gesture, and only one of those is
-     * recoverable. Re-typing the password is the smallest thing that distinguishes them, and it is
-     * what every service worth copying asks for here.
-     *
-     * Throttled by [SIGN_IN] rather than the intent bucket, and for that endpoint's reason: a
-     * request that verifies a password is a place to guess one.
-     *
-     * ### Why a wrong password is `401` and a missing account is `204`
-     *
-     * The first is a refusal to act. The second is the action having already happened — a client
-     * that lost the answer and asked again has got what it wanted, and telling it "no such account"
-     * would be reporting success as failure.
-     */
 }
 
 /**
@@ -395,35 +380,13 @@ private fun Route.sessionRoutes(store: AccountStore, clock: () -> Long) {
  * Both verify the password even though the caller already holds a token, and both are therefore in
  * the [SIGN_IN] bucket. Each says why in its own KDoc; what they have in common is that a token
  * proves a device, and neither of these is a thing a device should be able to do alone.
+ *
+ * The deletion has a function to itself, [deleteSelfRoute], because it grew a second subject — what
+ * becomes of the auction lots the account is standing in the middle of — and the two read better
+ * apart than they did with the password check and the unwinding in one block.
  */
-private fun Route.accountSelfRoutes(store: AccountStore) {
-    rateLimit(RateLimitName(SIGN_IN)) {
-        delete("/accounts/me") {
-            if (!requireCompatibleClient()) return@delete
-            val accountId = authenticate(store) ?: return@delete
-            val credentials = call.receive<Credentials>()
-
-            val digest = store.passwordHashFor(accountId)
-            if (digest == null || !PasswordHasher.verify(credentials.password, digest)) {
-                return@delete call.respond(
-                    HttpStatusCode.Unauthorized,
-                    AccountFailure(
-                        AccountError.INVALID_CREDENTIALS,
-                        "that password does not match this account",
-                    ),
-                )
-            }
-
-            store.deleteAccount(accountId)
-            // At warn: this is the one action here that cannot be undone, and an operator asked
-            // "what happened to this account" should find the answer without turning on debug.
-            call.application.environment.log.warn(
-                "Deleted account {} at its own request",
-                accountId,
-            )
-            call.respond(HttpStatusCode.NoContent)
-        }
-    }
+private fun Route.accountSelfRoutes(store: AccountStore, auctions: AuctionStore?) {
+    deleteSelfRoute(store, auctions)
 
     /**
      * Changes the password, and ends every **other** session.
@@ -489,6 +452,71 @@ private fun Route.accountSelfRoutes(store: AccountStore) {
                 "Account {} changed its password; {} other session(s) ended",
                 accountId,
                 ended,
+            )
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+}
+
+/**
+ * Deletes the account and everything belonging to it. **Irreversible.**
+ *
+ * ### Why it asks for the password when the caller already holds a token
+ *
+ * Because a token is not proof that the *player* asked. It is stored on the device in the clear
+ * — `SessionStore` argues for that, and the argument holds only because what a stolen token can
+ * do is bounded. Letting it destroy an account would put "somebody picked up an unlocked phone"
+ * and "the owner asked to be forgotten" behind the same gesture, and only one of those is
+ * recoverable. Re-typing the password is the smallest thing that distinguishes them, and it is
+ * what every service worth copying asks for here.
+ *
+ * Throttled by [SIGN_IN] rather than the intent bucket, and for that endpoint's reason: a
+ * request that verifies a password is a place to guess one.
+ *
+ * ### Why a wrong password is `401` and a missing account is `204`
+ *
+ * The first is a refusal to act. The second is the action having already happened — a client
+ * that lost the answer and asked again has got what it wanted, and telling it "no such account"
+ * would be reporting success as failure.
+ *
+ * ### Why [auctions] is nullable
+ *
+ * Most tests have no auction house to unwind and would otherwise have to build one to delete an
+ * account. A deployment always passes it — `Application.module` does — and the cost of the null is
+ * bounded: it means "there are no lots", which is true in exactly the configuration that passes it.
+ */
+private fun Route.deleteSelfRoute(store: AccountStore, auctions: AuctionStore?) {
+    rateLimit(RateLimitName(SIGN_IN)) {
+        delete("/accounts/me") {
+            if (!requireCompatibleClient()) return@delete
+            val accountId = authenticate(store) ?: return@delete
+            val credentials = call.receive<Credentials>()
+
+            val digest = store.passwordHashFor(accountId)
+            if (digest == null || !PasswordHasher.verify(credentials.password, digest)) {
+                return@delete call.respond(
+                    HttpStatusCode.Unauthorized,
+                    AccountFailure(
+                        AccountError.INVALID_CREDENTIALS,
+                        "that password does not match this account",
+                    ),
+                )
+            }
+
+            // The lots go first, on the delete's own connection. A player who leaves mid-auction
+            // leaves other people's money and other people's cards behind them, and those have to
+            // be settled rather than cascaded away — `AuctionStore.closeOutOn` says who gets what.
+            var settled = 0
+            store.deleteAccount(accountId) { db ->
+                settled = auctions?.closeOutOn(db, accountId) ?: 0
+            }
+            // At warn: this is the one action here that cannot be undone, and an operator asked
+            // "what happened to this account" should find the answer without turning on debug.
+            // The lot count rides along because it is the part with somebody else in it.
+            call.application.environment.log.warn(
+                "Deleted account {} at its own request, settling {} auction lots",
+                accountId,
+                settled,
             )
             call.respond(HttpStatusCode.NoContent)
         }
@@ -882,11 +910,14 @@ private suspend fun RoutingContext.respondWithProfile(
  * and far below the index limit, so the refusal only ever meets something that was never going to
  * work.
  *
+ * Internal rather than private because the auction house applies the same bound for the same
+ * reason: the rule is about the column the id is stored in, and both write to it.
+ *
  * The shape is `ErrorResponse`, the one content negotiation already answers a malformed body with,
  * rather than an `AccountFailure`: this is not a statement about an account, and `AccountError` has
  * no member that would be true of it.
  */
-private suspend fun RoutingContext.acceptsOperationId(request: Idempotent): Boolean {
+internal suspend fun RoutingContext.acceptsOperationId(request: Idempotent): Boolean {
     if (request.operationId.length in 1..MAX_OPERATION_ID) return true
 
     call.application.environment.log.info(
@@ -986,7 +1017,7 @@ private suspend fun io.ktor.server.application.ApplicationCall.respondMalformed(
  * Bounded rather than exact because the id is the client's to choose and its shape is not this
  * server's business — only that it fits in an index and in a table. See [acceptsOperationId].
  */
-private const val MAX_OPERATION_ID = 128
+internal const val MAX_OPERATION_ID = 128
 
 /** Thirty days: long enough that a player is not asked again on a device they use weekly. */
 private const val SESSION_DAYS = 30L

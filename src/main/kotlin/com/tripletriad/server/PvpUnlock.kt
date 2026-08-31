@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.GameSave
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
 import com.tripletriad.protocol.Unlocks
@@ -32,10 +33,15 @@ import io.ktor.server.routing.RoutingContext
  * playing, the answer is that they finish; gating `/pvp/match` as well would strand a live board
  * and hand one side a win nobody played for.
  */
-suspend fun RoutingContext.authenticateUnlocked(accounts: AccountStore, unlocks: Unlocks): Long? {
+suspend fun RoutingContext.authenticateUnlocked(
+    accounts: AccountStore,
+    unlocks: Unlocks,
+    // Defaulted to the door this file was written for, so every existing call keeps its shape.
+    feature: Feature = Feature.MULTIPLAYER,
+): Long? {
     val accountId = authenticate(accounts) ?: return null
 
-    val refusal = refuseUnlock(accounts, accountId, unlocks) ?: return accountId
+    val refusal = refuseUnlock(accounts, accountId, unlocks, feature) ?: return accountId
     call.respond(HttpStatusCode.Forbidden, refusal)
     return null
 }
@@ -45,6 +51,7 @@ private fun refuseUnlock(
     accounts: AccountStore,
     accountId: Long,
     unlocks: Unlocks,
+    feature: Feature,
 ): AccountFailure? {
     val identity = accounts.identity(accountId)
     val save = accounts.saveFor(accountId)
@@ -58,11 +65,41 @@ private fun refuseUnlock(
             "confirm your email address before playing against other people",
         )
 
-        save != null && !unlocks.allowsMultiplayer(save) -> AccountFailure(
+        save != null && !feature.opensFor(save, unlocks) -> AccountFailure(
             AccountError.NOT_UNLOCKED,
-            "multiplayer unlocks at level ${unlocks.multiplayer}",
+            "${feature.label} unlocks at level ${feature.levelIn(unlocks)}",
         )
 
         else -> null
+    }
+}
+
+/**
+ * Which door is being asked about.
+ *
+ * Both share the address check and differ only on the level, which is the whole reason this is a
+ * parameter rather than a second copy of [refuseUnlock]: the confirmed address is the measure that
+ * costs a farmer an inbox, and it has to hold at *every* door or it holds at none.
+ *
+ * The auction house has its own threshold rather than borrowing multiplayer's because they are
+ * different risks — one is a match, the other is a transfer of MGP between accounts — and a
+ * deployment that wants to move one without the other should not have to move both. They default
+ * to the same number today; see `Unlocks`.
+ */
+enum class Feature(val label: String) {
+    MULTIPLAYER("multiplayer"),
+    AUCTION("the auction house"),
+    ;
+
+    /** Whether [save] has reached this door's level. */
+    fun opensFor(save: GameSave, unlocks: Unlocks): Boolean = when (this) {
+        MULTIPLAYER -> unlocks.allowsMultiplayer(save)
+        AUCTION -> unlocks.allowsAuction(save)
+    }
+
+    /** The level itself, for the sentence a refused player reads. */
+    fun levelIn(unlocks: Unlocks): Int = when (this) {
+        MULTIPLAYER -> unlocks.multiplayer
+        AUCTION -> unlocks.auction
     }
 }

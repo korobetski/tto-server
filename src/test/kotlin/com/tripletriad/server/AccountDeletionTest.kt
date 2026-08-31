@@ -1,10 +1,17 @@
 package com.tripletriad.server
 
+import com.tripletriad.data.AuctionRules
+import com.tripletriad.model.CardItem
+import com.tripletriad.model.XpTable
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
+import com.tripletriad.protocol.AuctionOutcome
+import com.tripletriad.protocol.BidRequest
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.Credentials
+import com.tripletriad.protocol.ListCardRequest
 import com.tripletriad.protocol.Session
+import com.tripletriad.protocol.Unlocks
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
@@ -137,6 +144,58 @@ class AccountDeletionTest {
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
     }
 
+    /**
+     * Leaving mid-auction settles the lot on the way out, **through the route**.
+     *
+     * [AuctionFlowTest] is where the rule itself is measured — who is paid, what is destroyed, and
+     * why. What it cannot measure is that `DELETE /accounts/me` actually asks for any of it: it
+     * calls the store pairing directly, so a route that quietly stopped passing its `unwind` would
+     * leave that whole file green while every departing seller destroyed a buyer's paid-for card.
+     *
+     * So this one does the least it can and does it over HTTP: a lot exists, somebody has money on
+     * it, the seller deletes their account through the endpoint a player would use, and the buyer
+     * ends up holding the card. The setup reaches past the API because the setup is not the claim.
+     */
+    @Test
+    fun leavingMidAuctionSettlesTheLotThroughTheRoute() = server {
+        val accounts = AccountStore(Postgres.dataSource)
+        val auctions = AuctionStore(Postgres.dataSource, accounts, Catalogs.cards.byId)
+
+        val sellerName = Postgres.freshAccount("auction-leaver")
+        val session = register(sellerName)
+        val sellerId = assertNotNullId(accounts.accountIdForUsername(sellerName))
+        stock(accounts, sellerId, holding = 1)
+
+        val buyerName = Postgres.freshAccount("auction-stayer")
+        val buyerId = assertNotNullId(
+            accounts.accountIdForUsername(register(buyerName).player.save.username),
+        )
+        stock(accounts, buyerId, holding = 0)
+
+        val listed = ApiJson.decodeFromString<AuctionOutcome>(
+            bodyOf(
+                auctions.list(
+                    sellerId,
+                    ListCardRequest(CARD, FLOOR, FLOOR, operationId = "leave-list"),
+                ),
+            ),
+        )
+        val lotId = requireNotNull(listed.lot) { "the fixture could not open a lot" }.id
+        auctions.bid(buyerId, BidRequest(lotId, FLOOR, operationId = "leave-bid"))
+
+        assertEquals(
+            HttpStatusCode.NoContent,
+            deleteAccount(session.token, PASSWORD).status,
+        )
+
+        val buyer = requireNotNull(accounts.saveFor(buyerId)) { "the buyer lost their character" }
+        assertEquals(
+            listOf(CardItem(CARD)),
+            buyer.bag,
+            "the route deleted the seller without settling the lot",
+        )
+    }
+
     // ---- Harness ----------------------------------------------------------
 
     /** Every row this account owns, across the tables that reference it. */
@@ -154,6 +213,26 @@ class AccountDeletionTest {
                 s.executeQuery().use { rows -> if (rows.next()) rows.getInt(1) else 0 }
             }
         }
+    }
+
+    /** A profile that can trade: the auction unlock level, its XP, and a card to sell. */
+    private fun stock(accounts: AccountStore, accountId: Long, holding: Int) {
+        val save = requireNotNull(accounts.saveFor(accountId)) { "account $accountId has no save" }
+        val stocked = (1..holding).fold(save) { profile, _ -> profile.withCard(CARD) }
+        assertTrue(
+            accounts.replaceSave(
+                accountId,
+                stocked.copy(
+                    mgp = PURSE,
+                    xp = XpTable.thresholdFor(Unlocks.DEFAULT_AUCTION),
+                    level = Unlocks.DEFAULT_AUCTION,
+                ),
+            ),
+        )
+    }
+
+    private fun bodyOf(body: String?): String = requireNotNull(body) {
+        "the auction store answered null"
     }
 
     private fun assertNotNullId(id: Long?): Long = requireNotNull(
@@ -221,6 +300,15 @@ class AccountDeletionTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     private companion object {
+        /** The card the auction fixture trades, chosen the way [AuctionFlowTest] chooses it. */
+        val CARD = Catalogs.cards.cards.first { it.rarity == 1 }.id
+
+        /** Its shop price, which is both the floor and — here — the whole sale. */
+        val FLOOR = AuctionRules.floorPriceOf(CARD, Catalogs.cards.byId)
+
+        /** Enough to cover a bid and its fee without the amount mattering. */
+        const val PURSE = 100_000
+
         const val PASSWORD = "correct-horse-battery"
     }
 }

@@ -1,8 +1,10 @@
 package com.tripletriad.server
 
 import com.tripletriad.protocol.AppVersion
+import com.tripletriad.protocol.AuctionPolicy
 import com.tripletriad.protocol.ClientPlatform
 import com.tripletriad.protocol.ClientRelease
+import com.tripletriad.protocol.PvpStakePolicy
 import com.tripletriad.protocol.Unlocks
 import org.slf4j.LoggerFactory
 
@@ -31,6 +33,8 @@ data class ServerConfig(
     val identity: ServerIdentity,
     val mail: MailConfig,
     val unlocks: Unlocks,
+    val auction: AuctionPolicy,
+    val stakes: PvpStakePolicy,
 ) {
     companion object {
         /**
@@ -63,6 +67,8 @@ data class ServerConfig(
                 identity = ServerIdentity.from(lookup),
                 mail = MailConfig.from(environment, lookup),
                 unlocks = unlocksFrom(lookup),
+                auction = auctionFrom(lookup),
+                stakes = stakesFrom(lookup),
             )
         }
 
@@ -79,6 +85,44 @@ data class ServerConfig(
             multiplayer = lookup("TTO_UNLOCK_MULTIPLAYER")?.toIntOrNull()
                 ?: Unlocks.DEFAULT_MULTIPLAYER,
             auction = lookup("TTO_UNLOCK_AUCTION")?.toIntOrNull() ?: Unlocks.DEFAULT_AUCTION,
+        )
+
+        /**
+         * How this deployment runs its auction house.
+         *
+         * Every one of these is a number that will be tuned in response to what players actually
+         * do — a lot cap that turns out to throttle honest sellers, a ceiling that turns out to
+         * block a legitimately scarce card. Reading them here rather than compiling them in is
+         * what keeps a tuning a restart instead of a coordinated release of three artifacts; they
+         * travel to clients in `ServerInfo.auction`, and the server refuses on its own copy.
+         *
+         * A value that is not a number falls back to the default rather than stopping the boot,
+         * which is the judgement `unlocksFrom` makes and for the same reason.
+         */
+        private fun auctionFrom(lookup: (String) -> String?) = AuctionPolicy(
+            maxOpenLots = lookup("TTO_AUCTION_MAX_LOTS")?.toIntOrNull()
+                ?: AuctionPolicy.DEFAULT_MAX_OPEN_LOTS,
+            maxPriceMultiple = lookup("TTO_AUCTION_MAX_MULTIPLE")?.toIntOrNull()
+                ?: AuctionPolicy.DEFAULT_MAX_PRICE_MULTIPLE,
+            sellerDecisionHours = lookup("TTO_AUCTION_DECISION_HOURS")?.toIntOrNull()
+                ?: AuctionPolicy.DEFAULT_SELLER_DECISION_HOURS,
+            antiSnipeSeconds = lookup("TTO_AUCTION_ANTI_SNIPE_SECONDS")?.toIntOrNull()
+                ?: AuctionPolicy.DEFAULT_ANTI_SNIPE_SECONDS,
+        )
+
+        /**
+         * How large a wager this deployment lets a player propose.
+         *
+         * Read here for the reason [auctionFrom]'s numbers are: the ceiling is a balance dial, not
+         * a protocol constant, and the first thing anybody will want to change about it is the
+         * number. It travels to clients in `ServerInfo.stakes` so they can draw the limit rather
+         * than discover it, and `PvpReferee` refuses on this copy, which is the one that counts.
+         */
+        private fun stakesFrom(lookup: (String) -> String?) = PvpStakePolicy(
+            perLevel = lookup("TTO_PVP_STAKE_PER_LEVEL")?.toIntOrNull()
+                ?: PvpStakePolicy.DEFAULT_PER_LEVEL,
+            heavyPercent = lookup("TTO_PVP_STAKE_HEAVY_PERCENT")?.toIntOrNull()
+                ?: PvpStakePolicy.DEFAULT_HEAVY_PERCENT,
         )
 
         private const val DEV_DATABASE_URL = "jdbc:postgresql://localhost:5432/tripletriad"

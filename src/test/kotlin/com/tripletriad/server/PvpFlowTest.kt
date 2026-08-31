@@ -248,7 +248,11 @@ class PvpFlowTest {
         val response = client.post("/pvp/tables") {
             protocolHeaders()
             bearer(alice.token)
-            setBody(json.encodeToString(PvpTableRequest(FORMAT, stake = PvpStake(mgp = FORTUNE))))
+            setBody(
+                json.encodeToString(
+                    PvpTableRequest(FORMAT, stake = PvpStake(mgp = UNAFFORDABLE)),
+                ),
+            )
         }
 
         assertEquals(HttpStatusCode.Conflict, response.status)
@@ -879,8 +883,15 @@ class PvpFlowTest {
         /** A wager a starting purse of 100 MGP covers. */
         const val WAGER = 50
 
-        /** More than any purse in these tests, so the refusal is what is being measured. */
-        const val FORTUNE = 1_000_000
+        /**
+         * More than a starting purse of 100 and less than the level-5 stake ceiling of 500.
+         *
+         * Both halves matter. Over the purse is what the test is about; under the ceiling is what
+         * keeps it about that — `PvpStakePolicy` refuses first, so a bigger number would still be
+         * a 409 and would no longer be measuring affordability. `PvpStakeLimitTest` owns the
+         * other refusal and asserts the code rather than the status, for the same reason.
+         */
+        const val UNAFFORDABLE = 400
 
         /** A full board. */
         const val PLACEMENTS = 9

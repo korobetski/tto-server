@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.model.CardColor
+import com.tripletriad.model.DeckLimits
 import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchResult
@@ -652,7 +653,17 @@ class PvpClaimTest {
 
         /** A collection wider than a hand, so a draw from it can differ from the deck. */
         val STOCK: List<Int> = RANKED.take(HAND * 4)
-        val STRONGEST: List<Int> = RANKED.takeLast(HAND)
+
+        /**
+         * The strongest hand the format admits **that a deck may legally name**.
+         *
+         * The top five outright are five five-stars, which `DeckLimits` refuses: `playerDeck`
+         * would drop the slot and deal the profile's first legal hand instead, and every assertion
+         * below about "the deck it named" would be about a deck nobody named. Taken strongest-first
+         * under the caps, so it is still the deck that beats [WEAKEST] on any board.
+         */
+        val STRONGEST: List<Int> =
+            DeckLimits.firstLegalHand(RANKED.reversed(), Catalogs.cards.byId)
 
         const val HAND = 5
     }

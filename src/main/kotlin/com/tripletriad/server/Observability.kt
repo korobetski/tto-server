@@ -117,6 +117,12 @@ private fun Application.installRateLimits(accounts: AccountStore) {
             requestKey { call -> call.callerAddress() }
         }
 
+        // Listing, bidding, and the seller's answer. See [AUCTION_LIMIT] for the number.
+        register(RateLimitName(AUCTION)) {
+            rateLimiter(limit = AUCTION_LIMIT, refillPeriod = 1.minutes)
+            requestKey { call -> call.callerKey(accounts) }
+        }
+
         // Placing a card, conceding, and collecting. See [PLAY_LIMIT] for the number.
         register(RateLimitName(PLAY)) {
             rateLimiter(limit = PLAY_LIMIT, refillPeriod = 1.minutes)
@@ -327,6 +333,7 @@ const val LOBBY = "lobby"
 const val INTENT = "intent"
 const val PLAY = "play"
 const val CODES = "codes"
+const val AUCTION = "auction"
 
 /**
  * Ten code requests or code attempts per address per five minutes.
@@ -407,6 +414,18 @@ private const val LOBBY_LIMIT = 20
  * reach is a limit that was set wrong.
  */
 private const val PLAY_LIMIT = 120
+
+/**
+ * Thirty auction actions a minute.
+ *
+ * Bidding is the one that comes in bursts: the last two minutes of a lot are when a player who
+ * wants it raises repeatedly, and the anti-snipe extension means those two minutes can go on.
+ * Thirty leaves room for that and still bounds a script to something a person could have typed.
+ *
+ * Below [INTENT_LIMIT] deliberately. Emptying a bag is thirty harmless actions; thirty listings is
+ * six times the open-lot cap, and every one of them is visible to everybody else.
+ */
+private const val AUCTION_LIMIT = 30
 
 /** Sixty intents a minute — a player emptying a bag of thirty items in a hurry. */
 private const val INTENT_LIMIT = 60

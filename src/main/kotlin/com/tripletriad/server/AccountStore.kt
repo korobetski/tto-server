@@ -150,6 +150,17 @@ class AccountStore(
      * inherits the behaviour by declaring its foreign key properly instead of by being remembered
      * here. `docs/data-inventory.md` states the property; this is what relies on it.
      *
+     * ### The one thing a foreign key could not express
+     *
+     * The auction house. Every other table can be cascaded away because everything in it belongs
+     * to the account being deleted; a lot does not — somebody else's money is held against it and
+     * somebody else's card is inside it. So [unwind] runs first and **on this transaction**, and
+     * the auction house settles those lots before the delete reaches them. A call of its own would
+     * leave a window in which the account could bid again between the two.
+     *
+     * Empty by default, so callers with no auction house to unwind keep their call shape and this
+     * function still says on its own what it always said.
+     *
      * ### What it does not do
      *
      * It does not anonymise finished matches for the player's **opponents**. A PvP row names both
@@ -161,12 +172,14 @@ class AccountStore(
      * @return false when there was no such account, which is not an error — a repeated request from
      *   a client that lost the first answer has still achieved what it asked for.
      */
-    fun deleteAccount(accountId: Long): Boolean = transaction { db ->
-        db.prepareStatement("DELETE FROM accounts WHERE id = ?").use { statement ->
-            statement.setLong(1, accountId)
-            statement.executeUpdate() > 0
+    fun deleteAccount(accountId: Long, unwind: (Connection) -> Unit = {}): Boolean =
+        transaction { db ->
+            unwind(db)
+            db.prepareStatement("DELETE FROM accounts WHERE id = ?").use { statement ->
+                statement.setLong(1, accountId)
+                statement.executeUpdate() > 0
+            }
         }
-    }
 
     /** The name an account goes by, for showing a player who they are up against. */
     fun usernameFor(accountId: Long): String? = transaction { db ->
@@ -803,6 +816,85 @@ class AccountStore(
     }
 
     /**
+     * [applyOnce], for an operation that has to write more than the caller's own profile.
+     *
+     * ### Why the auction house could not use [applyOnce]
+     *
+     * Because almost nothing it does touches one account. A bid refunds the player it outbid; a
+     * settlement pays the seller and hands the buyer a card; withdrawing a lot moves a card back
+     * out of a table row. All of it has to land together or not at all — a refund that commits
+     * without the bid that caused it is money invented, and a bid that commits without the refund
+     * is money destroyed — and [applyOnce] can only offer one locked profile and no way to reach
+     * the connection the transaction is running on.
+     *
+     * So this hands [perform] the transaction itself, through an [AccountWriter] that is the only
+     * door to [lockSave] and [writeSave] from outside this class. What it does **not** hand over
+     * is the idempotency claim: that is identical to [applyOnce]'s, placeholder and all, and the
+     * argument for its shape is written there.
+     *
+     * @param perform the whole operation. Returns the response body, or null to abandon — which
+     *   rolls the transaction back, the claimed key with it, so an abandoned attempt leaves no
+     *   trace and a retry is free.
+     * @return the response body, freshly computed or replayed, or null when [perform] abandoned.
+     */
+    // The indices are JDBC's parameter positions, as in [applyOnce] and for its reason: they
+    // are the statement's own numbering, not a quantity anyone could name better.
+    @Suppress("MagicNumber")
+    fun applyOnceAcross(
+        accountId: Long,
+        operationId: String,
+        perform: (AccountWriter) -> String?,
+    ): String? = transaction { db ->
+        val claimed = db.prepareStatement(
+            """
+            INSERT INTO applied_operations (account_id, operation_id, response)
+            VALUES (?, ?, '{}'::jsonb)
+            ON CONFLICT (account_id, operation_id) DO NOTHING
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, operationId)
+            statement.executeUpdate()
+        }
+
+        if (claimed == 0) return@transaction readAnswer(db, accountId, operationId)
+
+        // Abandoning rolls the claim back with everything else, so the key is free again.
+        // `transaction` then commits an empty transaction, which is what it should do: the
+        // alternative is a claimed operation id whose stored answer is "nothing happened", and a
+        // retry that is refused rather than served.
+        val response = perform(AccountWriter(db, this))
+        if (response == null) {
+            db.rollback()
+            return@transaction null
+        }
+
+        db.prepareStatement(
+            """
+            UPDATE applied_operations SET response = ?::jsonb
+            WHERE account_id = ? AND operation_id = ?
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, response)
+            statement.setLong(2, accountId)
+            statement.setString(3, operationId)
+            statement.executeUpdate()
+        }
+        response
+    }
+
+    /** [lockSave], reachable only through [AccountWriter]. */
+    internal fun lockFor(db: Connection, accountId: Long): GameSave? = lockSave(db, accountId)
+
+    /** [writeSave], reachable only through [AccountWriter]. */
+    internal fun writeFor(db: Connection, accountId: Long, save: GameSave) =
+        writeSave(db, accountId, save)
+
+    /** [readStats], reachable only through [AccountWriter]. */
+    internal fun statsFor(db: Connection, accountId: Long): PlayerStats =
+        readStats(db, accountId, RECENT_MATCHES)
+
+    /**
      * Forgets applied operations older than [before].
      *
      * ### Why the table needs sweeping at all
@@ -1141,6 +1233,68 @@ data class Crediting(val match: RecordedMatch, val save: GameSave)
  * returning `ItemUse` is the shape this generalises.
  */
 data class Outcome<T>(val save: GameSave, val detail: T)
+
+/**
+ * The door an [AccountStore.applyOnceAcross] block writes profiles through.
+ *
+ * ### Why the lock order is checked and not merely documented
+ *
+ * `AccountStore.transfer` takes its two row locks in ascending account id, and its KDoc explains
+ * why: two settlements between the same pair, taking the locks in opposite orders, deadlock. That
+ * one can enforce the order because it knows both accounts before it starts. An auction block does
+ * not — which accounts a bid touches depends on who is currently leading, and the answer is read
+ * inside the transaction.
+ *
+ * So the rule moves from the caller to here: [lock] refuses an account below one already locked,
+ * loudly and at the moment the mistake is made, rather than at three in the morning when two
+ * settlements happen to overlap. The deadlock it prevents is the kind that is impossible to
+ * reproduce and trivial to reintroduce.
+ *
+ * ### Locked profiles are cached, and that is not an optimisation
+ *
+ * A block that locks the same account twice must see the same profile both times, including any
+ * change it has already written. Reading the row again would hand it the *stored* profile and
+ * quietly discard the earlier write — so [lock] returns what [write] last put there.
+ */
+class AccountWriter internal constructor(
+    /** The transaction everything in the block runs in, auction tables included. */
+    val db: Connection,
+    private val store: AccountStore,
+) {
+    // Values are nullable because the *absence* has to be remembered too. An account with no
+    // character locks to null, and if that were not recorded the next `lock` of the same id would
+    // be treated as a fresh one — ordered against every id locked since, and refused for being out
+    // of order even though nothing had moved. `closeOutOn` is where that bites: it locks a whole
+    // batch of counterparties up front and then reaches for them again one lot at a time.
+    private val held = LinkedHashMap<Long, GameSave?>()
+
+    /**
+     * Locks [accountId]'s profile and returns it, or null when the account has no character.
+     *
+     * @throws IllegalArgumentException when it would be taken out of ascending order. See this
+     *   class's KDoc — the order is the deadlock guard, and a violation is a programming error and
+     *   not a runtime condition.
+     */
+    fun lock(accountId: Long): GameSave? {
+        if (held.containsKey(accountId)) return held[accountId]
+        val highest = held.keys.maxOrNull()
+        require(highest == null || accountId > highest) {
+            "profiles must be locked in ascending id order, got $accountId after $highest"
+        }
+        return store.lockFor(db, accountId).also { held[accountId] = it }
+    }
+
+    /** Writes [save] for an account this block has locked. */
+    fun write(accountId: Long, save: GameSave) {
+        require(held[accountId] != null) { "profile $accountId was written without a lock" }
+        held[accountId] = save
+        store.writeFor(db, accountId, save)
+    }
+
+    /** [save] and the match record beside it — the `PlayerState` every auction response carries. */
+    fun state(accountId: Long, save: GameSave): PlayerState =
+        PlayerState(save = save, stats = store.statsFor(db, accountId))
+}
 
 /**
  * What happened when a verified match was offered for payment.

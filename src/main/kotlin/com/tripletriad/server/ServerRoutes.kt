@@ -1,6 +1,8 @@
 package com.tripletriad.server
 
+import com.tripletriad.protocol.AuctionPolicy
 import com.tripletriad.protocol.CURRENT_VERSION
+import com.tripletriad.protocol.PvpStakePolicy
 import com.tripletriad.protocol.ServerInfo
 import com.tripletriad.protocol.Unlocks
 import com.tripletriad.protocol.VERSION_HEADER
@@ -45,6 +47,8 @@ fun Route.serverRoutes(
     // Defaulted, so a test that only cares about readiness need not name them. A deployment always
     // passes its own — see `ServerConfig.unlocksFrom`.
     unlocks: Unlocks = Unlocks(),
+    auction: AuctionPolicy = AuctionPolicy(),
+    stakes: PvpStakePolicy = PvpStakePolicy(),
 ) {
     get("/server") {
         // Sent even though nothing here is refused, so a client that reads only headers — or that
@@ -67,6 +71,15 @@ fun Route.serverRoutes(
                 // drawing a number compiled into it months ago. The server refuses on its own copy
                 // regardless — see [Unlocks], and `PvpRoutes` for where it does.
                 unlocks = unlocks,
+                // The auction house's own numbers, for the same reason and with the same
+                // caveat: a client draws what it is told and the server refuses on its own copy.
+                // A client that never reads this still cannot list below the floor.
+                auction = auction,
+                // How large a wager it allows, again for the same reason. This one a client
+                // genuinely needs: the ceiling is what the stake field is bounded by, and a
+                // client left to guess it would either refuse a legal wager or offer an
+                // illegal one.
+                stakes = stakes,
             ),
         )
     }

@@ -30,6 +30,11 @@ internal fun Tabled.refusal(): Rejected = when (this) {
     )
     Tabled.CannotAfford ->
         Rejected(HttpStatusCode.Conflict, PvpRefusal.CANNOT_AFFORD, "you cannot cover that stake")
+    Tabled.StakeTooHigh -> Rejected(
+        HttpStatusCode.Conflict,
+        PvpRefusal.STAKE_TOO_HIGH,
+        "that stake is above the limit for your level",
+    )
     Tabled.AlreadyWaiting -> Rejected(
         HttpStatusCode.Conflict,
         PvpRefusal.ALREADY_WAITING,
@@ -51,6 +56,11 @@ internal fun Joined.refusal(): Rejected = when (this) {
     )
     Joined.CannotAfford ->
         Rejected(HttpStatusCode.Conflict, PvpRefusal.CANNOT_AFFORD, "you cannot cover that stake")
+    Joined.StakeTooHigh -> Rejected(
+        HttpStatusCode.Conflict,
+        PvpRefusal.STAKE_TOO_HIGH,
+        "that stake is above the limit for your level",
+    )
     Joined.AlreadyPlaying -> Rejected(
         HttpStatusCode.Conflict,
         PvpRefusal.ALREADY_PLAYING,

@@ -39,7 +39,7 @@ object Transcripts {
         // same seed played against a *different* opponent is a different match, which is how
         // `SeedTicketTest` tells "this ticket is spent" apart from "this transcript is a repeat".
         val opponent = Catalogs.npcs.playing(format.id)[opponent]
-        val deck = PveMatches.playerDeck(profile)
+        val deck = PveMatches.playerDeck(profile, Catalogs.cards.byId)
 
         val random = Random(seed)
         val match = PveMatches.assemble(profile, opponent, Catalogs.cards, format, random)

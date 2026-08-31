@@ -48,6 +48,11 @@ class MigrationTest {
                     "the quick queue survived the migration that removes it",
                 )
                 assertTrue(tableExists(pool, "pvp_tables"), "V4 did not create pvp_tables")
+
+                // V14. The two tables the auction house lives in; the invariants they carry are
+                // asserted by the test below, which is where a schema that came up wrong shows.
+                assertTrue(tableExists(pool, "auction_lots"), "V14 did not create auction_lots")
+                assertTrue(tableExists(pool, "auction_bids"), "V14 did not create auction_bids")
             }
         }
     }
@@ -79,6 +84,92 @@ class MigrationTest {
         }.exceptionOrNull()
 
         assertTrue(failure != null, "opening a pool against a dead host reported success")
+    }
+
+    /**
+     * The two invariants V14 asks the database to hold, held against a real database.
+     *
+     * Both are things the routes also check, and that is the point of checking them again here:
+     * application code is what a bug gets past, and these two are the ones where getting past it
+     * costs somebody money. A second live hold on a lot is two purses debited for one card — what
+     * a bidder tapping twice would produce if the idempotency key ever missed. A bid from the
+     * seller is shill bidding, whatever the intent behind it.
+     *
+     * Written as raw SQL rather than through the store deliberately: a store that refuses to issue
+     * the statement proves nothing about the schema, and the schema is what has to hold the day a
+     * future store forgets.
+     */
+    @Test
+    fun theAuctionLedgerRefusesASecondHoldAndASellersOwnBid() {
+        withPostgres { config ->
+            Database.pool(config).use { pool ->
+                Database.migrate(pool)
+
+                val (seller, bidder) = pool.connection.use { db ->
+                    val sellerId = insertAccount(db, "seller")
+                    val bidderId = insertAccount(db, "bidder")
+                    db.createStatement().use { sql ->
+                        sql.execute(
+                            "INSERT INTO auction_lots (id, seller_account, card_id, " +
+                                "start_price, reserve_price, listing_fee, ends_at) VALUES " +
+                                "('lot-1', $sellerId, 1001, 100, 400, 20, " +
+                                "now() + interval '1 hour')",
+                        )
+                        sql.execute(
+                            "INSERT INTO auction_bids (lot_id, bidder_account, amount, fee) " +
+                                "VALUES ('lot-1', $bidderId, 100, 3)",
+                        )
+                    }
+                    db.commit()
+                    sellerId to bidderId
+                }
+
+                assertTrue(
+                    refused(
+                        pool,
+                        "INSERT INTO auction_bids (lot_id, bidder_account, amount, fee) " +
+                            "VALUES ('lot-1', $bidder, 200, 6)",
+                    ),
+                    "a second unrefunded, unsettled bid was accepted on one lot",
+                )
+
+                assertTrue(
+                    refused(
+                        pool,
+                        "UPDATE auction_lots SET top_bid = 100, top_bidder = $seller " +
+                            "WHERE id = 'lot-1'",
+                    ),
+                    "the seller was recorded as their own top bidder",
+                )
+            }
+        }
+    }
+
+    /**
+     * Whether Postgres refuses [statement] — on a connection of its own, which is the whole point.
+     *
+     * The pool hands out connections with `autoCommit = false`, so a statement that fails aborts
+     * its transaction and *every* statement after it on that connection fails too. A second probe
+     * sharing the first one's connection therefore passes whether or not the constraint it is
+     * asking about exists. This was found by mutation: with the shill-bid check deleted from V14,
+     * the shared-connection version of the test above still went green.
+     */
+    private fun refused(pool: javax.sql.DataSource, statement: String): Boolean = runCatching {
+        pool.connection.use { db ->
+            db.createStatement().use { it.execute(statement) }
+            db.commit()
+        }
+    }.isFailure
+
+    /** @return the generated id, which the auction rows have to reference. */
+    private fun insertAccount(db: java.sql.Connection, name: String): Long = db.prepareStatement(
+        "INSERT INTO accounts (username, password_hash) VALUES (?, 'x') RETURNING id",
+    ).use { statement ->
+        statement.setString(1, name)
+        statement.executeQuery().use { rows ->
+            rows.next()
+            rows.getLong(1)
+        }
     }
 
     private fun tableExists(pool: javax.sql.DataSource, name: String): Boolean =

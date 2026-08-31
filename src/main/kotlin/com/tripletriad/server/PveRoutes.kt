@@ -666,11 +666,15 @@ class PveReferee(
         val legal = cards.admittedBy(format).associateBy { it.id }
 
         val collection = save.ownedCardIds().mapNotNull { legal[it] }
-        val blue = if (rules.random && collection.size >= HAND_SIZE) {
+        // `randomHand` draws under `DeckLimits`, so it answers short for a collection that cannot
+        // field a legal five — a profile sold down to nothing but aces. The chosen deck is the
+        // answer there: Random may take the choice away, it may not refuse to deal.
+        val drawn = if (rules.random && collection.size >= HAND_SIZE) {
             MatchPreparation.randomHand(collection, generator).map { it.id }
         } else {
-            PveMatches.playerDeck(save, deck)
+            emptyList()
         }
+        val blue = drawn.takeIf { it.size == HAND_SIZE } ?: PveMatches.playerDeck(save, deck, legal)
         val red = npc.randomHand(generator)
 
         val fieldable = blue.size == HAND_SIZE && red.size == HAND_SIZE &&

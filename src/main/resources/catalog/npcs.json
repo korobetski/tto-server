@@ -432,12 +432,12 @@
         283,
         281
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 29,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 175,
-        "d": 61,
-        "l": 21
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -456,7 +456,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 7
+      "difficulty": 5
     },
     {
       "id": 11,
@@ -1621,12 +1621,12 @@
         318,
         336
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 29,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 25,
       "MGPReward": {
-        "w": 175,
-        "d": 61,
-        "l": 21
+        "w": 150,
+        "d": 53,
+        "l": 18
       },
       "itemRewards": [
         {
@@ -1645,7 +1645,7 @@
           "rate": 0.01
         }
       ],
-      "difficulty": 7
+      "difficulty": 6
     },
     {
       "id": 36,
@@ -1934,11 +1934,11 @@
         286
       ],
       "level": "STR_NPC_LEVEL_NOVICE",
-      "matchFee": 5,
+      "matchFee": 9,
       "MGPReward": {
-        "w": 25,
-        "d": 9,
-        "l": 3
+        "w": 50,
+        "d": 18,
+        "l": 6
       },
       "itemRewards": [
         {
@@ -1952,7 +1952,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -2132,11 +2132,11 @@
         275
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "matchFee": 29,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2150,7 +2150,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 8,
+      "difficulty": 7,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2623,11 +2623,11 @@
         315
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "matchFee": 29,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2641,7 +2641,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 8,
+      "difficulty": 7,
       "availability": {
         "begins": 6,
         "ends": 24
@@ -2765,11 +2765,11 @@
         338
       ],
       "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "matchFee": 29,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -2793,7 +2793,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 8
+      "difficulty": 7
     },
     {
       "id": 59,
@@ -5167,12 +5167,12 @@
         448,
         427
       ],
-      "level": "STR_NPC_LEVEL_EXPERT",
-      "matchFee": 37,
+      "level": "STR_NPC_LEVEL_ADVANCED",
+      "matchFee": 29,
       "MGPReward": {
-        "w": 225,
-        "d": 79,
-        "l": 27
+        "w": 175,
+        "d": 61,
+        "l": 21
       },
       "itemRewards": [
         {
@@ -5181,7 +5181,7 @@
           "rate": 0.2
         }
       ],
-      "difficulty": 9
+      "difficulty": 7
     },
     {
       "id": 71,
@@ -5936,12 +5936,12 @@
         485,
         465
       ],
-      "level": "STR_NPC_LEVEL_ADVANCED",
-      "matchFee": 33,
+      "level": "STR_NPC_LEVEL_AVERAGE",
+      "matchFee": 21,
       "MGPReward": {
-        "w": 200,
-        "d": 70,
-        "l": 24
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -5955,7 +5955,7 @@
           "rate": 0.1067
         }
       ],
-      "difficulty": 8
+      "difficulty": 5
     },
     {
       "id": 92,
@@ -7327,11 +7327,11 @@
         461
       ],
       "level": "STR_NPC_LEVEL_AVERAGE",
-      "matchFee": 25,
+      "matchFee": 21,
       "MGPReward": {
-        "w": 150,
-        "d": 53,
-        "l": 18
+        "w": 125,
+        "d": 44,
+        "l": 15
       },
       "itemRewards": [
         {
@@ -7345,7 +7345,7 @@
           "rate": 0.0745
         }
       ],
-      "difficulty": 6
+      "difficulty": 5
     },
     {
       "id": 125,

@@ -1,5 +1,7 @@
 package com.tripletriad.server
 
+import com.tripletriad.protocol.AuctionPolicy
+import com.tripletriad.protocol.PvpStakePolicy
 import com.tripletriad.protocol.Unlocks
 import io.ktor.server.application.Application
 import io.ktor.server.engine.addShutdownHook
@@ -69,7 +71,15 @@ fun main() {
 
     val registry = prometheusRegistry()
     val server = embeddedServer(Netty, port = config.port, host = config.host) {
-        module(dataSource, registry, config.identity, config.mail.mailer(), config.unlocks)
+        module(
+            dataSource,
+            registry,
+            config.identity,
+            config.mail.mailer(),
+            config.unlocks,
+            config.auction,
+            config.stakes,
+        )
     }
 
     // Closes the pool on SIGTERM, which is what `docker stop` and every orchestrator send first.
@@ -87,6 +97,11 @@ fun main() {
  * Wires the application. Kept separate from [main] so tests can start it without a socket, a
  * shutdown hook or a real Postgres.
  */
+// Six capabilities and one composition root. Grouping two of them behind a holder to satisfy
+// the counter would put an indirection between `main` and the thing it configures, and the
+// tests that call this with a bare DataSource would gain a wrapper to construct — the same
+// argument `PveRoutes` and `PvpRoutes` make above their own suppressions.
+@Suppress("LongParameterList")
 fun Application.module(
     dataSource: DataSource,
     registry: PrometheusMeterRegistry,
@@ -95,6 +110,8 @@ fun Application.module(
     // no mail leaves the process, and the thresholds are `:core`'s own.
     mailer: Mailer = Mailer.Disabled,
     unlocks: Unlocks = Unlocks(),
+    auction: AuctionPolicy = AuctionPolicy(),
+    stakes: PvpStakePolicy = PvpStakePolicy(),
 ) {
     // One store for the whole application. It holds no state of its own — the pool does — so this
     // is about there being a single place the SQL lives, not about sharing anything.
@@ -119,19 +136,38 @@ fun Application.module(
     // rather than for years.
     val codes = CodeStore(dataSource)
 
+    // The auction house. Its own store for the reason the three above have theirs, and one
+    // more: it is the only thing here that writes *two* profiles in one transaction, which is why
+    // it needs `AccountStore` rather than the pool alone.
+    val auctions = AuctionStore(dataSource, accounts, Catalogs.cards.byId, unlocks, auction)
+
     sweepAbandonedMatches(
-        PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp),
+        PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp, stakes),
         accounts,
         codes,
+        auctions,
     )
 
     routing {
         healthRoutes(dataSource)
-        serverRoutes(identity, dataSource, unlocks)
-        accountRoutes(accounts, ShopTables.shipped(), CodeChannel(codes, mailer))
+        serverRoutes(identity, dataSource, unlocks, auction, stakes)
+        accountRoutes(
+            accounts,
+            ShopTables.shipped(),
+            CodeChannel(codes, mailer),
+            auctions = auctions,
+        )
         matchRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts)
-        pvpRoutes(Catalogs.cards, Catalogs.formats, accounts, pvp, unlocks = unlocks)
+        pvpRoutes(
+            Catalogs.cards,
+            Catalogs.formats,
+            accounts,
+            pvp,
+            unlocks = unlocks,
+            stakes = stakes,
+        )
         pveRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts, pve)
+        auctionRoutes(auctions, accounts, unlocks)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.
@@ -167,6 +203,7 @@ private fun Application.sweepAbandonedMatches(
     referee: PvpReferee,
     accounts: AccountStore,
     codes: CodeStore,
+    auctions: AuctionStore,
 ) {
     launch {
         var sinceOperationPrune = 0L
@@ -181,6 +218,14 @@ private fun Application.sweepAbandonedMatches(
                 if (forfeited + claimed > 0) {
                     logger.info("Swept {} abandoned and {} unclaimed", forfeited, claimed)
                 }
+
+                // On the same loop, and it is the loop's most load-bearing passenger. A PvP
+                // forfeit is settled by whoever polls next and somebody usually does; nobody polls
+                // a lot. An auction that ended and was never swept holds the buyer's money, the
+                // seller's card and both players' attention indefinitely — so here "the first
+                // person to look" is genuinely nobody, and this is the only thing that closes it.
+                val settled = auctions.sweep()
+                if (settled > 0) logger.info("Settled {} auction lots", settled)
 
                 // Riding along on the loop that already exists rather than getting a scheduler of
                 // its own, for the reason the loop itself gives — but on its own, much longer
