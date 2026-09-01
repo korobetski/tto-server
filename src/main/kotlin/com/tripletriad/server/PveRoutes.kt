@@ -290,21 +290,46 @@ class PveReferee(
         // Losing the insert means a second tap got there first. Its match is the answer — which is
         // what the player wanted from both taps — so the deal just made is dropped on the floor.
         val opened = pve.open(dealt) ?: return reopened(accountId)
-        val started = opening(opened)
 
-        // Narrated from the very beginning, which is nothing at all unless the toss gave the
-        // opponent the opening move. Answering with an empty list there would put a card on the
-        // board that the client has no placement to animate — it would simply appear.
-        return answer(started, narrate(started, 0))?.let(Dealt::Playing) ?: Dealt.Undealable
+        // The board **as dealt**, announcing nothing — not even when the toss gave the opponent
+        // the opening move, which is the case this used to answer with a card already on the
+        // board. The client has announcements of its own to play first (the rules, the hand
+        // turning over for Open, the coin flip that decides who moves first), and a card that
+        // has landed before the flip that won it contradicts the flip. See [opening] for where
+        // that placement is computed instead, and `PveMatchView.plays` for why here is the wrong
+        // place to send it from.
+        return answer(opened, emptyList())?.let(Dealt::Playing) ?: Dealt.Undealable
     }
 
-    /** The match this player is in or has just finished, as they may see it. */
+    /**
+     * The match this player is in or has just finished, as they may see it.
+     *
+     * **Leaves an owed opening owed**, where [view] pays it. Resuming is not an exception to the
+     * deal, it *is* the deal: a client picking a match back up replays the rules captions and the
+     * coin flip for it, and would have to take an opening applied here back off again — which is
+     * the reconstruction this whole arrangement exists to delete. So a resumed match arrives in
+     * the same shape a fresh one does, and begins the same way, through [view].
+     */
     fun current(accountId: Long): PveMatchView? =
         pve.recentFor(accountId, clock())?.let { answer(it, emptyList()) }
 
-    /** One match by id, scoped to its owner by the store's own query. */
-    fun view(matchId: String, accountId: Long): PveMatchView? =
-        pve.matchById(matchId, accountId)?.let { answer(it, emptyList()) }
+    /**
+     * One match by id, scoped to its owner by the store's own query — **and the read that starts
+     * a match the opponent won the toss for.**
+     *
+     * A deal answers before the opponent has moved, so its opening is owed rather than made, and
+     * this is where the debt is paid: [opening] computes and writes it, and [narrate] announces
+     * exactly what was written, which is nothing at all on every other read. That is what makes
+     * this one request the client's whole "the announcements are done, go ahead" — no endpoint of
+     * its own, because a plain read of the match is honestly what it is.
+     *
+     * [current] deliberately does **not** do this, and the asymmetry is the point: see there.
+     */
+    fun view(matchId: String, accountId: Long): PveMatchView? {
+        val row = pve.matchById(matchId, accountId) ?: return null
+        val (started, plays) = opening(row)
+        return answer(started, plays)
+    }
 
     /** Places a card, if it is this player's turn and the move is one the rules allow. */
     fun play(matchId: String, accountId: Long, move: PveMove): Moved {
@@ -632,11 +657,44 @@ class PveReferee(
         ?.let(Dealt::Playing)
         ?: Dealt.Undealable
 
-    /** The opponent's first placement, when the toss gave it the opening move. */
-    private fun opening(row: PveMatchRow): PveMatchRow {
-        val first = replies(row)
-        if (first.isEmpty() || !pve.appendMoves(row.id, 0, first)) return row
-        return row.copy(moves = first)
+    /**
+     * The opponent's placement when it is on move and has not made one, or [row] untouched.
+     *
+     * ### Called from a read, which is the whole design
+     *
+     * A row is a move list, and an empty one under `first = RED` is not an incomplete match — it
+     * is the complete, replayable fact *the opponent has not moved yet*. Nothing blocks on it and
+     * no status expresses it, so it cannot be stuck: the placement is computed by whichever
+     * request asks next, which is [view] in the ordinary case and a `NotYourTurn` refusal
+     * re-reading the board in the case of a client that never asked.
+     *
+     * A mid-match row never reaches the appending branch, because [record] writes the player's
+     * card and every reply the opponent owes in one statement — so the only board on which RED is
+     * on move is one nobody has played on. The arithmetic does not rely on that being true, which
+     * is why the expected count is [PveMatchRow.moves]'s size rather than the zero it was when
+     * this was only ever called on a fresh deal.
+     *
+     * ### Losing the race costs an animation and nothing else
+     *
+     * Two reads arriving together both compute the opening and one loses the compare-and-set in
+     * [PveStore.appendMoves]. Re-reading is the honest answer, exactly as it is in [record]: the
+     * placement really was made, by the other request, and this one announces nothing, because
+     * **this** request did not make it. Announcing it from both would step the same card onto the
+     * board twice.
+     *
+     * @return the row as it now stands, and the placements **this call** wrote — which is what
+     *   makes the sentence above enforceable rather than merely intended.
+     */
+    private fun opening(row: PveMatchRow): Pair<PveMatchRow, List<Placement>> {
+        val owed = replies(row)
+        if (owed.isEmpty()) return row to emptyList()
+
+        return if (pve.appendMoves(row.id, row.moves.size, owed)) {
+            val started = row.copy(moves = row.moves + owed)
+            started to narrate(started, row.moves.size)
+        } else {
+            (pve.matchById(row.id, row.accountId) ?: row) to emptyList()
+        }
     }
 
     /**

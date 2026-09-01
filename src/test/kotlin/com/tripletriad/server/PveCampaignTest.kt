@@ -16,6 +16,7 @@ import com.tripletriad.protocol.PveRefusal
 import com.tripletriad.protocol.Session
 import com.tripletriad.protocol.VERSION_HEADER
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -159,10 +160,11 @@ class PveCampaignTest {
         plant(session) { it.copy(campaignRun = CampaignRun(LADDER.key)) }
         val response = open(session.token, LADDER.opponents.first().iconId, LADDER.key)
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
+        val dealt: PveMatchView = json.decodeFromString(response.bodyAsText())
 
         // The run goes away underneath the live match, exactly as a forfeit would leave it.
         plant(session) { it.leavingCampaign() }
-        finish(session.token, json.decodeFromString(response.bodyAsText()))
+        finish(session.token, begin(session.token, dealt.matchId))
 
         assertNull(saveOf(session)?.campaignRun, "a settled match reopened a closed run")
     }
@@ -227,7 +229,14 @@ class PveCampaignTest {
         )
     }
 
-    /** Opens a rung and plays it to the end, whichever way it goes. */
+    /**
+     * Opens a rung and plays it to the end, whichever way it goes.
+     *
+     * The deal is followed by a read, because the deal alone leaves a board waiting: an opening the
+     * toss gave the opponent is played by the first read of the match, not by the request that
+     * dealt it. Without it every rung whose toss went the opponent's way would find nothing
+     * playable and stop on its first turn.
+     */
     private suspend fun ApplicationTestBuilder.playOut(
         token: String,
         opponent: String,
@@ -235,7 +244,21 @@ class PveCampaignTest {
     ): PveMatchView {
         val response = open(token, opponent, campaignKey)
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
-        return finish(token, json.decodeFromString(response.bodyAsText()))
+        val dealt: PveMatchView = json.decodeFromString(response.bodyAsText())
+        return finish(token, begin(token, dealt.matchId))
+    }
+
+    /** The read that starts a match — see [playOut]. */
+    private suspend fun ApplicationTestBuilder.begin(
+        token: String,
+        matchId: String,
+    ): PveMatchView {
+        val response = client.get("/pve/matches/$matchId") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        return json.decodeFromString(response.bodyAsText())
     }
 
     /**

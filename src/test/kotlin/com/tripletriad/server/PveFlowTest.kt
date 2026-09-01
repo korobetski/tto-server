@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.CardColor
 import com.tripletriad.model.OpenRule
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.Credentials
@@ -22,9 +23,11 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -50,28 +53,91 @@ import kotlin.test.assertTrue
  */
 class PveFlowTest {
 
-    /** Opening a match deals a hand, and the opponent moves first if the toss says so. */
+    /**
+     * **The deal puts no card on the board, and the toss is not left to chance to prove it.**
+     *
+     * It used to put one there: an opponent that won the opening played it into the deal's own
+     * answer, so the client received a decision it had not yet announced and had to take the card
+     * back off before it could announce it. The board is dealt here and begun in
+     * [theFirstReadPlaysTheOpeningTheTossGaveTheOpponent].
+     *
+     * Driven through [PveReferee] rather than the route, because that is where the seam for the
+     * toss is — see [refereeSeeded]. Asserting this over HTTP would mean dealing until the coin
+     * came up the right way, which is a slower way of testing a weaker claim.
+     */
     @Test
-    fun openingAMatchDealsAPlayableBoard() = server {
+    fun theDealAnnouncesNothingAndLeavesTheBoardEmpty() = server {
         val session = register(Postgres.freshAccount("pve-open"))
 
-        val view = openMatch(session.token)
+        val view = dealSeeded(session, OPPONENT_WINS_TOSS)
 
+        assertEquals(CardColor.RED, view.first, "the seed is chosen to give the opponent the toss")
         assertEquals(PveMatchStatus.PLAYING, view.status)
         assertEquals(OPPONENT, view.opponentIconId)
         assertEquals(HAND, view.hand.size)
-        assertTrue(view.playable.isNotEmpty(), "the player should be on move after opening")
+        assertTrue(view.cells.all { it == null }, "nobody has played on a board just dealt")
+        assertTrue(view.plays.isEmpty(), "and so there is nothing to announce")
+        assertEquals(HAND, view.opponentHand.size, "the opponent still holds all five")
+        assertTrue(view.playable.isEmpty(), "and it is not the player's turn to move")
+    }
 
-        // If the opponent won the toss it has already played, and the board says so before the
-        // player has done anything. That is the round trip this design exists to avoid spending.
-        val placed = view.cells.count { it != null }
-        assertTrue(placed <= 1, "only the opponent's opening move may be on the board")
-        assertEquals(placed, view.plays.size, "an opening move must be announced to be animated")
+    /** The other half of the toss needs no read to be playable, and owes no announcement. */
+    @Test
+    fun aDealThePlayerWonTheTossForIsPlayableStraightAway() = server {
+        val session = register(Postgres.freshAccount("pve-blue"))
+        val referee = refereeSeeded(PLAYER_WINS_TOSS)
+        val accountId = accountIdOf(session)
+
+        val view = dealt(referee, accountId)
+
+        assertEquals(CardColor.BLUE, view.first, "the seed is chosen to give the player the toss")
+        assertTrue(view.playable.isNotEmpty(), "so the player is on move already")
+        assertTrue(view.cells.all { it == null }, "and nobody has played yet")
+        assertTrue(view.plays.isEmpty())
+
+        // The read that begins a match owes nothing here, and must invent nothing: the opponent is
+        // not on move, so there is no placement for it to compute.
+        val read = assertNotNull(referee.view(view.matchId, accountId))
+
+        assertTrue(read.cells.all { it == null }, "a read is not a placement")
+        assertTrue(read.plays.isEmpty())
+        assertTrue(read.playable.isNotEmpty(), "and it is still the player's move")
+    }
+
+    /**
+     * **The first read is what starts the match**, and it starts it exactly once.
+     *
+     * The opening owed by a toss the opponent won is computed here rather than at the deal, so it
+     * arrives after the client's announcements rather than under them. Reading again must not play
+     * again — the row's move count is what the append is gated on, and this is the assertion that
+     * says so from the outside.
+     */
+    @Test
+    fun theFirstReadPlaysTheOpeningTheTossGaveTheOpponent() = server {
+        val session = register(Postgres.freshAccount("pve-begin"))
+        val referee = refereeSeeded(OPPONENT_WINS_TOSS)
+        val accountId = accountIdOf(session)
+        val dealt = dealt(referee, accountId)
+        assertEquals(CardColor.RED, dealt.first, "the seed is chosen to give the opponent the toss")
+
+        val begun = assertNotNull(referee.view(dealt.matchId, accountId))
+
+        assertEquals(1, begun.cells.count { it != null }, "the opening the toss owed has landed")
+        assertEquals(1, begun.plays.size, "and it has to be announced to be animated")
         assertEquals(
-            HAND - placed,
-            view.opponentHand.size,
-            "the opponent's card count is public, and it has played $placed",
+            HAND - 1,
+            begun.opponentHand.size,
+            "the opponent's card count is public, and it has played one",
         )
+        assertTrue(begun.playable.isNotEmpty(), "the player is on move once the opening is in")
+
+        // Reading is not playing. The second read finds the opening already written, appends
+        // nothing and announces nothing — otherwise a client that refreshed twice would watch the
+        // same card land twice, and one that refreshed nine times would fill the board.
+        val again = assertNotNull(referee.view(dealt.matchId, accountId))
+
+        assertEquals(begun.cells, again.cells, "a read must not move a card")
+        assertTrue(again.plays.isEmpty(), "and must not announce one it did not make")
     }
 
     /**
@@ -272,7 +338,8 @@ class PveFlowTest {
         return json.decodeFromString(response.bodyAsText())
     }
 
-    private suspend fun ApplicationTestBuilder.openMatch(token: String): PveMatchView {
+    /** The deal alone: a board nobody has played on, whichever way the toss went. */
+    private suspend fun ApplicationTestBuilder.dealMatch(token: String): PveMatchView {
         val response = client.post("/pve/matches") {
             protocolHeaders()
             bearer(token)
@@ -281,6 +348,66 @@ class PveFlowTest {
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
         return json.decodeFromString(response.bodyAsText())
     }
+
+    /**
+     * A referee whose **deal** is reproducible, [seed] deciding the toss.
+     *
+     * `PveReferee` takes its generator as a parameter for exactly this, and the route wires the
+     * real one — so this reaches the seam without opening a way for a *client* to choose a toss,
+     * which is the thing that must never exist.
+     *
+     * ### Only the first draw is seeded, and that is not a detail
+     *
+     * `PveReferee.deal` opens by taking one generator and decides the rules, both hands and the
+     * toss from it; the match id comes from a **second** call, and the opponent's own choices from
+     * later ones. Seeding every call would make the id a function of the seed alone — the same
+     * board dealt twice in a run collides on the primary key, which is a test failing on a
+     * fixture's arithmetic rather than on the thing it is about. Seeding the first call gives the
+     * reproducible deal and leaves the id alone.
+     *
+     * Every test using this asserts the toss it expected. A seed is an opaque number whose meaning
+     * comes from the order the deal happens to draw in, and that assertion is what turns a
+     * reordered deal from a silently weaker test into a failing one.
+     */
+    private fun refereeSeeded(seed: Int): PveReferee {
+        var dealt = false
+        return PveReferee(
+            Catalogs.cards,
+            Catalogs.npcs,
+            Catalogs.formats,
+            AccountStore(Postgres.dataSource),
+            PveStore(Postgres.dataSource),
+            Catalogs.campaigns,
+            System::currentTimeMillis,
+        ) {
+            if (dealt) Random.Default else Random(seed).also { dealt = true }
+        }
+    }
+
+    /** The account behind a session, which a referee is addressed by and a route is not. */
+    private fun accountIdOf(session: Session): Long = assertNotNull(
+        AccountStore(Postgres.dataSource).accountIdForUsername(session.player.save.username),
+    )
+
+    /** A board dealt by [referee], refusing to guess at anything else it might have answered. */
+    private fun dealt(referee: PveReferee, accountId: Long): PveMatchView = assertIs<Dealt.Playing>(
+        referee.open(accountId, PveMatchRequest(OPPONENT, FORMAT)),
+        "the fixture account has to be able to field a deck",
+    ).view
+
+    /** [dealt] for a test that has no other use for the referee it dealt with. */
+    private fun ApplicationTestBuilder.dealSeeded(session: Session, seed: Int): PveMatchView =
+        dealt(refereeSeeded(seed), accountIdOf(session))
+
+    /**
+     * A board the player can play on: dealt, then **begun**.
+     *
+     * Two requests, because that is what a client makes — the read is where an opening owed to the
+     * toss is played, and without it half the matches a test opens are waiting on the opponent. A
+     * test about anything other than the deal wants this one.
+     */
+    private suspend fun ApplicationTestBuilder.openMatch(token: String): PveMatchView =
+        assertNotNull(matchById(token, dealMatch(token).matchId))
 
     /** Plays the first playable card into the first empty cell. */
     private suspend fun ApplicationTestBuilder.place(
@@ -365,6 +492,14 @@ class PveFlowTest {
 
         /** Enough for a full board and several Sudden Death rematches. */
         const val MAX_PLACEMENTS = 60
+
+        /**
+         * Seeds naming a deal whose toss went each way, found by trying the small integers and
+         * reading the toss back. Shareable between tests — see `refereeSeeded`, which keeps the
+         * match id out of what a seed decides.
+         */
+        const val OPPONENT_WINS_TOSS = 2
+        const val PLAYER_WINS_TOSS = 1
 
         /** The widest authored format — every block, every rule. `FormatCatalog.default`. */
         const val FORMAT = "free-play"
