@@ -130,10 +130,14 @@ interface Mailer {
         /**
          * Hand-built JSON, which is worth a sentence.
          *
-         * The payload is four strings and one of them is attacker-supplied — [to] is whatever the
+         * The payload is five strings and one of them is attacker-supplied — [to] is whatever the
          * player typed. So it is *encoded*, by `kotlinx.serialization`'s own string encoder rather
          * than by concatenation, because a hand-quoted address containing a quote character is how
          * this becomes a way of writing arbitrary fields into somebody else's API request.
+         *
+         * The same encoder carries the HTML part, which is where it stops being only about
+         * quoting: an HTML document is full of characters JSON forbids raw, and every one of them
+         * — the newlines above all — has to arrive as an escape rather than as itself.
          */
         private fun body(to: String, message: MailMessage): String = buildString {
             append("""{"sender":{"email":""").append(quote(from))
@@ -141,6 +145,7 @@ interface Mailer {
             append("""},"to":[{"email":""").append(quote(to))
             append("""}],"subject":""").append(quote(message.subject))
             append(""","textContent":""").append(quote(message.body))
+            append(""","htmlContent":""").append(quote(message.html))
             append("}")
         }
 
@@ -166,5 +171,14 @@ interface Mailer {
     }
 }
 
-/** Subject and body, plain text. No HTML: these are four lines and a number. */
-data class MailMessage(val subject: String, val body: String)
+/**
+ * One message, rendered twice.
+ *
+ * Both parts are sent together and say the same thing; see `MailTemplates` for why neither is
+ * optional. A client that will not render HTML shows [body], and so does anything that reads mail
+ * as text — a screen reader, a filter, a mail archive.
+ *
+ * @param body plain text.
+ * @param html a complete document, tables and inline styles, safe for mail clients.
+ */
+data class MailMessage(val subject: String, val body: String, val html: String)

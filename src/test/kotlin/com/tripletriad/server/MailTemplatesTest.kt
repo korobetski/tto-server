@@ -2,6 +2,7 @@ package com.tripletriad.server
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
@@ -95,6 +96,77 @@ class MailTemplatesTest {
                 MailTemplates.passwordReset(tag, CODE).subject,
                 "the two mails share a subject in $tag",
             )
+        }
+    }
+
+    /**
+     * The subject carries the code too, and that is a decision rather than an accident.
+     *
+     * On a phone the subject is what the notification shows, so a player reads the code without
+     * unlocking anything or opening anything. The cost is that the code sits in a line that
+     * intermediate mail servers log; it expires in ten minutes and unlocks nothing on its own,
+     * which is the trade being made.
+     */
+    @Test
+    fun theSubjectCarriesTheCode() {
+        for (tag in listOf("en", "fr", "de", "ja")) {
+            assertTrue(
+                CODE in MailTemplates.verification(tag, CODE).subject,
+                "the confirmation subject for $tag did not carry the code",
+            )
+            assertTrue(
+                CODE in MailTemplates.passwordReset(tag, CODE).subject,
+                "the reset subject for $tag did not carry the code",
+            )
+        }
+    }
+
+    /**
+     * Both renderings carry the same code, in every language and both messages.
+     *
+     * The failure this guards is the one that made a single [Wording] worth building: two
+     * renderings assembled separately, one of them interpolating the wrong value or none, and a
+     * player reading an HTML mail that disagrees with the text part their client did not show.
+     */
+    @Test
+    fun theTextAndHtmlRenderingsCarryTheSameCode() {
+        for (tag in listOf("en", "fr", "de", "ja", null)) {
+            for (message in listOf(
+                MailTemplates.verification(tag, CODE),
+                MailTemplates.passwordReset(tag, CODE),
+            )) {
+                assertTrue(CODE in message.body, "no code in the text part for ${tag ?: "none"}")
+                assertTrue(CODE in message.html, "no code in the HTML part for ${tag ?: "none"}")
+            }
+        }
+    }
+
+    /** A whole document, and one that declares the language it is written in. */
+    @Test
+    fun theHtmlIsACompleteDocumentInTheChosenLanguage() {
+        for (tag in listOf("en", "fr", "de", "ja")) {
+            val html = MailTemplates.verification(tag, CODE).html
+
+            assertTrue(html.startsWith("<!DOCTYPE html>"), "no doctype for $tag")
+            assertTrue(html.trimEnd().endsWith("</html>"), "unclosed document for $tag")
+            assertTrue("""lang="$tag"""" in html, "the HTML for $tag did not declare its language")
+        }
+    }
+
+    /**
+     * And asks for nothing it will not get.
+     *
+     * Gmail and Outlook strip web fonts and remote stylesheets and then fall back without saying
+     * so, which is the worst of both: the design silently becomes Times and nothing reports it.
+     * The families named in the template are the ones every client already has, so this asserts
+     * the template never grows a link to one it does not.
+     */
+    @Test
+    fun theHtmlLoadsNothingFromTheNetwork() {
+        val html = MailTemplates.verification("fr", CODE).html
+
+        for (forbidden in listOf("<link", "@font-face", "fonts.googleapis", "<script", "<img")) {
+            assertFalse(forbidden in html, "the mail template reaches for $forbidden")
         }
     }
 
