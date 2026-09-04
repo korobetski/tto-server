@@ -33,13 +33,6 @@
               2078,
               2133
             ],
-            "level": "STR_NPC_LEVEL_INITIATE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 20,
-              "d": 11,
-              "l": 5
-            },
             "itemRewards": [
               {
                 "card": 2077,
@@ -57,7 +50,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 0
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -88,13 +81,6 @@
               2078,
               2134
             ],
-            "level": "STR_NPC_LEVEL_INITIATE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 25,
-              "d": 13,
-              "l": 6
-            },
             "itemRewards": [
               {
                 "card": 2074,
@@ -112,7 +98,7 @@
                 "rate": 0.02
               }
             ],
-            "difficulty": 0
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -144,13 +130,6 @@
               2077,
               2078
             ],
-            "level": "STR_NPC_LEVEL_AVERAGE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 36,
-              "d": 18,
-              "l": 9
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -168,7 +147,7 @@
                 "rate": 0.1
               }
             ],
-            "difficulty": 0
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -201,13 +180,6 @@
               2078,
               2146
             ],
-            "level": "STR_NPC_LEVEL_AVERAGE",
-            "matchFee": 15,
-            "MGPReward": {
-              "w": 40,
-              "d": 20,
-              "l": 10
-            },
             "itemRewards": [
               {
                 "card": 2146,
@@ -215,7 +187,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 0
+            "difficulty": 3
           },
           "messages": {}
         },
@@ -258,13 +230,6 @@
               2102,
               2139
             ],
-            "level": "STR_NPC_LEVEL_ADVANCED",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 54,
-              "d": 27,
-              "l": 13
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -277,7 +242,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 0
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -318,13 +283,6 @@
               2102,
               2137
             ],
-            "level": "STR_NPC_LEVEL_EXPERT",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 110,
-              "d": 40,
-              "l": 20
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -337,7 +295,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 0
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -379,13 +337,6 @@
               2102,
               2156
             ],
-            "level": "STR_NPC_LEVEL_EXPERT",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 110,
-              "d": 40,
-              "l": 20
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -398,7 +349,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 0
+            "difficulty": 5
           },
           "messages": {}
         }
@@ -448,13 +399,6 @@
               337,
               357
             ],
-            "level": "STR_NPC_LEVEL_NOVICE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 22,
-              "d": 8,
-              "l": 3
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -472,7 +416,7 @@
                 "rate": 0.2
               }
             ],
-            "difficulty": 0
+            "difficulty": 1
           },
           "messages": {
             "start": "Let's see what you got in a serious match.",
@@ -504,13 +448,6 @@
               281,
               282
             ],
-            "level": "STR_NPC_LEVEL_NOVICE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 22,
-              "d": 8,
-              "l": 3
-            },
             "itemRewards": [
               {
                 "card": 271,
@@ -523,7 +460,7 @@
                 "rate": 0.2
               }
             ],
-            "difficulty": 3
+            "difficulty": 1
           },
           "messages": {
             "start": "I will not let me!",
@@ -554,13 +491,6 @@
               296,
               297
             ],
-            "level": "STR_NPC_LEVEL_INITIATE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 32,
-              "d": 12,
-              "l": 4
-            },
             "itemRewards": [
               {
                 "card": 265,
@@ -675,13 +605,6 @@
               401,
               402
             ],
-            "level": "STR_NPC_LEVEL_AVERAGE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 50,
-              "d": 20,
-              "l": 7
-            },
             "itemRewards": [
               {
                 "card": 268,
@@ -694,7 +617,7 @@
                 "rate": 0.125
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -719,13 +642,6 @@
               313,
               301
             ],
-            "level": "STR_NPC_LEVEL_AVERAGE",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 59,
-              "d": 0,
-              "l": 8
-            },
             "itemRewards": [
               {
                 "card": 301,
@@ -762,13 +678,6 @@
               305,
               297
             ],
-            "level": "STR_NPC_LEVEL_EXPERT",
-            "matchFee": 0,
-            "MGPReward": {
-              "w": 617,
-              "d": 46,
-              "l": 17
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -791,7 +700,7 @@
                 "rate": 0.25
               }
             ],
-            "difficulty": 7
+            "difficulty": 8
           },
           "messages": {
             "start": "It's the last lap, give everything you have.",
@@ -843,13 +752,6 @@
               2069,
               2129
             ],
-            "level": "STR_NPC_LEVEL_NOVICE",
-            "matchFee": 5,
-            "MGPReward": {
-              "w": 25,
-              "d": 9,
-              "l": 3
-            },
             "itemRewards": [
               {
                 "card": 2058,
@@ -900,13 +802,6 @@
               2078,
               2152
             ],
-            "level": "STR_NPC_LEVEL_INITIATE",
-            "matchFee": 13,
-            "MGPReward": {
-              "w": 75,
-              "d": 26,
-              "l": 9
-            },
             "itemRewards": [
               {
                 "card": 2152,
@@ -947,13 +842,6 @@
               2078,
               2154
             ],
-            "level": "STR_NPC_LEVEL_NOVICE",
-            "matchFee": 9,
-            "MGPReward": {
-              "w": 50,
-              "d": 18,
-              "l": 6
-            },
             "itemRewards": [
               {
                 "potion": "MGP_BOOST",
@@ -1006,13 +894,6 @@
               2078,
               2133
             ],
-            "level": "STR_NPC_LEVEL_NOVICE",
-            "matchFee": 5,
-            "MGPReward": {
-              "w": 25,
-              "d": 9,
-              "l": 3
-            },
             "itemRewards": [
               {
                 "card": 2077,
@@ -1030,7 +911,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 1
+            "difficulty": 2
           },
           "messages": {}
         }

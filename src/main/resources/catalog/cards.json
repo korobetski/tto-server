@@ -247,7 +247,7 @@
       "block": 1,
       "number": 18,
       "nameKey": "STR_FF14_CARD_18",
-      "name": "Sahuagin",
+      "name": "Sahagin",
       "top": 4,
       "right": 5,
       "bottom": 3,
@@ -279,7 +279,7 @@
       "bottom": 3,
       "left": 7,
       "rarity": 1,
-      "type": null
+      "type": "beast"
     },
     {
       "id": 277,
@@ -429,7 +429,7 @@
       "block": 1,
       "number": 32,
       "nameKey": "STR_FF14_CARD_32",
-      "name": "Rhitahtyna sas Arvina",
+      "name": "Rhitahtyn sas Arvina",
       "top": 7,
       "right": 1,
       "bottom": 3,
@@ -572,7 +572,7 @@
       "block": 1,
       "number": 43,
       "nameKey": "STR_FF14_CARD_43",
-      "name": "Good King Moggle Mog XIII",
+      "name": "Good King Moggle Mog XII",
       "top": 7,
       "right": 6,
       "bottom": 7,
@@ -1514,7 +1514,7 @@
       "bottom": 4,
       "left": 5,
       "rarity": 3,
-      "type": null
+      "type": "beast"
     },
     {
       "id": 372,
@@ -1929,7 +1929,7 @@
       "right": 6,
       "bottom": 7,
       "left": 7,
-      "rarity": 4,
+      "rarity": 3,
       "type": null
     },
     {
@@ -1942,7 +1942,7 @@
       "right": 6,
       "bottom": 4,
       "left": 7,
-      "rarity": 4,
+      "rarity": 3,
       "type": null
     },
     {
@@ -1955,7 +1955,7 @@
       "right": 6,
       "bottom": 7,
       "left": 6,
-      "rarity": 4,
+      "rarity": 3,
       "type": null
     },
     {
@@ -5791,7 +5791,7 @@
       "bottom": 7,
       "left": 9,
       "rarity": 4,
-      "type": "beast"
+      "type": null
     },
     {
       "id": 702,
