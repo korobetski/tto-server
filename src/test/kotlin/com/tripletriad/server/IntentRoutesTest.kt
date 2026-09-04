@@ -3,6 +3,7 @@ package com.tripletriad.server
 import com.tripletriad.data.Campaign
 import com.tripletriad.data.CardValue
 import com.tripletriad.data.ShopCatalog
+import com.tripletriad.data.StarterCatalog
 import com.tripletriad.data.StarterPack
 import com.tripletriad.model.BoosterItem
 import com.tripletriad.model.BoosterType
@@ -243,6 +244,47 @@ class IntentRoutesTest {
     }
 
     /**
+     * The box the player chose is the box the server deals.
+     *
+     * The bug this endpoint's `starterId` exists for: a character registered here owns nothing, the
+     * client sent no id, and the route granted `catalog.starters.first()`. So a player who picked
+     * the FFVIII box was dealt the FFXIV one, and the only trace was five monsters from the wrong
+     * game in their first match. Asserted on the *other* starter than the catalogue's first, since
+     * granting the first is exactly what the broken version did.
+     */
+    @Test
+    fun theStarterTheClientNamesIsTheOneDealt() = server {
+        val session = registerWithoutABox()
+        val chosen = Catalogs.starters.starters.last()
+        val first = Catalogs.starters.starters.first()
+
+        val opened = claimStarter(session.token, "op-chose", chosen.id).save
+
+        assertEquals(StarterCatalog.SIZE, opened.cards.size, "the box is nine cards")
+        assertEquals(chosen.deck, opened.decks.first().cards, "the authored deck")
+        for (id in chosen.deck) assertTrue(opened.ownsCard(id), "$id was not dealt")
+        for (id in first.deck) assertFalse(opened.ownsCard(id), "the other box's $id was dealt")
+        assertTrue(
+            opened.cards.keys.all { Catalogs.cards.byId.getValue(it).block == chosen.block },
+            "a card from outside the chosen set was dealt: ${opened.cards.keys}",
+        )
+    }
+
+    /** A name this server does not know is a name it ignores, rather than a 500 or a forgery. */
+    @Test
+    fun anUnknownStarterIdFallsBackToTheOfferedBox() = server {
+        val session = registerWithoutABox()
+
+        val opened = claimStarter(session.token, "op-unknown", "ff-nonexistent").save
+
+        assertEquals(
+            Catalogs.starters.starters.first().deck,
+            opened.decks.first().cards,
+            "an unknown id should have been ignored, not obeyed",
+        )
+    }
+
+    /**
      * A profile that has sold everything can repair itself, and one that has not gets nothing.
      *
      * Both halves in one test because the condition is the whole endpoint: `StarterPack.isOwedBy`
@@ -358,7 +400,17 @@ class IntentRoutesTest {
             .filterIsInstance<PotionItem>().first()
         ).potionType
 
-    private suspend fun ApplicationTestBuilder.register(): Session {
+    /** An account, and the box every other fixture here wants it to have. */
+    private suspend fun ApplicationTestBuilder.register(): Session =
+        openStarterBox(registerWithoutABox())
+
+    /**
+     * An account exactly as registration leaves it: **owning nothing**.
+     *
+     * What the two starter tests are about, and the reason this is split out — every other fixture
+     * wants a player who can field a deck, and these two want the moment before that.
+     */
+    private suspend fun ApplicationTestBuilder.registerWithoutABox(): Session {
         val who = Postgres.freshAccount("intent")
         val response = client.post("/accounts") {
             protocolHeaders()
@@ -391,8 +443,11 @@ class IntentRoutesTest {
         return session
     }
 
-    private suspend fun ApplicationTestBuilder.claimStarter(token: String, op: String) =
-        intent(token, "/me/starter", json.encodeToString(ClaimStarterRequest(op)))
+    private suspend fun ApplicationTestBuilder.claimStarter(
+        token: String,
+        op: String,
+        starterId: String? = null,
+    ) = intent(token, "/me/starter", json.encodeToString(ClaimStarterRequest(op, starterId)))
 
     /** Rewrites the stored profile behind the API, for the fields the API no longer believes. */
     private fun plant(session: Session, change: (GameSave) -> GameSave) {

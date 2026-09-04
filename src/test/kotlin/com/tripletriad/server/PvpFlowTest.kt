@@ -758,7 +758,8 @@ class PvpFlowTest {
         // both allowed in the lobby. Getting them in is `unlockForPvp`'s job, and the gate that
         // keeps them out is `PvpUnlockTest`'s.
         unlockForPvp(name)
-        return json.decodeFromString<Session>(response.bodyAsText())
+        // Registration deals no cards; the box does. See [openStarterBox].
+        return openStarterBox(json.decodeFromString<Session>(response.bodyAsText()))
     }
 
     /** Opens a table on [stake], returning it. */

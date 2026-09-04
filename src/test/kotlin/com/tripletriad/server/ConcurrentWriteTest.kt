@@ -182,7 +182,8 @@ class ConcurrentWriteTest {
             setBody(json.encodeToString(credentials(who)))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
-        val session = json.decodeFromString<Session>(response.bodyAsText())
+        // Registration deals no cards; the box does. See [openStarterBox].
+        val session = openStarterBox(json.decodeFromString<Session>(response.bodyAsText()))
 
         val accounts = AccountStore(Postgres.dataSource)
         val id = assertNotNull(accounts.accountIdForUsername(session.player.save.username))

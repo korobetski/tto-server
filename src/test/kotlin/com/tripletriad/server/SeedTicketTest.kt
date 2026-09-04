@@ -185,7 +185,8 @@ class SeedTicketTest {
             setBody(json.encodeToString(credentials(who)))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
-        return json.decodeFromString(response.bodyAsText())
+        // Registration deals no cards; the box does. See [openStarterBox].
+        return openStarterBox(json.decodeFromString(response.bodyAsText()))
     }
 
     private suspend fun ApplicationTestBuilder.tickets(token: String): List<Int> {

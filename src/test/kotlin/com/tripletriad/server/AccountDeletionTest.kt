@@ -250,7 +250,8 @@ class AccountDeletionTest {
             setBody(json.encodeToString(Credentials(name, PASSWORD, address(name))))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
-        return json.decodeFromString(response.bodyAsText())
+        // Registration deals no cards; the box does. See [openStarterBox].
+        return openStarterBox(json.decodeFromString(response.bodyAsText()))
     }
 
     private suspend fun ApplicationTestBuilder.deleteAccount(token: String, password: String) =

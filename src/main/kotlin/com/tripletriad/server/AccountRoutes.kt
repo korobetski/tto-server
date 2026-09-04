@@ -747,7 +747,7 @@ private fun Route.intentRoutes(
 
         // Inside the block, deliberately: this is what makes the shop share the bucket and the
         // guard rather than quietly having neither.
-        shopIntents(store, tables, clock)
+        shopIntents(store, tables, random, clock)
     }
 }
 
@@ -761,7 +761,12 @@ private fun Route.intentRoutes(
  * What they have in common is the thing worth stating: **no price arrives from the client.**
  * Each one names what it wants and the server looks up what that costs.
  */
-private fun Route.shopIntents(store: AccountStore, tables: ShopTables, clock: () -> Long) {
+private fun Route.shopIntents(
+    store: AccountStore,
+    tables: ShopTables,
+    random: () -> Random,
+    clock: () -> Long,
+) {
     /**
      * Buys from the shop, at the server's price.
      *
@@ -811,12 +816,27 @@ private fun Route.shopIntents(store: AccountStore, tables: ShopTables, clock: ()
      * quite apart from the operation id — the second call finds nothing owed.
      *
      * This is the endpoint that let `cards` join the server-owned list. See [ClaimStarterRequest].
+     *
+     * ### The choice arrives here, and it did not used to
+     *
+     * `starterId` names one of **this** server's starters. A character created by registering owns
+     * nothing at all — `GameSave.new` deals no cards — so this is the call that makes it playable,
+     * and the box it opens has to be the one the player picked. It was not: the id had nowhere to
+     * travel, this route took `catalog.starters.first()`, and a player who chose FFVIII walked into
+     * their first match holding FFXIV cards. An id this server does not know falls back to the
+     * offer, which is also what the shop's repair sends — it names no box because it is not a
+     * choice.
+     *
+     * The four unauthored cards are drawn **here**, from this server's generator, for the reason
+     * `/me/bag/use` rolls a booster here: a draw worth anything to the client must not be the
+     * client's.
      */
     post("/me/starter") {
         if (!requireCompatibleClient()) return@post
         val request = call.receive<ClaimStarterRequest>()
+        val chosen = request.starterId?.let { tables.starters[it] }
         respondWithProfile(store, request) { save ->
-            StarterPack.grantedTo(save, tables.starters)
+            StarterPack.grantedTo(save, tables.starters, tables.cards.byId, random(), chosen)
         }
     }
 

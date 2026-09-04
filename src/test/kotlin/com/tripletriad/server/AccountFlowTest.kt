@@ -438,7 +438,8 @@ class AccountFlowTest {
             setBody(json.encodeToString(Credentials(name, PASSWORD, address(name))))
         }
         assertEquals(HttpStatusCode.Created, response.status, response.bodyAsText())
-        return json.decodeFromString<Session>(response.bodyAsText())
+        // Registration deals no cards; the box does. See [openStarterBox].
+        return openStarterBox(json.decodeFromString<Session>(response.bodyAsText()))
     }
 
     private suspend fun ApplicationTestBuilder.signIn(name: String): Session {

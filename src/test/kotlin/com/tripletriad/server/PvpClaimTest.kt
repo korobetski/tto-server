@@ -1,6 +1,7 @@
 package com.tripletriad.server
 
 import com.tripletriad.model.CardColor
+import com.tripletriad.model.Deck
 import com.tripletriad.model.DeckLimits
 import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
@@ -502,9 +503,7 @@ class PvpClaimTest {
         val hand = List(HAND) { UNCAPTURABLE }
         val save = hand
             .fold(GameSave.new(name, createdAt = START)) { profile, id -> profile.withCard(id) }
-            .let { profile ->
-                profile.copy(decks = listOf(profile.decks.first().copy(cards = hand)))
-            }
+            .copy(decks = listOf(Deck(GameSave.DEFAULT_DECK_NAME, hand)))
         return assertNotNull(accounts.register(name, "hash-$name", save))
     }
 
@@ -513,9 +512,7 @@ class PvpClaimTest {
         val name = Postgres.freshAccount(prefix)
         val save = STOCK
             .fold(GameSave.new(name, createdAt = START)) { profile, id -> profile.withCard(id) }
-            .let { profile ->
-                profile.copy(decks = listOf(profile.decks.first().copy(cards = WEAKEST)))
-            }
+            .copy(decks = listOf(Deck(GameSave.DEFAULT_DECK_NAME, WEAKEST)))
         return assertNotNull(accounts.register(name, "hash-$name", save))
     }
 
@@ -545,13 +542,12 @@ class PvpClaimTest {
 
     private fun register(prefix: String, deck: List<Int>): Long {
         val name = Postgres.freshAccount(prefix)
-        // `GameSave.new` supplies the 100 MGP a wager is drawn from. The cards are added on top and
-        // named as a complete deck, because that is what `PveMatches.playerDeck` reads first.
+        // `GameSave.new` supplies the 100 MGP a wager is drawn from, and nothing else — it deals no
+        // cards at all. The five are added on top and named as a complete deck, because that is
+        // what `PveMatches.playerDeck` reads first.
         val save = deck
             .fold(GameSave.new(name, createdAt = START)) { profile, id -> profile.withCard(id) }
-            .let { profile ->
-                profile.copy(decks = listOf(profile.decks.first().copy(cards = deck)))
-            }
+            .copy(decks = listOf(Deck(GameSave.DEFAULT_DECK_NAME, deck)))
         return assertNotNull(accounts.register(name, "hash-$name", save))
     }
 
