@@ -532,6 +532,7 @@ class PveReferee(
             achievementIds = (reward.achievements + (climbed?.achievements ?: emptyList()))
                 .map { it.id },
             questIds = reward.quests.map { it.id },
+            weeklyQuestIds = reward.weeklyQuests.map { it.id },
         )
 
     /**

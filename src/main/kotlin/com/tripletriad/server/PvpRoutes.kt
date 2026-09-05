@@ -1137,6 +1137,7 @@ class PvpReferee(
                 // had no field, so a player earned them and was never told.
                 achievementIds = credited.reward.achievements.map { it.id },
                 questIds = credited.reward.quests.map { it.id },
+                weeklyQuestIds = credited.reward.weeklyQuests.map { it.id },
             ),
         )
     }

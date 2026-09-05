@@ -226,6 +226,7 @@ data class PvpMatchRow(
             xp = payout[side]?.xp ?: 0,
             achievementIds = payout[side]?.achievementIds.orEmpty(),
             questIds = payout[side]?.questIds.orEmpty(),
+            weeklyQuestIds = payout[side]?.weeklyQuestIds.orEmpty(),
             stakeMgp = spoils.mgp,
             cardsWon = spoils.won,
             cardsLost = spoils.lost,
@@ -477,6 +478,8 @@ data class Payout(
     val xp: Int,
     val achievementIds: List<String> = emptyList(),
     val questIds: List<String> = emptyList(),
+    /** The week's quest, if this match finished it — the same reasoning as [questIds]. */
+    val weeklyQuestIds: List<String> = emptyList(),
 )
 
 data class Spoils(

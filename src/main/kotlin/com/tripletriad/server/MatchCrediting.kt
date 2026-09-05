@@ -129,6 +129,8 @@ object MatchCrediting {
                 xp = credited.reward.xp,
                 items = credited.reward.items,
                 achievementIds = credited.reward.achievements.map { it.id },
+                questIds = credited.reward.quests.map { it.id },
+                weeklyQuestIds = credited.reward.weeklyQuests.map { it.id },
             )
 
             Crediting(

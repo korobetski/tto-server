@@ -1,8 +1,8 @@
 package com.tripletriad.server
 
-import com.tripletriad.model.DailyQuests
 import com.tripletriad.model.Deck
 import com.tripletriad.model.MatchResult
+import com.tripletriad.model.QuestLog
 import com.tripletriad.model.Stats
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
@@ -193,10 +193,17 @@ class AccountFlowTest {
 
         val session = register(Postgres.freshAccount("forger"))
         val forged = session.player.save.copy(
-            quests = DailyQuests(
-                day = "2026-08-12",
+            quests = QuestLog(
+                period = "2026-08-12",
                 questIds = listOf("q-win-3"),
                 completed = mapOf("q-win-3" to 1L),
+            ),
+            // The week's log too, which is the larger of the two prizes and therefore the one a
+            // forged profile would be worth forging. It joined `withServerOwnedFrom` with it.
+            weekly = QuestLog(
+                period = "2026-08-10",
+                questIds = listOf("w-win-15"),
+                completed = mapOf("w-win-15" to 1L),
             ),
             avatarId = "ffxiv_twi03007",
         )
@@ -210,9 +217,14 @@ class AccountFlowTest {
 
         val stored = me(session.token).save
         assertEquals(
-            DailyQuests(),
+            QuestLog(),
             stored.quests,
             "a client asserted a quest completion and the server kept it",
+        )
+        assertEquals(
+            QuestLog(),
+            stored.weekly,
+            "a client asserted a *week's* completion and the server kept it",
         )
         assertEquals("ffxiv_twi03007", stored.avatarId, "the rest of the profile is still believed")
     }
