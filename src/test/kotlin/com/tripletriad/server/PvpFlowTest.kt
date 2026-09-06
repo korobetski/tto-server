@@ -10,6 +10,7 @@ import com.tripletriad.protocol.PvpChallenge
 import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpMatchView
 import com.tripletriad.protocol.PvpMove
+import com.tripletriad.protocol.PvpPresence
 import com.tripletriad.protocol.PvpQueueState
 import com.tripletriad.protocol.PvpStake
 import com.tripletriad.protocol.PvpTable
@@ -109,6 +110,48 @@ class PvpFlowTest {
         val fromBob = assertNotNull(currentMatch(bob.token))
         assertEquals(BOB_AVATAR, fromAlice.opponentAvatarId, "Alice was not shown Bob's face")
         assertEquals(ALICE_AVATAR, fromBob.opponentAvatarId, "Bob was not shown Alice's face")
+    }
+
+    /**
+     * **Presence counts the others, and never the reader.**
+     *
+     * The question the lobby asks before offering to open a table. Read as *deltas* rather than
+     * absolutes, because the Postgres is shared by the whole run — see [Postgres] — and every
+     * other test in this file reads the lobby, so the accounts they registered are present too.
+     * A test asserting "one person is online" would be a test that passes alone and fails in a
+     * suite, which is worse than no test at all.
+     *
+     * Two claims: reading the lobby is what makes an account present, and the reader is never in
+     * their own count — otherwise a player alone on the server is shown a permanent "1 online"
+     * and told there is somebody to play.
+     */
+    @Test
+    fun presenceCountsEverybodyElseWhoHasBeenSeen() = server {
+        val alice = register(Postgres.freshAccount("seen-a"))
+        val bob = register(Postgres.freshAccount("seen-b"))
+
+        // Registering is not being seen: presence is stamped by reading the lobby, which is the
+        // one route a client with this screen open polls.
+        val before = presence(alice.token).others
+
+        tables(alice.token)
+        assertEquals(before, presence(alice.token).others, "Alice counted herself")
+
+        tables(bob.token)
+        assertEquals(before + 1, presence(alice.token).others, "Bob was not seen reading the lobby")
+    }
+
+    /** And how many tables on offer are somebody else's, which is all a player can join. */
+    @Test
+    fun presenceCountsOtherPeoplesTables() = server {
+        val alice = register(Postgres.freshAccount("room-a"))
+        val bob = register(Postgres.freshAccount("room-b"))
+        val before = presence(bob.token).tables
+
+        openTable(alice.token)
+
+        assertEquals(before, presence(alice.token).tables, "Alice's own table was offered to her")
+        assertEquals(before + 1, presence(bob.token).tables, "Bob was not told about the table")
     }
 
     /** A joined table stops being on offer, so nobody turns up to a match that already started. */
@@ -804,6 +847,15 @@ class PvpFlowTest {
 
     private suspend fun ApplicationTestBuilder.tables(token: String): List<PvpTable> {
         val response = client.get("/pvp/tables") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        return json.decodeFromString(response.bodyAsText())
+    }
+
+    private suspend fun ApplicationTestBuilder.presence(token: String): PvpPresence {
+        val response = client.get("/pvp/presence") {
             protocolHeaders()
             bearer(token)
         }

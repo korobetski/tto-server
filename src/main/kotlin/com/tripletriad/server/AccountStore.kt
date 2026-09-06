@@ -33,7 +33,11 @@ import javax.sql.DataSource
 // aimed at a class doing too many *things*; this one does one thing — read and write what is stored
 // about a player — and splitting it by table would put `openSession` and `accountForToken` behind a
 // second object for no reason other than a count.
-@Suppress("TooManyFunctions")
+// LargeClass counts the same thing twice over: the size here is queries and the KDoc that explains
+// them, not behaviour tangled together. Splitting by table is the only split available, and it
+// cost every caller a second store to construct and pass around — see `transaction`, which is
+// what holds this class together and cannot be shared across two of them.
+@Suppress("TooManyFunctions", "LargeClass")
 class AccountStore(
     private val dataSource: DataSource,
     private val json: Json = SaveJson,
@@ -314,6 +318,52 @@ class AccountStore(
         ).use { statement ->
             statement.setString(1, tokenFingerprint)
             statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
+        }
+    }
+
+    /**
+     * Records that this account has just spoken to us — at most once every [PRESENCE_FLOOR].
+     *
+     * The floor is in the `WHERE` clause and not in Kotlin, for the same reason the expiry above
+     * is: two of the player's own requests can be in flight at once, and a check-then-write would
+     * let both through. What it buys is the difference between one write per client per second —
+     * the lobby's poll rate — and one per half minute.
+     *
+     * Fire-and-forget by design: presence is a courtesy on the lobby screen, and a failed touch
+     * must never turn a successful read of the tables into an error.
+     */
+    fun touch(accountId: Long) = transaction { db ->
+        db.prepareStatement(
+            """
+            UPDATE accounts SET seen_at = now()
+            WHERE id = ? AND (seen_at IS NULL OR seen_at < now() - ?::interval)
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setString(2, PRESENCE_FLOOR)
+            statement.executeUpdate()
+        }
+        Unit
+    }
+
+    /**
+     * How many accounts *other than this one* have been heard from inside [windowMillis].
+     *
+     * The reader is excluded in SQL rather than by subtracting one, because they may not be in the
+     * count to begin with: `touch` is throttled, so an account thirty seconds into its first
+     * request has not been written yet, and "1 - 1 = 0" and "0 - 1 = -1" are different bugs.
+     */
+    fun onlineOthers(accountId: Long, windowMillis: Long): Int = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT count(*) FROM accounts
+            WHERE id <> ? AND seen_at IS NOT NULL
+              AND seen_at > now() - make_interval(secs => ?)
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setLong(1, accountId)
+            statement.setDouble(2, windowMillis / MILLIS_PER_SECOND)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.getInt(1) else 0 }
         }
     }
 
@@ -1180,6 +1230,17 @@ class AccountStore(
 
         /** Enough for a recent-form list. The full history stays in the table. */
         const val RECENT_MATCHES = 20
+
+        /**
+         * How stale a sighting has to be before [touch] writes a new one.
+         *
+         * Half a minute against a two-minute presence window (`PvpPresence.WINDOW_MILLIS`): a
+         * client that goes quiet is counted as here for up to thirty seconds longer than it
+         * strictly was, which is the price of not writing a row a second per player.
+         */
+        const val PRESENCE_FLOOR = "30 seconds"
+
+        const val MILLIS_PER_SECOND = 1_000.0
     }
 }
 

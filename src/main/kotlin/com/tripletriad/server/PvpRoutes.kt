@@ -19,6 +19,7 @@ import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpMatchView
 import com.tripletriad.protocol.PvpMove
 import com.tripletriad.protocol.PvpOutcome
+import com.tripletriad.protocol.PvpPresence
 import com.tripletriad.protocol.PvpQueueState
 import com.tripletriad.protocol.PvpRefusal
 import com.tripletriad.protocol.PvpStake
@@ -138,8 +139,36 @@ private fun Route.tableRoutes(
     /** Every table still open, the caller's own included — they need to see it to withdraw it. */
     get("/tables") {
         if (!requireCompatibleClient()) return@get
-        authenticate(accounts) ?: return@get
+        val accountId = authenticate(accounts) ?: return@get
+        // The one place presence is recorded. Every client that has this screen open polls it once
+        // a second, and no other route is reached that reliably — a player deep in a match against
+        // a program is silent here for minutes, which is why the window forgives two of them.
+        accounts.touch(accountId)
         call.respond(HttpStatusCode.OK, pvp.openTables(clock()).map { it.toWire() })
+    }
+
+    /**
+     * Whether anybody else is awake, for the screen that has to decide whether to open a table.
+     *
+     * Its own endpoint rather than a field on the table list, even though the client reads both
+     * from the same screen: the list is polled once a second and this is not — a count over every
+     * account is a different question with a different cost, and folding it into the poll would
+     * mean asking it sixty times a minute to answer it once.
+     *
+     * Not level-gated, unlike hosting: "is anybody there" is the question a player asks *before*
+     * finding out whether they are allowed to host, and answering it with a 403 tells them
+     * nothing.
+     */
+    get("/presence") {
+        if (!requireCompatibleClient()) return@get
+        val accountId = authenticate(accounts) ?: return@get
+        call.respond(
+            HttpStatusCode.OK,
+            PvpPresence(
+                others = accounts.onlineOthers(accountId, PvpPresence.WINDOW_MILLIS),
+                tables = pvp.openTables(clock()).count { it.hostAccount != accountId },
+            ),
+        )
     }
 
     /**
