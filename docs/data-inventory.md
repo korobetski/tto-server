@@ -9,7 +9,12 @@ the part a privacy notice cannot do for itself.
 > something to be inferred from a table definition. What follows is the inventory such a policy
 > would have to be true about, and it is written so that a claim contradicting it is visible.
 
-Last derived from the schema on 2026-08-29, at migration `V13`.
+Last derived from the schema on 2026-09-07, at migration `V16`.
+
+> **Two migrations are not yet reflected below.** `V14` added the auction house and `V15` added
+> `accounts.seen_at`, and neither has a row in the table. They are named here rather than quietly
+> left out, because a document whose value is that it can be checked against the code must be
+> honest about where it has fallen behind. The `V16` row below **is** derived.
 
 ## On the server
 
@@ -26,6 +31,13 @@ Last derived from the schema on 2026-08-29, at migration `V13`.
 | Applied operations | `applied_operations` | Making a retried purchase happen once | Holds the response that was sent, so it can be replayed |
 | Seed tickets | `match_tickets` | Stopping a client choosing its own deal | Random integers |
 | Lobby tables, invitations, matches | `pvp_*` | Playing another person | Carries both players' account ids |
+| Which accounts are **not people** | `bots` | The server plays accounts of its own — see `operations.md` | Holds no personal data of its own: an account id, a difficulty band and a timestamp. It is listed here because of what it says about the *other* rows — an `accounts` row named here belongs to nobody, and one that is not named belongs to a person |
+
+**Bot accounts are accounts.** Every row above exists for them too — a username, a password digest,
+a profile, a match history — and none of it is about a person: `V16` created the account, the address
+is null, and nobody has ever signed in. They matter to this inventory in one direction only: a
+report counting `accounts` or `matches` without excluding them is counting the server as though it
+were players, which is a claim about people that is not true. `operations.md` gives the query.
 
 **IP addresses** are not stored in any table. They appear in the reverse proxy's access log
 (`Caddyfile`, `format json`) and in the rate limiter's in-memory buckets, which are keyed by address
