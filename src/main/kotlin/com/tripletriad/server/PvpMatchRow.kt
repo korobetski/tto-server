@@ -61,6 +61,16 @@ data class PvpMatchRow(
     val stake: PvpStake,
     val status: PvpMatchStatus,
     val turnDeadline: Long?,
+    /**
+     * When each side first opened the board, and how long the pair has to do so.
+     *
+     * The turn clock does not run until both sightings are in — see [isAttended] and
+     * `V16__pvp_pairing.sql`. Until then [pairingDeadline] is what bounds the match, and it is
+     * cleared when the turn clock takes over so that exactly one of the two is ever set.
+     */
+    val blueSeenAt: Long? = null,
+    val redSeenAt: Long? = null,
+    val pairingDeadline: Long? = null,
     val forfeitedBy: CardColor? = null,
     /** What each side has named under One or Diff. Absent until they name it. */
     val claimed: Map<CardColor, List<Int>> = emptyMap(),
@@ -82,6 +92,18 @@ data class PvpMatchRow(
     }
 
     fun accountOf(side: CardColor): Long = if (side == CardColor.BLUE) blueAccount else redAccount
+
+    /** When [side] first opened this board, or null if they never have. */
+    fun seenAt(side: CardColor): Long? = if (side == CardColor.BLUE) blueSeenAt else redSeenAt
+
+    /**
+     * Whether both sides have opened the board, and the turn clock may therefore run.
+     *
+     * A match created before `V16__pvp_pairing.sql` has neither sighting and a [turnDeadline]
+     * already set; it is *not* attended by this test, and the [pairingDeadline] fallback in
+     * [wireFor] is guarded on that rather than on the sightings, so those rows keep their clock.
+     */
+    val isAttended: Boolean get() = blueSeenAt != null && redSeenAt != null
 
     /**
      * The five cards [side] brought, as ids, **before** the swap.
@@ -197,7 +219,10 @@ data class PvpMatchRow(
             stake = stake,
             // Only the side that is on the clock is given one. A player who is waiting has no
             // deadline to render, and sending one would invite a countdown against the wrong turn.
-            deadline = turnDeadline.takeIf { view.isMyTurn },
+            // Before both sides have arrived nobody is on the clock and the pairing deadline
+            // stands in for both of them: it is the same question — how long have I got — and one
+            // field answering it keeps the board from needing to know which kind of wait it is in.
+            deadline = turnDeadline.takeIf { view.isMyTurn } ?: pairingDeadline,
             outcome = outcomeFor(side, cards),
         )
     }
@@ -426,6 +451,15 @@ data class PvpMatchRow(
         const val TURN_MILLIS: Long = 30_000L
         const val GRACE_MILLIS: Long = 120_000L
         const val DEADLINE_MILLIS: Long = TURN_MILLIS + GRACE_MILLIS
+
+        /**
+         * How long a paired match waits for both sides to open the board.
+         *
+         * The same five minutes a table stands for, and for the same reason: it is how long a
+         * player who walked away is worth waiting for. A match neither side attends inside it is
+         * closed as `ABANDONED` and credits nobody — see `PvpRoutes.sweepPairing`.
+         */
+        const val PAIRING_MILLIS: Long = 300_000L
 
         /** How long an invitation stands before it lapses. */
         const val CHALLENGE_MILLIS: Long = 60_000L

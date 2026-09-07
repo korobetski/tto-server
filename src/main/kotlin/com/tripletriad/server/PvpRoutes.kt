@@ -405,22 +405,40 @@ private fun Route.liveMatchRoutes(referee: PvpReferee, accounts: AccountStore) {
             }
         }
 
-        /** Concedes. The same settlement a timeout produces, chosen rather than suffered. */
-        post("/match/{id}/forfeit") {
-            if (!requireCompatibleClient()) return@post
-            val accountId = authenticate(accounts) ?: return@post
-            val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+        // Says the player is at the board, which starts the turn clock once both sides have said
+        // it. Called once per board rather than on a timer, which is why it sits under [PLAY]
+        // with the other two acts rather than beside the poll.
+        matchAction("/match/{id}/attend", accounts, referee::attend)
 
-            val view = referee.forfeit(id, accountId)
-            if (view == null) {
-                call.respond(
-                    HttpStatusCode.NotFound,
-                    Refusal(PvpRefusal.NO_SUCH_MATCH, "no such match"),
-                )
-            } else {
-                call.respond(HttpStatusCode.OK, view)
-            }
-        }
+        // Concedes. The same settlement a timeout produces, chosen rather than suffered.
+        matchAction("/match/{id}/forfeit", accounts, referee::forfeit)
+    }
+}
+
+/**
+ * The two acts on an open match that carry no body and answer with the match.
+ *
+ * One registration for both, because they differ in nothing but the referee call: the version
+ * gate, the authentication, the missing-id refusal and the two answers are the same four lines
+ * either way, and a second copy of them is a second place for one of the four to be forgotten.
+ */
+private fun Route.matchAction(
+    path: String,
+    accounts: AccountStore,
+    act: (String, Long) -> PvpMatchView?,
+) = post(path) {
+    if (!requireCompatibleClient()) return@post
+    val accountId = authenticate(accounts) ?: return@post
+    val id = call.parameters["id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+
+    // One answer either way: the match as it now stands, or that there is no such match.
+    when (val view = act(id, accountId)) {
+        null -> call.respond(
+            HttpStatusCode.NotFound,
+            Refusal(PvpRefusal.NO_SUCH_MATCH, "no such match"),
+        )
+
+        else -> call.respond(HttpStatusCode.OK, view)
     }
 }
 
@@ -857,9 +875,40 @@ class PvpReferee(
         // `recentMatchFor`, not `liveMatchFor`: a settled match has to stay readable long enough
         // for the side that did not place the last card to be told how it ended.
         val row = pvp.recentMatchFor(accountId, clock()) ?: return null
-        val settled = settleIfOverdue(row) ?: row
+        // A lapsed pairing is noticed on the same poll, for the same reason a lapsed turn is: the
+        // side that did come to the board is owed an answer rather than a countdown at zero.
+        val lapsed = abandonIfUnattended(row)
+        val settled = when {
+            lapsed -> pvp.matchById(row.id) ?: row
+            else -> settleIfOverdue(row) ?: row
+        }
         val side = settled.sideOf(accountId) ?: return null
 
+        return settled.wireFor(side, opponent(settled, side), cards)
+    }
+
+    /**
+     * Records that this player is looking at the board, and starts the clock once both are.
+     *
+     * Called by the board itself on open, and deliberately **not** by the poll: the client polls
+     * `GET /pvp/match` from the lobby and from other screens, so treating a poll as attendance
+     * would arm the clock against a player who is still somewhere else entirely — which is the bug
+     * this exists to close.
+     *
+     * Idempotent, so the board may call it every time it opens: [PvpStore.attend] keeps the first
+     * sighting and only writes a deadline where there was none.
+     */
+    fun attend(matchId: String, accountId: Long): PvpMatchView? {
+        val row = pvp.matchById(matchId) ?: return null
+        val side = row.sideOf(accountId) ?: return null
+
+        if (row.status == PvpMatchStatus.PLAYING) {
+            pvp.attend(matchId, side, clock(), clock() + PvpMatchRow.DEADLINE_MILLIS)
+        }
+
+        // Re-read rather than patch the copy in hand: the other side may have arrived in between,
+        // and the deadline the player is about to count down from must be the stored one.
+        val settled = pvp.matchById(matchId) ?: return null
         return settled.wireFor(side, opponent(settled, side), cards)
     }
 
@@ -987,6 +1036,23 @@ class PvpReferee(
 
     /** Settles every claim nobody came back for. The same net, for the other deadline. */
     fun sweepClaims(): Int = pvp.claimOverdue(clock()).count { claimIfOverdue(it) != null }
+
+    /** Closes every paired match neither side ever opened. Nobody is paid and nobody loses. */
+    fun sweepPairing(): Int = pvp.pairingOverdue(clock()).count { abandonIfUnattended(it) }
+
+    /**
+     * Closes a match that was paired and never opened. Returns whether this call closed it.
+     *
+     * Deliberately **not** routed through [settle], which credits both profiles: a match nobody
+     * came to has no winner, no loser and no spoils, and paying it out would make hosting a table
+     * and walking away a way to earn. `ABANDONED` is the status that says exactly that — see
+     * `PvpMatchStatus`.
+     */
+    private fun abandonIfUnattended(row: PvpMatchRow): Boolean {
+        val deadline = row.pairingDeadline ?: return false
+        if (row.status != PvpMatchStatus.PLAYING || clock() < deadline) return false
+        return pvp.finish(row.id, PvpMatchStatus.ABANDONED)
+    }
 
     // ---- The two things that end a match ----------------------------------
 
@@ -1235,7 +1301,13 @@ class PvpReferee(
             moves = emptyList(),
             stake = stake,
             status = PvpMatchStatus.PLAYING,
-            turnDeadline = clock() + PvpMatchRow.DEADLINE_MILLIS,
+            // No turn clock yet. Pairing is something that happens *to* a player — the join may
+            // arrive while they are on another board, or on a locked phone — and starting a
+            // 150-second forfeit timer against a randomly chosen first mover meant half of them
+            // lost at the maximum stake without ever being shown the match. The clock starts when
+            // both sides have opened it; see `PvpRoutes.attend` and `V16__pvp_pairing.sql`.
+            turnDeadline = null,
+            pairingDeadline = clock() + PvpMatchRow.PAIRING_MILLIS,
         )
     }
 

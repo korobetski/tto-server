@@ -843,7 +843,9 @@ class PvpFlowTest {
         host: String,
         joiner: String,
         stake: PvpStake = PvpStake.None,
-    ): String = join(joiner, openTable(host, stake).id).matchId.let(::assertNotNull)
+    ): String = join(joiner, openTable(host, stake).id).matchId
+        .let(::assertNotNull)
+        .also { attendBoth(it, host, joiner) }
 
     private suspend fun ApplicationTestBuilder.tables(token: String): List<PvpTable> {
         val response = client.get("/pvp/tables") {
@@ -908,15 +910,6 @@ class PvpFlowTest {
         ).save.mgp
     }
 
-    private fun HttpRequestBuilder.protocolHeaders() {
-        contentType(ContentType.Application.Json)
-        header(VERSION_HEADER, CURRENT_VERSION.toString())
-    }
-
-    private fun HttpRequestBuilder.bearer(token: String) {
-        header(HttpHeaders.Authorization, "Bearer $token")
-    }
-
     private val json = Json { ignoreUnknownKeys = true }
 
     private companion object {
@@ -949,4 +942,35 @@ class PvpFlowTest {
         /** A full board. */
         const val PLACEMENTS = 9
     }
+}
+
+/*
+ * Below the class rather than inside it: these three say nothing about what two players can do to
+ * each other, and the class is large enough that detekt counts it.
+ */
+
+/**
+ * Brings both players to the board, the way a real client does when the match screen opens.
+ *
+ * It is what starts the turn clock — see `PvpRoutes.attend`. Without it every test in this file
+ * would be playing an *unattended* match, whose deadlines are deliberately not the ones they are
+ * about; those belong to `PvpPairingTest`.
+ */
+private suspend fun ApplicationTestBuilder.attendBoth(matchId: String, vararg tokens: String) {
+    for (token in tokens) {
+        val response = client.post("/pvp/match/$matchId/attend") {
+            protocolHeaders()
+            bearer(token)
+        }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+    }
+}
+
+private fun HttpRequestBuilder.protocolHeaders() {
+    contentType(ContentType.Application.Json)
+    header(VERSION_HEADER, CURRENT_VERSION.toString())
+}
+
+private fun HttpRequestBuilder.bearer(token: String) {
+    header(HttpHeaders.Authorization, "Bearer $token")
 }

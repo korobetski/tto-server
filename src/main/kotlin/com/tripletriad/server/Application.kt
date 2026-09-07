@@ -215,8 +215,17 @@ private fun Application.sweepAbandonedMatches(
             try {
                 val forfeited = referee.sweep()
                 val claimed = referee.sweepClaims()
-                if (forfeited + claimed > 0) {
-                    logger.info("Swept {} abandoned and {} unclaimed", forfeited, claimed)
+                // The third deadline: a match paired between two players who never opened it.
+                // Unlike the other two this one really does need the loop — a match nobody came
+                // to is a match nobody is polling, so "the first person to look" is nobody.
+                val unattended = referee.sweepPairing()
+                if (forfeited + claimed + unattended > 0) {
+                    logger.info(
+                        "Swept {} abandoned, {} unclaimed and {} unattended",
+                        forfeited,
+                        claimed,
+                        unattended,
+                    )
                 }
 
                 // On the same loop, and it is the loop's most load-bearing passenger. A PvP
