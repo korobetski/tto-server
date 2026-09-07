@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.NpcLevel
 import com.tripletriad.protocol.AppVersion
 import com.tripletriad.protocol.AuctionPolicy
 import com.tripletriad.protocol.ClientPlatform
@@ -35,6 +36,7 @@ data class ServerConfig(
     val unlocks: Unlocks,
     val auction: AuctionPolicy,
     val stakes: PvpStakePolicy,
+    val bots: BotPolicy,
 ) {
     companion object {
         /**
@@ -69,6 +71,7 @@ data class ServerConfig(
                 unlocks = unlocksFrom(lookup),
                 auction = auctionFrom(lookup),
                 stakes = stakesFrom(lookup),
+                bots = BotPolicy.from(lookup),
             )
         }
 
@@ -309,5 +312,154 @@ data class MailConfig(
         private const val DEV_FROM = "no-reply@localhost"
 
         private const val DEV_NAME = "Triple Triad"
+    }
+}
+
+/**
+ * Whether this deployment plays accounts of its own, and how.
+ *
+ * ### Off by default, and that is the important line
+ *
+ * A server that quietly populates its own lobby is a different product from one that does not, and
+ * nobody should get one by upgrading. [enabled] is false unless `TTO_BOTS_ENABLED` says otherwise,
+ * and every other number here is inert until it is true.
+ *
+ * ### Why the numbers are environment variables rather than constants
+ *
+ * The same argument the auction house's and the stake ceiling's make: every one of these is a dial
+ * that will be turned in response to what actually happens — a wait that turns out to be so short
+ * that bots take matches from people, a cadence that turns out to read as a machine, a roster that
+ * turns out to be too small to ever be there when somebody opens a table. Compiling them in would
+ * make each of those a release.
+ *
+ * They do **not** travel to clients in `ServerInfo`. Nothing in the protocol says a bot exists —
+ * see `V16__bots.sql` on why that is a decision rather than an omission — so there is nothing for a
+ * client to render and nothing it could act on.
+ *
+ * @property band how hard every bot plays. `EXPERT` is the top of `MatchAiOptions.forLevel`: depth
+ *   five, a solved endgame from six free cells, and no blunder at all. It is the band the roster is
+ *   created at; an operator splitting the roster across bands does it with an UPDATE, which is what
+ *   the column in `bots` is for.
+ * @property wagers whether a bot may sit down at a table that risks something — MGP or a trade
+ *   rule. **False**, and the default is the whole of the current position on it: a bot that stakes
+ *   moves real value into and out of the players' economy, and a card won from one is a card the
+ *   world gained. Turning it on is a decision to be taken with the numbers in front of you, which
+ *   is what the metrics are for.
+ * @property reserve MGP a bot keeps back from the shop. Idle while [wagers] is false, and the
+ *   thing that stops a bot arriving at a table it cannot cover once it is not.
+ */
+data class BotPolicy(
+    val enabled: Boolean = false,
+    val count: Int = DEFAULT_COUNT,
+    val band: NpcLevel = NpcLevel.EXPERT,
+    val formatId: String = DEFAULT_FORMAT,
+    val namePrefix: String = DEFAULT_NAME_PREFIX,
+    val wagers: Boolean = false,
+    val reserve: Int = DEFAULT_RESERVE,
+    val tableWaitMillis: Long = DEFAULT_TABLE_WAIT_SECONDS * MILLIS,
+    val moveMinMillis: Long = DEFAULT_MOVE_MIN_SECONDS * MILLIS,
+    val moveSpreadMillis: Long = DEFAULT_MOVE_SPREAD_SECONDS * MILLIS,
+    val idleMillis: Long = DEFAULT_IDLE_SECONDS * MILLIS,
+    val tickMillis: Long = DEFAULT_TICK_SECONDS * MILLIS,
+) {
+    companion object {
+        /**
+         * Reads the policy from the environment.
+         *
+         * A value that is not a number falls back to the default rather than stopping the boot,
+         * which is the judgement `ServerConfig.unlocksFrom` makes and for the same reason: a typo
+         * in a dial should cost the dial, not the server. A band this build does not know falls
+         * back to `EXPERT`, which is `BotStore`'s reading of the same question.
+         */
+        fun from(lookup: (String) -> String?): BotPolicy {
+            val defaults = BotPolicy()
+            return BotPolicy(
+                enabled = lookup("TTO_BOTS_ENABLED").toBoolean(),
+                count = lookup("TTO_BOTS_COUNT")?.toIntOrNull() ?: defaults.count,
+                band = NpcLevel.entries.firstOrNull { it.name == lookup("TTO_BOTS_BAND") }
+                    ?: defaults.band,
+                formatId = lookup("TTO_BOTS_FORMAT")?.takeIf { it.isNotBlank() }
+                    ?: defaults.formatId,
+                namePrefix = lookup("TTO_BOTS_NAME_PREFIX")?.takeIf { it.isNotBlank() }
+                    ?: defaults.namePrefix,
+                wagers = lookup("TTO_BOTS_WAGER").toBoolean(),
+                reserve = lookup("TTO_BOTS_RESERVE")?.toIntOrNull() ?: defaults.reserve,
+                tableWaitMillis = seconds(lookup("TTO_BOTS_TABLE_WAIT_SECONDS"))
+                    ?: defaults.tableWaitMillis,
+                moveMinMillis = seconds(lookup("TTO_BOTS_MOVE_MIN_SECONDS"))
+                    ?: defaults.moveMinMillis,
+                moveSpreadMillis = seconds(lookup("TTO_BOTS_MOVE_SPREAD_SECONDS"))
+                    ?: defaults.moveSpreadMillis,
+                idleMillis = seconds(lookup("TTO_BOTS_IDLE_SECONDS")) ?: defaults.idleMillis,
+                tickMillis = seconds(lookup("TTO_BOTS_TICK_SECONDS")) ?: defaults.tickMillis,
+            )
+        }
+
+        /** A count of seconds as milliseconds, or null when it is not a positive number. */
+        private fun seconds(value: String?): Long? =
+            value?.toLongOrNull()?.takeIf { it > 0 }?.times(MILLIS)
+
+        private const val MILLIS = 1_000L
+
+        /**
+         * Ten, which is enough that somebody is usually free when a table goes unanswered and few
+         * enough that a depth-five search per placement stays noise on the process that serves
+         * requests. It is the first number to measure, not the last.
+         */
+        private const val DEFAULT_COUNT = 10
+
+        /** The widest shipped format, which is where the roster and the lobby both are. */
+        private const val DEFAULT_FORMAT = "ff14-standard"
+
+        /**
+         * What a bot is called, before four random digits.
+         *
+         * Neutral rather than either honest or disguised, because the deployment decides which of
+         * those it wants: nothing in the protocol marks a bot, so this prefix is the only thing a
+         * player can read. An operator who wants them obvious sets it to something obvious.
+         */
+        private const val DEFAULT_NAME_PREFIX = "Duelist"
+
+        /**
+         * Forty-five seconds before a table is a bot's business.
+         *
+         * Long enough that a person browsing the lobby has read it and had time to tap it, short
+         * enough that the host has not given up — `PvpMatchRow.TABLE_MILLIS` gives them five
+         * minutes, so this spends the first sixth of it waiting for a human.
+         */
+        private const val DEFAULT_TABLE_WAIT_SECONDS = 45L
+
+        /**
+         * Three to nine seconds a placement.
+         *
+         * A pace a person could keep, and the only thing standing where the `PLAY` rate limit
+         * cannot: 120 placements a minute is what that bucket allows a client, and a bot driving
+         * the referee in-process is bounded by nothing but this. Nine seconds is also comfortably
+         * inside the thirty-second turn timer, so a bot never forfeits by thinking.
+         */
+        private const val DEFAULT_MOVE_MIN_SECONDS = 3L
+        private const val DEFAULT_MOVE_SPREAD_SECONDS = 6L
+
+        /** How long a bot with nothing to do waits before looking again. */
+        private const val DEFAULT_IDLE_SECONDS = 20L
+
+        /**
+         * How often the director looks at all.
+         *
+         * Two seconds, which is what makes "forty-five seconds and nobody joined" mean forty-five
+         * rather than up to seventy-five. It is its own loop rather than a passenger on
+         * `sweepAbandonedMatches` for exactly that reason: the sweep runs every thirty seconds
+         * because nothing it does is urgent, and this is the one thing here that is.
+         */
+        private const val DEFAULT_TICK_SECONDS = 2L
+
+        /**
+         * Five thousand MGP kept out of the shop.
+         *
+         * Idle while [wagers] is false. It is roughly the ceiling a level-25 account may wager
+         * under the default `PvpStakePolicy`, so a bot that has climbed that far can cover a table
+         * at its own limit without having to stop buying packs first.
+         */
+        private const val DEFAULT_RESERVE = 5_000
     }
 }

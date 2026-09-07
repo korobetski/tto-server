@@ -83,6 +83,21 @@ services:
       # package; raising one of these is a restart, not a client release.
       TTO_UNLOCK_MULTIPLAYER: ${TTO_UNLOCK_MULTIPLAYER:-}
       TTO_UNLOCK_AUCTION: ${TTO_UNLOCK_AUCTION:-}
+      # The accounts this server plays itself. Blank everywhere means off, which is the default and
+      # the only safe one: a server that populates its own lobby is a different product. See
+      # `docs/operations.md` for the four things to decide before setting the first of these.
+      TTO_BOTS_ENABLED: ${TTO_BOTS_ENABLED:-}
+      TTO_BOTS_COUNT: ${TTO_BOTS_COUNT:-}
+      TTO_BOTS_BAND: ${TTO_BOTS_BAND:-}
+      TTO_BOTS_FORMAT: ${TTO_BOTS_FORMAT:-}
+      TTO_BOTS_NAME_PREFIX: ${TTO_BOTS_NAME_PREFIX:-}
+      TTO_BOTS_WAGER: ${TTO_BOTS_WAGER:-}
+      TTO_BOTS_RESERVE: ${TTO_BOTS_RESERVE:-}
+      TTO_BOTS_TABLE_WAIT_SECONDS: ${TTO_BOTS_TABLE_WAIT_SECONDS:-}
+      TTO_BOTS_MOVE_MIN_SECONDS: ${TTO_BOTS_MOVE_MIN_SECONDS:-}
+      TTO_BOTS_MOVE_SPREAD_SECONDS: ${TTO_BOTS_MOVE_SPREAD_SECONDS:-}
+      TTO_BOTS_IDLE_SECONDS: ${TTO_BOTS_IDLE_SECONDS:-}
+      TTO_BOTS_TICK_SECONDS: ${TTO_BOTS_TICK_SECONDS:-}
     # No published port either: Caddy reaches it as `server:8080` on this network. Publishing it
     # would put a plaintext HTTP server on the VPS's public address, next to the HTTPS one, and
     # every client that found it would work — which is how a TLS deployment stays untested.

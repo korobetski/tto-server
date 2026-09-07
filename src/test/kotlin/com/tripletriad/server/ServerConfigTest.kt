@@ -1,9 +1,11 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.NpcLevel
 import com.tripletriad.protocol.Unlocks
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -183,6 +185,63 @@ class ServerConfigTest {
         assertEquals(Unlocks.DEFAULT_MULTIPLAYER, config.unlocks.multiplayer)
     }
 
+    /**
+     * **A server nobody configured plays nobody.**
+     *
+     * The one assertion in this file about a feature rather than about a variable, and it is here
+     * for the reason the rest are: a deployment that quietly began populating its own lobby on
+     * upgrade would be a different product delivered without anybody choosing it.
+     */
+    @Test
+    fun botsAreOffUntilADeploymentAsksForThem() {
+        val config = ServerConfig.from(production("BREVO_API_KEY" to NOT_A_REAL_KEY)::get)
+
+        assertFalse(config.bots.enabled)
+        assertFalse(config.bots.wagers, "and they risk nothing even once they are on")
+    }
+
+    /** Every dial is readable, and the band is one `MatchAiOptions.forLevel` understands. */
+    @Test
+    fun theBotDialsAreReadFromTheEnvironment() {
+        val policy = BotPolicy.from(
+            mapOf(
+                "TTO_BOTS_ENABLED" to "true",
+                "TTO_BOTS_COUNT" to "3",
+                "TTO_BOTS_BAND" to "AVERAGE",
+                "TTO_BOTS_TABLE_WAIT_SECONDS" to "90",
+            )::get,
+        )
+
+        assertTrue(policy.enabled)
+        assertEquals(BOT_COUNT, policy.count)
+        assertEquals(NpcLevel.AVERAGE, policy.band)
+        assertEquals(BOT_WAIT_MILLIS, policy.tableWaitMillis)
+    }
+
+    /**
+     * A dial that will not parse costs the dial, not the boot.
+     *
+     * The same judgement `unlocksFrom` makes one test up, and the reason is sharper here: none of
+     * these numbers is load-bearing enough to be worth refusing to start over, and a band name
+     * from a newer build falls back to the strong end rather than to a free win.
+     */
+    @Test
+    fun aMisspeltBotDialFallsBackRatherThanFailing() {
+        val policy = BotPolicy.from(
+            mapOf(
+                "TTO_BOTS_ENABLED" to "true",
+                "TTO_BOTS_COUNT" to "several",
+                "TTO_BOTS_BAND" to "UNSTOPPABLE",
+                "TTO_BOTS_TABLE_WAIT_SECONDS" to "0",
+            )::get,
+        )
+
+        val defaults = BotPolicy()
+        assertEquals(defaults.count, policy.count)
+        assertEquals(NpcLevel.EXPERT, policy.band)
+        assertEquals(defaults.tableWaitMillis, policy.tableWaitMillis)
+    }
+
     /** Everything a production boot needs, plus whatever the test is about. */
     private fun production(vararg extra: Pair<String, String>) = mapOf(
         "TTO_ENV" to "production",
@@ -193,6 +252,10 @@ class ServerConfigTest {
 
     private companion object {
         const val DEFAULT_PORT = 8080
+
+        /** `TTO_BOTS_COUNT` and `TTO_BOTS_TABLE_WAIT_SECONDS` as the policy stores them. */
+        const val BOT_COUNT = 3
+        const val BOT_WAIT_MILLIS = 90_000L
         const val OVERRIDDEN_PORT = 9090
 
         /** Shaped like a Brevo key and belonging to nobody. Never sent anywhere: see [Mailer]. */

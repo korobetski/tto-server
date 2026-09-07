@@ -60,6 +60,18 @@ server.
 | `MAIL_SENDER_NAME` | `Triple Triad` | what the recipient sees in the From line |
 | `TTO_UNLOCK_MULTIPLAYER` | `5` | the level refereed play opens at |
 | `TTO_UNLOCK_AUCTION` | `5` | the level the auction house opens at |
+| `TTO_BOTS_ENABLED` | `false` | **off everywhere until set.** Whether this server plays accounts of its own — see below |
+| `TTO_BOTS_COUNT` | `10` | how many |
+| `TTO_BOTS_BAND` | `EXPERT` | how hard they play. An `NpcLevel` name; an unknown one falls back to `EXPERT` |
+| `TTO_BOTS_FORMAT` | `ff14-standard` | which format they grind and shop in |
+| `TTO_BOTS_NAME_PREFIX` | `Duelist` | what they are called, before four random digits |
+| `TTO_BOTS_WAGER` | `false` | whether they may sit down at a table that stakes MGP or cards |
+| `TTO_BOTS_RESERVE` | `5000` | MGP a bot keeps out of the shop. Idle while wagering is off |
+| `TTO_BOTS_TABLE_WAIT_SECONDS` | `45` | how long a table stands unanswered before a bot takes it |
+| `TTO_BOTS_MOVE_MIN_SECONDS` | `3` | the fastest a bot places a card |
+| `TTO_BOTS_MOVE_SPREAD_SECONDS` | `6` | added to the above, drawn per move |
+| `TTO_BOTS_IDLE_SECONDS` | `20` | how long a bot with nothing to do waits |
+| `TTO_BOTS_TICK_SECONDS` | `2` | how often the director looks at all |
 
 ### Mail, and why the server refuses to start without a provider
 
@@ -92,6 +104,88 @@ updated asks the same question and gets the new answer.
 An unparseable value falls back to `:core`'s default rather than stopping the boot, which is the
 opposite judgement from `DATABASE_URL` and deliberately so: a wrong database is a server that
 cannot work, a wrong threshold costs a door being open too early.
+
+### The bots, and the four things to decide before turning them on
+
+`TTO_BOTS_ENABLED` makes this server play accounts of its own: ordinary `accounts` rows with
+ordinary profiles, driven in-process by `BotDirector`, which opens matches through the same
+referees a client reaches over HTTP. See `BotDirector` for the design and `V16__bots.sql` for the
+one table it adds.
+
+What a bot actually does, between matches and in them:
+
+- **Plays both modes.** Solo matches against the roster, and a lobby table nobody else took. Every
+  placement is `MatchSearch` at the band its row names, given only the visibility the rules grant.
+- **Takes what it wins.** An opened pack and an opponent's drops arrive as *bag items*, not as
+  cards; `BotBrain.emptying` uses them, which is also how the XP and MGP potions get spent — a boon
+  is a count of boosted matches, so using one is what makes the next win pay more.
+- **Buys packs** with what it earns, keeping `TTO_BOTS_RESERVE` back.
+- **Sells its surplus commons**, which is about the Random rule as much as the money: the collection
+  is drawn from *one entry per copy*, so a fourth copy of a one-star is a fourth ticket in a draw
+  the bot does not want to win. It never sells a copy a deck is built on, and never above two stars.
+- **Keeps three decks and chooses between them** (`BotDecks`): the strongest legal five, the five
+  most concentrated in one card type, and the five spread over the most types. A table states its
+  rules and an opponent declares theirs, so the choice is made from public terms — the concentrated
+  hand under **Ascension**, where every card of a type on the board raises every card of that type;
+  the spread one under **Descension**, which is the same tally punishing what Ascension rewards.
+  Elemental gets the strongest hand: its modifier belongs to the cell, drawn when the match is
+  dealt, so there is nothing to prepare against.
+
+It does **not** read the opponent's cards to counter-pick, though `npcs.json` would let it. That is
+a different game from the one a person is playing, and these accounts exist to measure the one that
+is played.
+
+**It is off by default and stays off on upgrade.** A server that populates its own lobby is a
+different product from one that does not, and nobody should get it by deploying a new tag.
+
+Four things are worth deciding deliberately rather than inheriting:
+
+1. **Nothing marks a bot on the wire.** No field on `PvpTable`, none on `PvpMatchView`; the only
+   place the distinction exists is the `bots` table and the metrics. So `TTO_BOTS_NAME_PREFIX` is
+   the whole of what a player can read. The default is neutral. Set it to something obvious if this
+   deployment would rather be plain about it.
+2. **A fresh roster cannot fill the lobby yet.** A bot starts at level 1 and `TTO_UNLOCK_MULTIPLAYER`
+   is 5, and the gate is checked for a bot exactly as it is for a person. So the first hours after
+   enabling this are bots playing solo matches; the lobby fills once they have climbed. That is the
+   feature working, not a fault — but it means turning this on the evening you need a busy lobby
+   does not produce one.
+3. **`TTO_BOTS_WAGER` moves real value.** With it off a bot only sits down at a table that risks
+   nothing at all — no MGP and no trade rule. With it on, a card won from a bot is a card the world
+   gained and one lost to a bot is a card that left it. The economy is the reason to hold this until
+   the metrics below say what it would cost.
+4. **`TTO_BOTS_COUNT` is CPU.** Every placement at `EXPERT` is a depth-five alpha-beta search with a
+   node budget of 400 000, on the process that serves requests. Ten bots at one placement every
+   three to nine seconds is small; a hundred has not been measured.
+
+### What the bots are for, and how to read them
+
+Three uses, in the order they pay off:
+
+- **A lobby that answers.** `TTO_BOTS_TABLE_WAIT_SECONDS` is the whole of the policy: below it a
+  table belongs to whoever is reading the lobby, above it to a bot.
+- **A progression curve nobody had to play.** The gauges below are sampled by Prometheus, so *rate*
+  over them is the answer to "how fast does an account actually climb" — the question the reward
+  tables were tuned against a guess for.
+- **A balance experiment.** The band is a column on `bots`, not a constant: `UPDATE bots SET band =
+  'ADVANCED' WHERE ...` splits the roster, and the same gauges then read per band.
+
+| Gauge | Tag | What it says |
+|---|---|---|
+| `tto_bots_count` | — | how many accounts this server plays |
+| `tto_bots_level` | `band` | mean level |
+| `tto_bots_mgp` | `band` | mean purse |
+| `tto_bots_collection` | `band` | mean distinct cards owned |
+| `tto_bots_matches` | `band` | mean matches played |
+| `tto_bots_wins` | `band` | mean matches won |
+
+They are read from the bots' own profiles — one query per scrape over `bots` joined to
+`characters`, bounded by the roster rather than by how long the deployment has been running. The
+`matches` table remains the better source for anything asked once: what a particular opponent pays,
+how a band's win rate moved across a release.
+
+**Bot matches are in `matches` alongside everybody else's.** Any query about players has to exclude
+them — `WHERE NOT EXISTS (SELECT 1 FROM bots b WHERE b.account_id = matches.account_id)` — and any
+that does not is measuring the server playing itself.
 
 ### Changing a value on the deployed host
 
@@ -313,7 +407,8 @@ and unscraped.
   ships that stream; a file appender inside the container writes into a layer that dies with it.
 - **Correlation ids**: every request carries `X-Request-Id`, generated if the caller did not supply
   one, and printed on every log line via the MDC. One grep recovers a request's whole story.
-- **Metrics**: `/metrics` in Prometheus format, JVM and HTTP.
+- **Metrics**: `/metrics` in Prometheus format, JVM and HTTP — plus the `tto_bots_*` gauges when
+  `TTO_BOTS_ENABLED` is set, which are the progression measurement described under Configuration.
 
 Deliberately absent: a Prometheus and a Grafana in `compose.yaml`. Two containers nobody looks at
 are not observability, and the endpoint is there for the day something scrapes it.
