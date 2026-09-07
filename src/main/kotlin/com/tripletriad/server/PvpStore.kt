@@ -399,13 +399,18 @@ class PvpStore(
      * The refusal is what makes a double tap harmless: the expected move count is checked in the
      * `WHERE`, so a second identical request finds the count already advanced and changes nothing.
      * Without it, two requests a few milliseconds apart would place two cards from one tap.
+     *
+     * The pairing deadline is dropped here whatever it was: a match somebody has placed a card in
+     * is not a match nobody came to, and leaving it set would let [pairingOverdue] abandon a game
+     * in progress — which is what a client too old to call [attend] would otherwise suffer.
      */
     fun appendMove(id: String, expectedMoves: Int, move: PvpMove, deadline: Long?): Boolean =
         transaction { db ->
             db.prepareStatement(
                 """
             UPDATE pvp_matches
-            SET moves = moves || ?::jsonb, turn_deadline = ?, updated_at = now()
+            SET moves = moves || ?::jsonb, turn_deadline = ?, pairing_deadline = NULL,
+                updated_at = now()
             WHERE id = ? AND status = 'PLAYING' AND jsonb_array_length(moves) = ?
                 """.trimIndent(),
             ).use { statement ->
@@ -436,7 +441,7 @@ class PvpStore(
         db.prepareStatement(
             """
             UPDATE pvp_matches
-            SET status = ?, forfeited_by = ?, turn_deadline = NULL,
+            SET status = ?, forfeited_by = ?, turn_deadline = NULL, pairing_deadline = NULL,
                 claim_deadline = ?,
                 finished_at = CASE WHEN ? THEN NULL ELSE now() END,
                 updated_at = now()
@@ -553,6 +558,72 @@ class PvpStore(
         }
     }
 
+    /**
+     * Records that [side] has opened the board, and starts the turn clock once both have.
+     *
+     * One statement, because the second sighting and the clock it starts have to be decided
+     * together: read-modify-write here would let two simultaneous first polls each see the other
+     * side absent and leave a paired, attended match with no deadline at all.
+     *
+     * Every write is idempotent — `COALESCE` keeps the first sighting, and the deadline is only
+     * ever written where there was none — so the board may call this on every open without the
+     * clock sliding forward each time.
+     *
+     * @param deadline the turn deadline to start when this is the second sighting.
+     * @return true if the row was updated, false if the match is over or not there.
+     */
+    fun attend(id: String, side: CardColor, now: Long, deadline: Long): Boolean =
+        transaction { db ->
+            // Not user input: one of two literals chosen here.
+            val mine = if (side == CardColor.BLUE) "blue_seen_at" else "red_seen_at"
+            val theirs = if (side == CardColor.BLUE) "red_seen_at" else "blue_seen_at"
+            db.prepareStatement(
+                """
+            UPDATE pvp_matches
+            SET $mine = COALESCE($mine, ?),
+                turn_deadline = CASE
+                    WHEN $theirs IS NULL THEN turn_deadline
+                    ELSE COALESCE(turn_deadline, ?)
+                END,
+                pairing_deadline = CASE
+                    WHEN $theirs IS NULL THEN pairing_deadline
+                    ELSE NULL
+                END,
+                updated_at = now()
+            WHERE id = ? AND status = 'PLAYING'
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setTimestamp(1, Timestamp(now))
+                statement.setTimestamp(2, Timestamp(deadline))
+                statement.setString(3, id)
+                statement.executeUpdate() > 0
+            }
+        }
+
+    /**
+     * Every live match that was paired and never opened, past the wait it was given.
+     *
+     * The pairing counterpart of [overdue], and separate from it because the outcome differs in
+     * kind: an overdue *turn* is a forfeit with a winner and a payout, an unopened match is an
+     * `ABANDONED` row that credits nobody.
+     */
+    fun pairingOverdue(now: Long, limit: Int = SWEEP_LIMIT): List<PvpMatchRow> = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT * FROM pvp_matches
+            WHERE status = 'PLAYING' AND pairing_deadline IS NOT NULL AND pairing_deadline < ?
+            ORDER BY pairing_deadline
+            LIMIT ?
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setTimestamp(1, Timestamp(now))
+            statement.setInt(2, limit)
+            statement.executeQuery().use { rows ->
+                buildList { while (rows.next()) add(rows.toMatch()) }
+            }
+        }
+    }
+
     private fun readMatch(db: Connection, id: String): PvpMatchRow? =
         db.prepareStatement("SELECT * FROM pvp_matches WHERE id = ?").use { statement ->
             statement.setString(1, id)
@@ -565,8 +636,8 @@ class PvpStore(
             """
             INSERT INTO pvp_matches
                 (id, blue_account, red_account, format, rules, seed, blue_hand, red_hand,
-                 first_player, moves, stake, status, turn_deadline)
-            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?)
+                 first_player, moves, stake, status, turn_deadline, pairing_deadline)
+            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?::jsonb, ?::jsonb, ?, ?, ?)
             """.trimIndent(),
         ).use { statement ->
             statement.setString(1, row.id)
@@ -582,6 +653,7 @@ class PvpStore(
             statement.setString(11, json.encodeToString(PvpStake.serializer(), row.stake))
             statement.setString(12, row.status.name)
             statement.setTimestamp(13, row.turnDeadline?.let(::Timestamp))
+            statement.setTimestamp(14, row.pairingDeadline?.let(::Timestamp))
             statement.executeUpdate()
         }
     }
@@ -600,6 +672,9 @@ class PvpStore(
         stake = json.decodeFromString(PvpStake.serializer(), getString("stake")),
         status = PvpMatchStatus.valueOf(getString("status")),
         turnDeadline = getTimestamp("turn_deadline")?.time,
+        blueSeenAt = getTimestamp("blue_seen_at")?.time,
+        redSeenAt = getTimestamp("red_seen_at")?.time,
+        pairingDeadline = getTimestamp("pairing_deadline")?.time,
         forfeitedBy = getString("forfeited_by")?.let(CardColor::valueOf),
         claimed = json
             .decodeFromString<Map<String, List<Int>>>(getString("claimed"))
