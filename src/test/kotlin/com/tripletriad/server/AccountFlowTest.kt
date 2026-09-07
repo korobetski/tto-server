@@ -1,9 +1,11 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.DailyQuestCatalog
 import com.tripletriad.model.Deck
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.QuestLog
 import com.tripletriad.model.Stats
+import com.tripletriad.model.WeeklyQuestCatalog
 import com.tripletriad.protocol.AccountError
 import com.tripletriad.protocol.AccountFailure
 import com.tripletriad.protocol.CURRENT_VERSION
@@ -429,7 +431,22 @@ class AccountFlowTest {
         val reward = assertNotNull(receipt.reward, "an accepted match reported no reward")
         val after = assertNotNull(receipt.player).save
 
-        assertEquals(before.mgp + reward.mgp, after.mgp)
+        // **The quests are counted, and leaving them out is what made this test flaky.**
+        //
+        // `RewardSummary.mgp` is what the *match* paid, deliberately: a quest's MGP is credited by
+        // the same call and reported separately, by id, so a result panel can name the quest rather
+        // than fold its prize into the match's. See `MatchReward.quests`, which says so at length.
+        //
+        // The deal here comes from a server-issued ticket drawn on `Random.Default`, so whether the
+        // match happens to finish a quest varies from run to run. Asserting `before + reward.mgp`
+        // alone therefore passed whenever no quest completed and failed when one did — and the
+        // failure looked like the server crediting money it had not reported. Summing them is both
+        // the honest invariant and a stronger one: every MGP in the profile is now accounted for.
+        val questMgp = reward.questIds.mapNotNull { DailyQuestCatalog[it] }
+            .sumOf { it.reward.mgp } +
+            reward.weeklyQuestIds.mapNotNull { WeeklyQuestCatalog[it] }.sumOf { it.reward.mgp }
+
+        assertEquals(before.mgp + reward.mgp + questMgp, after.mgp)
         assertEquals(before.pveMatches + 1, after.pveMatches, "the match was not counted")
         assertTrue(
             reward.items.isEmpty() || reward.result == MatchResult.WIN,
