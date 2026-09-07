@@ -348,7 +348,9 @@ class BotBrainTest {
 
     private companion object {
         const val FORMAT = "ff14-standard"
-        const val SEED = 20260907
+
+        /** Distinct from every other class's, per the note in `BotDirectorTest`. */
+        const val SEED = 20_260_921
         const val NOW = 1_800_000_000_000L
         const val WAIT = 45_000L
 

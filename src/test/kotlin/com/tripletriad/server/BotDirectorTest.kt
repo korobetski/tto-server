@@ -228,6 +228,45 @@ class BotDirectorTest {
     }
 
     /**
+     * **A bot opens the board it just sat down at.**
+     *
+     * Since `V16__pvp_pairing.sql` the turn clock does not start until both sides have been seen,
+     * and a sighting is recorded by `PvpRoutes.attend` — which the *board* calls on open, not the
+     * poll. A bot reads its match out of the store, so without this it would never attend: the
+     * match would sit until `sweepPairing` closed it as `ABANDONED`, paying nobody, and the person
+     * across the table would have waited for a match that never began.
+     *
+     * Asserted on the stored sighting rather than on the deadline, because the deadline only
+     * appears once the *other* side has arrived too — and the host here is a fixture that never
+     * opens anything.
+     */
+    @Test
+    fun aBotAttendsTheMatchItJoins() {
+        clearBots()
+        val director = director(policy(count = 1))
+        director.ensureRoster()
+        val bot = assertNotNull(bots.due(now).firstOrNull())
+        levelUp(bot.accountId)
+
+        val host = person("attend")
+        val table = assertNotNull(open(host, PvpStake.None), "the fixture needs a table")
+
+        now += WAIT + GRACE
+        director.tick()
+
+        val match = assertNotNull(pvp.liveMatchFor(bot.accountId), "the bot should have joined")
+        val side = assertNotNull(match.sideOf(bot.accountId))
+        assertNotNull(match.seenAt(side), "a bot that never attends is a match nobody can win")
+        assertNull(
+            match.seenAt(side.opposite()),
+            "and it must not attend for the person on the other side",
+        )
+        assertFalse(match.isAttended, "so the clock is still waiting on the host")
+
+        withdraw(table.table.id, host)
+    }
+
+    /**
      * A bot does not sit down for a wager while the deployment has not said it may.
      *
      * The table stakes no MGP at all and is still refused, because a trade rule moves a **card** —
@@ -385,6 +424,18 @@ class BotDirectorTest {
         /** Past `Unlocks.DEFAULT_MULTIPLAYER`, without being near a stake ceiling worth having. */
         const val UNLOCKED = 6
 
-        val GENERATOR = Random(20260907)
+        /**
+         * **A seed no other test class in this suite uses.**
+         *
+         * Match and table ids are minted from this generator — `PvpReferee.newId` — and every test
+         * class writes into the *same* database. Two classes seeded alike therefore mint the same
+         * ids and the second one to run collides on `pvp_tables_pkey`, which surfaces as a failure
+         * in whichever of the two happened to go second rather than in the one that is wrong.
+         *
+         * This file first used 20260907, the day it was written, and `PvpPairingTest` had picked
+         * the same date for the same reason. Dates are the convention here; a date somebody else
+         * has already taken is not one.
+         */
+        val GENERATOR = Random(20_260_922)
     }
 }

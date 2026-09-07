@@ -180,9 +180,29 @@ class BotDirector(
     }
 
     /** Places one card in the live match, if there is one and it is this bot's turn. */
+    // ReturnCount: four ways to have nothing to place — no match, no side, an unreplayable board,
+    // and a board that is not this bot's to move on — plus attending, which is an action of its
+    // own. Each is a different fact and worth naming where it is decided.
+    @Suppress("ReturnCount")
     private fun playedPvp(bot: Bot): Boolean {
         val row = pvp.liveMatchFor(bot.accountId) ?: return false
         val side = row.sideOf(bot.accountId) ?: return false
+
+        // **Opening the board is an action, and a bot is its own board.**
+        //
+        // Since `V16__pvp_pairing.sql` the turn clock does not start until *both* sides have been
+        // seen, and `PvpRoutes.attend` is what records a sighting — called by the board on open and
+        // deliberately not by the poll. A bot reads its match straight out of the store, so nothing
+        // would ever attend for it: the match would sit unattended until `sweepPairing` closed it
+        // as `ABANDONED`, paying nobody, and the person across the table would have waited for a
+        // match that never began.
+        //
+        // Attending counts as this pass's action so the first card comes a move-delay later, which
+        // is also what a person does — open the board, then think.
+        if (row.seenAt(side) == null) {
+            return pvpReferee.attend(row.id, bot.accountId) != null
+        }
+
         val at = row.position(cards) ?: return false
         val move = BotBrain.placement(at, side, optionsFor(bot), random()) ?: return false
 
@@ -226,7 +246,11 @@ class BotDirector(
 
         val joined = pvpReferee.joinTable(table.id, bot.accountId, deck)
         if (joined is Joined.Playing) {
-            logger.info("Bot {} joined table {}", bot.accountId, table.id)
+            // Immediately, rather than on the next pass: the host has been waiting since the table
+            // went up, and the clock does not start until both sides are seen. See `playedPvp`,
+            // which attends anything this missed — a restart between the join and here, say.
+            pvpReferee.attend(joined.match.id, bot.accountId)
+            logger.info("Bot {} joined and attended table {}", bot.accountId, table.id)
             return true
         }
         return false
