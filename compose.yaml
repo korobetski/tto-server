@@ -116,6 +116,48 @@ services:
     ports:
       - "127.0.0.1:${TTO_PORT:-8080}:8080"
 
+  caddy:
+    # Not part of the development stack, and here for exactly one reason: the routing block in
+    # ./Caddyfile decides which requests belong to the portal and which belong to the API, it is
+    # the single riskiest thing in the deployment, and without this service the only place to try
+    # it is the VPS. Getting it wrong there breaks every installed client at once.
+    #
+    # Behind a profile, so `docker compose up -d` still brings up two containers and nothing more.
+    # It is started deliberately, and checked deliberately:
+    #
+    #   docker compose --profile web up -d
+    #   curl -si localhost:8081/server        # the API, reached through the proxy
+    #   curl -si localhost:8081/metrics       # 404 - refused at the edge
+    #   curl -si localhost:8081/fr/           # the portal, once web/portal points at a build
+    #
+    # See web/README.md for how to put a portal build under it.
+    profiles: ["web"]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      # `http://` rather than a bare hostname, and the scheme is doing real work: an explicit
+      # `http://` turns automatic HTTPS off for this site. A bare `localhost` would have Caddy mint
+      # a certificate from its own internal CA and listen on 443 instead, so every check above
+      # would need `curl -k` and would be testing a code path the VPS does not take.
+      TTO_DOMAIN: ${TTO_DOMAIN:-http://localhost}
+      # Nothing here renews a certificate, so this is never read. It is set because the global
+      # block in the Caddyfile names it, and an unset variable there is a hard start-up failure.
+      TTO_TLS_EMAIL: ${TTO_TLS_EMAIL:-dev@localhost}
+    ports:
+      # Loopback, and not port 80: a development machine may well have something else on 80, and
+      # nothing in this file should be reachable from the network.
+      - "127.0.0.1:${TTO_WEB_PORT:-8081}:80"
+    volumes:
+      # The same file the VPS runs, unmodified. A development Caddyfile that differed from the
+      # deployed one would be testing a configuration nobody deploys.
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Stands in for the directory the portal's CI fills on the VPS. Empty in a fresh clone, which
+      # is a portal that answers 404 and an API that works — the correct behaviour for a host that
+      # has never had a portal deployed to it.
+      - ./web:/srv/web:ro
+
 secrets:
   gradle_properties:
     file: ${GRADLE_PROPERTIES:?set GRADLE_PROPERTIES in .env - see .env.sample}

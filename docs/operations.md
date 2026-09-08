@@ -231,6 +231,39 @@ what the process actually parsed. There is no such route for `BREVO_API_KEY` on 
 to confirm a mail key is to ask for a code and watch for the mail, not to have the server read a
 credential back to you.
 
+### The proxy is reloaded by the deployment, not by `up -d`
+
+`/srv/tto/Caddyfile` arrives with every release — the tarball in `.github/workflows/release.yml`
+carries it — and it is a **bind mount**. Its contents are not part of the `caddy` service's
+specification, so `docker compose up -d` finds nothing to change and leaves the container running
+the configuration it was started with. That was invisible for as long as the file never changed;
+from the moment it does, the file on the host and the routing actually in force stop agreeing, and
+nothing anywhere says so.
+
+`scripts/deploy.sh` closes that with a reload after the readiness gate. The one case it does not
+cover is an edit made on the host, which needs the same command by hand:
+
+```bash
+cd /srv/tto
+docker compose -f compose.prod.yaml exec caddy caddy reload --config /etc/caddy/Caddyfile
+```
+
+`reload` and not `restart`, and the difference is the whole point. Caddy parses and validates the
+new configuration first and swaps it in only if it is good, so a typo leaves the previous one
+serving and costs nobody a connection; a restart drops every connection first and discovers the typo
+afterwards. It is also why `deploy.sh` exits **3** instead of rolling the release back when the
+reload fails: a configuration Caddy refused is one it never loaded, so the site is stale rather than
+down, and rolling a healthy image back would be the more disruptive of the two.
+
+To read what it is running rather than what the file claims:
+
+```bash
+docker compose -f compose.prod.yaml exec caddy wget -qO- localhost:2019/config/
+```
+
+None of this applies to the portal's **content**. `/srv/tto/web` is read from disk on every request,
+so a portal deployment lands the moment its symlink moves and Caddy is never told anything.
+
 ### The server does not connect as the superuser
 
 Two roles, and the distinction is deliberate. `POSTGRES_USER` (`tripletriad`) owns the cluster and is
@@ -440,4 +473,5 @@ on a tag; `:core` is published from the `tto-core` repository and consumed as an
 - `deployment.md` — provisioning the VPS, and how a tag becomes the running server
 - `security-review.md` — a read of the whole repository for the ways something could be taken or
   taken down, with what is already right recorded next to what is not
+- `web-platform.md` — why Caddy serves static files at all, and what `/srv/tto/web` is for
 - `../../AS3-Triple-Triad/docs/migration/09-PHASE-5-NETWORK.md` — the design this serves

@@ -128,6 +128,18 @@ services:
       TTO_TLS_EMAIL: ${TTO_TLS_EMAIL:?set TTO_TLS_EMAIL in .env - Let's Encrypt expiry warnings}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # The portal, and eventually the browser client. This directory is not in this repository
+      # and is never written by a release of it: the tarball in .github/workflows/release.yml
+      # extracts over /srv/tto without deleting anything it did not bring, which is what lets a
+      # second repository own a subdirectory of the same tree. `tto-web`'s CI unpacks a build
+      # into web/releases/<sha> and moves the `web/portal` symlink onto it.
+      #
+      # Read-only, and that is not decoration: this mount is the one place where content built
+      # somewhere else is served to the public, so the proxy holding it must not be able to
+      # change it. Create it before the first deployment — see docs/deployment.md — because a
+      # missing bind-mount source is created by Docker as an empty directory owned by root, and
+      # the deploy user then cannot write into it.
+      - ./web:/srv/web:ro
       # The certificates and the ACME account key. Losing this volume is not fatal but it is not
       # free either — Let's Encrypt rate-limits issuance per domain, and a container that is
       # recreated often enough without it will eventually be refused.

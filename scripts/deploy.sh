@@ -15,6 +15,10 @@
 # third outcome where the stack is half-updated and nobody noticed — the readiness gate below is
 # what makes the difference, and the rollback is what makes it true rather than merely intended.
 #
+# It exits 0 when the new image is live and the proxy is running the configuration that shipped
+# with it, 1 when the new image failed and the previous one is serving, 2 when neither is, and 3
+# when the image is live but Caddy refused the new configuration and kept its old one.
+#
 # ### What it does not
 #
 # It does not back the database up first, and it cannot: the migration has already run by the time
@@ -63,6 +67,20 @@ await_ready() {
         elapsed=$((elapsed + 3))
     done
     return 1
+}
+
+# Applies the Caddyfile that came with this release. Every release ships one — see the tarball in
+# .github/workflows/release.yml — but it arrives as a bind mount, so its contents are not part of
+# the `caddy` service's specification and `up -d` has no reason to recreate the container for it.
+# Without this call a routing change is delivered on every deployment and applied on none of them,
+# and the symptom is the worst kind there is: the file on the host says one thing and the proxy in
+# front of the API does another.
+#
+# `reload` and not `restart`. Caddy parses and validates the new configuration first and swaps it in
+# only if it is good, so a typo leaves the previous one serving and costs nobody a connection. A
+# restart does the opposite — it drops every connection first and discovers the typo afterwards.
+reload_proxy() {
+    $COMPOSE exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 }
 
 # Rewrites the one line that says what this host runs. Atomic: a half-written .env is a host that
@@ -121,7 +139,20 @@ if await_ready; then
     # every tag this host has deployed stays pullable locally, which is what makes a rollback
     # instant instead of a download.
     docker image prune --force > /dev/null 2>&1 || true
-    exit 0
+
+    # The server is live and recorded; the proxy in front of it is the last thing to catch up.
+    echo "==> reloading the proxy"
+    if reload_proxy; then
+        exit 0
+    fi
+
+    # Nothing is rolled back here, deliberately. The new image answered /health/ready and `.env`
+    # names it, so the deployment itself stands — and a configuration Caddy *refused* is one it
+    # never loaded, so traffic never stopped and the routing in force is still the previous
+    # release's. That is a stale site, not a broken one, and the distinct exit code is there so
+    # that whoever reads the failure does not have to guess which of the two it is.
+    echo "FAILED: $IMAGE is live but Caddy refused the new configuration - routing is stale" >&2
+    exit 3
 fi
 
 # ---- the rollback ------------------------------------------------------------------------------

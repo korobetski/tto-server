@@ -137,3 +137,8 @@ restarts — rolling itself back if the new one never answers `/health/ready`.
 
 [docs/core-package.md](docs/core-package.md) — why `com.tripletriad:core` is a published package and
 not a directory somebody has to have.
+
+[docs/web-platform.md](docs/web-platform.md) — the portal, the administration console and the
+browser client: three products, three hostnames, and why the API's own hostname is the one that can
+never move. What is in this repository is the routing that serves the first of them; the sites
+themselves live elsewhere.

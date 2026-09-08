@@ -1,0 +1,5 @@
+# Everything under this directory is built by another repository and arrives on the VPS by its own
+# deployment. None of it belongs in this one.
+*
+!.gitignore
+!README.md

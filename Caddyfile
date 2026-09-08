@@ -4,7 +4,15 @@
 # start and every 60 days after, and redirects :80 to :443 without being asked. That is the whole
 # reason it is here rather than Nginx: a renewal nobody has to remember is a renewal that does not
 # expire on a Sunday.
-
+#
+# It has two jobs, and the route block below is where they are told apart: it serves the portal's
+# static files for the handful of paths that are the portal's, and hands everything else to the
+# API. Both live on this one hostname on purpose — see docs/web-platform.md for why the API's
+# hostname is the one thing here that can never move, and why sharing it removes CORS entirely.
+#
+# No blank line before the block below, and it is not an oversight: `caddy fmt` removes it, and
+# scripts/deploy.sh reloads Caddy on every deployment — so the blank line costs a formatting
+# complaint in the release log every single time.
 {
 	# Where expiry and validation-failure warnings go. Required by ACME, and the only warning that
 	# arrives before the certificate is actually broken.
@@ -34,19 +42,80 @@
 	# Same for the health endpoints: they are for the container runtime and for scripts/deploy.sh,
 	# both of which reach the server directly on the compose network. Published, they are a free
 	# readiness oracle for anyone probing the host.
-	@internal path /metrics /health/*
-	respond @internal 404
+	#
+	# `/admin/*` is refused here before a single admin route exists. The administration console gets
+	# its own hostname and proxies those routes itself; on this one — the host every installed client
+	# is pinned to, and the only one a stranger has a reason to guess — they are not reachable at
+	# all. A prefix that 404s from the day the first admin route is written is a prefix that was
+	# never briefly public by accident.
+	@internal path /metrics /health/* /admin/*
 
-	# `trusted_proxies` is deliberately absent, and adding it is a security change rather than a
-	# configuration one. With no trusted proxies Caddy discards whatever `X-Forwarded-For` a caller
-	# sent and writes the peer address instead, so the header the server reads is a fact rather than
-	# a claim — and the server's per-address rate limits (sign-in, registration) are keyed on it.
-	# See `Observability.kt`, which reads the *last* entry precisely so that a second hop appearing
-	# here degrades gracefully instead of handing an attacker their own bucket key.
-	reverse_proxy server:8080 {
-		# The server generates one when absent and logs every line under it, so a request can be
-		# followed end to end. Passing the proxy's own id through means the two agree.
-		header_up X-Request-Id {http.request.header.X-Request-Id}
+	# The portal's paths, enumerated. Everything not named here belongs to the API; see the fallback
+	# at the end of the route block for why that direction and not the other one.
+	#
+	# `/fr` and `/en` are listed next to `/fr/*` and `/en/*` on purpose: Caddy's path matcher reads
+	# `/fr/*` as "/fr/ followed by something", so the bare prefix a person types by hand is not
+	# covered by it.
+	#
+	# There is no `/rss.xml` here, and its absence is deliberate. The feeds are per-language —
+	# `/fr/rss.xml` and `/en/rss.xml`, already covered by the two wildcards — because a feed at the
+	# root would have to pick a language with no visitor to ask and no page to ask them on. A
+	# request for `/rss.xml` reaches the API and gets a clean 404.
+	#
+	# `/images/*` matches nothing today: the portal's screenshots are processed at build time and
+	# come out under `/_astro/`. It is listed for the files that will not be — an Open Graph image,
+	# a logo — because adding a path here later means redeploying this repository to fix a 404 in
+	# the other one.
+	@portal path / /fr /en /fr/* /en/* /_astro/* /images/* /favicon.ico /favicon.svg /robots.txt
+
+	# `route` rather than three sibling `handle` blocks. Sibling handlers are ordered by how specific
+	# Caddy judges their matchers to be, which for named matchers is not something this file can
+	# state and a reader cannot check. `route` runs its children in the order they are written, so
+	# the order below is the order that happens.
+	route {
+		handle @internal {
+			respond 404
+		}
+
+		# Filled by the portal's own CI, not by this repository and not by the release tarball — see
+		# the mount in compose.prod.yaml. Until the portal is first deployed this directory is empty,
+		# which is a working state: every path in `@portal` answers 404 and the API is untouched.
+		handle @portal {
+			root * /srv/web/portal
+			file_server
+
+			# The static branch only. The portal is hand-written HTML, CSS and TypeScript with no
+			# framework and no inline script, so a policy this absolute costs it nothing, and
+			# `connect-src 'self'` is what lets its sign-up form call `POST /accounts` — same origin,
+			# which is the whole reason the portal lives on this host rather than its own.
+			#
+			# It is not in the site-wide `header` block below because the API is not a document
+			# source: a CSP on a JSON response is inert, and whoever first relaxes this for a portal
+			# page would be quietly relaxing it for every API response as well. The line is long
+			# because a Caddyfile token cannot be wrapped — a header value has nowhere to put a
+			# newline.
+			header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+		}
+
+		# The fallback, and it is the API on purpose. A portal path left out of `@portal` above 404s:
+		# visible to whoever opens that page, harmless to everyone else, fixed by adding a word. The
+		# reverse arrangement — `file_server` last — would answer a forgotten API route with "no such
+		# file", so the next portal deployment would break every installed client at once while the
+		# portal itself looked perfectly healthy.
+		handle {
+			# `trusted_proxies` is deliberately absent, and adding it is a security change rather
+			# than a configuration one. With no trusted proxies Caddy discards whatever
+			# `X-Forwarded-For` a caller sent and writes the peer address instead, so the header the
+			# server reads is a fact rather than a claim — and the server's per-address rate limits
+			# (sign-in, registration) are keyed on it. See `Observability.kt`, which reads the *last*
+			# entry precisely so that a second hop appearing here degrades gracefully instead of
+			# handing an attacker their own bucket key.
+			reverse_proxy server:8080 {
+				# The server generates one when absent and logs every line under it, so a request
+				# can be followed end to end. Passing the proxy's own id through means the two agree.
+				header_up X-Request-Id {http.request.header.X-Request-Id}
+			}
+		}
 	}
 
 	log {
@@ -60,7 +129,8 @@
 		# for a host that is HTTPS-only and staying that way, which this one is.
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
-		# The server is an API — nothing it returns is ever a document a browser should frame.
+		# Neither branch of the route above has anything a browser should frame: an API response is
+		# not a document, and the portal's one interactive page is a sign-up form.
 		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"
 		# The proxy's own version, on every response, is free reconnaissance.

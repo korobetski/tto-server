@@ -119,8 +119,17 @@ dpkg-reconfigure -plow unattended-upgrades
 ### 6. The deployment directory
 
 ```bash
-install -d -o deploy -g deploy /srv/tto /srv/tto/backups
+install -d -o deploy -g deploy /srv/tto /srv/tto/backups /srv/tto/web
 ```
+
+`/srv/tto/web` holds a site this repository does not build. Caddy mounts it read-only and serves
+`web/portal` as the portal's document root; the portal is `tto-web`, a separate repository with its
+own deployment, and no release of the server ever writes there. Create it here anyway, and create
+it as `deploy`: a bind mount whose source does not exist is created by Docker as an empty directory
+owned by `root`, and the first thing to notice is the portal's CI being unable to write into it.
+
+Leaving it empty is a working state, not a half-finished one — every path the `Caddyfile` reserves
+for the portal answers 404, and the API is untouched.
 
 As `deploy`, put the environment in place:
 
@@ -219,6 +228,13 @@ git push origin v0.2.0
 Watch it in Actions. The release is green when `/health/ready` answered on the new digest, and red
 in every other case — including the case where the deployment rolled itself back, which is a success
 for the players and a failure for the release, and is reported as the latter on purpose.
+
+A release also applies the `Caddyfile` that shipped with it: `scripts/deploy.sh` reloads Caddy once
+the new image has answered. That adds a third way for a release to be red, and it is worth being
+able to recognise it — exit **3** means the image is live and Caddy *refused* the new
+configuration, so it kept the one it had. Nothing is down; the routing in force is the previous
+release's.
+See `operations.md` § *The proxy is reloaded by the deployment, not by `up -d`*.
 
 ### Rolling back
 
