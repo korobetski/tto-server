@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import com.tripletriad.model.NpcLevel
 import com.tripletriad.protocol.AuctionPolicy
 import com.tripletriad.protocol.PvpStakePolicy
 import com.tripletriad.protocol.Unlocks
@@ -10,6 +11,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.micrometer.core.instrument.Gauge
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -79,6 +81,7 @@ fun main() {
             config.unlocks,
             config.auction,
             config.stakes,
+            config.bots,
         )
     }
 
@@ -112,6 +115,9 @@ fun Application.module(
     unlocks: Unlocks = Unlocks(),
     auction: AuctionPolicy = AuctionPolicy(),
     stakes: PvpStakePolicy = PvpStakePolicy(),
+    // Defaulted **off**, so the test seam and every existing caller get a server that plays
+    // nobody. See `BotPolicy`, which says why that is the only safe default for this one.
+    bots: BotPolicy = BotPolicy(),
 ) {
     // One store for the whole application. It holds no state of its own — the pool does — so this
     // is about there being a single place the SQL lives, not about sharing anything.
@@ -141,12 +147,15 @@ fun Application.module(
     // it needs `AccountStore` rather than the pool alone.
     val auctions = AuctionStore(dataSource, accounts, Catalogs.cards.byId, unlocks, auction)
 
-    sweepAbandonedMatches(
-        PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp, stakes),
-        accounts,
-        codes,
-        auctions,
-    )
+    // The referee the sweep uses, and the one the director plays through. One instance rather than
+    // two: it holds no state of its own, and a second would be a second copy of the deployment's
+    // stake policy to keep in step.
+    val pvpReferee = PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp, stakes)
+
+    sweepAbandonedMatches(pvpReferee, accounts, codes, auctions)
+
+    // The accounts this server plays itself. Inert unless the deployment asked for them.
+    playBots(BotStore(dataSource), accounts, pve, pvp, pvpReferee, registry, bots, unlocks, stakes)
 
     routing {
         healthRoutes(dataSource)
@@ -259,6 +268,181 @@ private fun Application.sweepAbandonedMatches(
                 logger.error("The sweep failed; retrying at the next interval", failure)
             }
         }
+    }
+}
+
+/**
+ * The loop that plays this server's own accounts.
+ *
+ * ### Its own loop, and not a passenger on the sweep
+ *
+ * `sweepAbandonedMatches` runs every thirty seconds because nothing it does is urgent — a forfeit
+ * settled thirty seconds late is a forfeit. This is the one background thing here that *is* timed
+ * against a person: "nobody joined the table for forty-five seconds" has to mean forty-five and
+ * not up to seventy-five, and a bot's turn in a live match is answered while the other player is
+ * still looking at the board. So it runs on [BotPolicy.tickMillis], which is two seconds.
+ *
+ * Two coroutines rather than one for the same reason the sweep is a coroutine rather than a cron
+ * entry: it is a `launch` in the application's own scope, it stops when the application stops, and
+ * there is nothing to deploy, monitor or schedule.
+ *
+ * ### It is safe to run twice, and that is not an accident
+ *
+ * A second instance would take the same rows: `BotStore.due` is not a lock, so two directors could
+ * both act for one bot. Every action underneath is already guarded against exactly that — a second
+ * placement is refused by `PvpStore.appendMove`'s expected-move-count, a second join by
+ * `claimTableAndOpen`, a second deal by `pve_matches_live_idx`, a second settlement by `finish`.
+ * The bot would move sooner than its cadence intended, which is the whole of the harm.
+ */
+// Nine, and every one of them is something the director cannot look up for itself. Extracted from
+// `module` rather than inlined there because that function is a list of what this application is,
+// and this is one line of it.
+@Suppress("LongParameterList")
+private fun Application.playBots(
+    bots: BotStore,
+    accounts: AccountStore,
+    pve: PveStore,
+    pvp: PvpStore,
+    pvpReferee: PvpReferee,
+    registry: PrometheusMeterRegistry,
+    policy: BotPolicy,
+    unlocks: Unlocks,
+    stakes: PvpStakePolicy,
+) {
+    if (!policy.enabled) return
+
+    val director = BotDirector(
+        cards = Catalogs.cards,
+        npcs = Catalogs.npcs,
+        formats = Catalogs.formats,
+        starters = Catalogs.starters,
+        accounts = accounts,
+        bots = bots,
+        pve = pve,
+        pvp = pvp,
+        // Its own referee rather than a shared one: `pveRoutes` builds one for the routes and this
+        // is the same class with the same collaborators, holding no state either way.
+        pveReferee = PveReferee(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts, pve),
+        pvpReferee = pvpReferee,
+        policy = policy,
+        unlocks = unlocks,
+        stakes = stakes,
+    )
+    registerBotMetrics(registry, bots)
+
+    launch {
+        logger.info(
+            "Playing {} bots at band {} in {}",
+            policy.count,
+            policy.band,
+            policy.formatId,
+        )
+        while (isActive) {
+            delay(policy.tickMillis)
+            // The same net the sweep casts, for the same reason: one unplayable board must not end
+            // the loop and strand every bot behind it.
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                val enrolled = director.ensureRoster()
+                if (enrolled > 0) logger.info("Enrolled {} bots", enrolled)
+                director.tick()
+            } catch (failure: Exception) {
+                logger.error("The bot pass failed; retrying at the next tick", failure)
+            }
+        }
+    }
+}
+
+/**
+ * The gauges that answer "are the bots getting anywhere".
+ *
+ * ### Gauges over a live read, rather than counters incremented as things happen
+ *
+ * A bot's progress is *state*, not a stream of events: its level, its purse and how wide its
+ * collection is are all in its profile, maintained by `MatchRewards.credit` on every settlement.
+ * A counter here would be a second copy of numbers `:core` already keeps, and the first thing to
+ * disagree with them after a restart.
+ *
+ * What the time dimension costs, therefore, is nothing: Prometheus samples these and *is* the
+ * history. "How fast does a bot at this band accumulate cards" is a rate over a series that exists
+ * the moment this is scraped, and no table here has to store it.
+ *
+ * ### What it costs to scrape
+ *
+ * One query per scrape, over `bots` joined to `characters` — a row per bot, indexed by primary
+ * key, with no aggregate over `matches` anywhere. It is bounded by [BotPolicy.count] rather than
+ * by how long the deployment has been running, which is the property that makes it safe to sample
+ * every fifteen seconds forever.
+ *
+ * `Micrometer` calls the supplier once per gauge per scrape, so the snapshot is taken once and the
+ * gauges read from it — otherwise five gauges per band would be five queries.
+ */
+private fun registerBotMetrics(registry: PrometheusMeterRegistry, bots: BotStore) {
+    val snapshot = BotSnapshot(bots)
+
+    Gauge.builder("tto.bots.count", snapshot) { it.read().size.toDouble() }
+        .description("How many accounts this server plays itself")
+        // **Micrometer holds a gauge's subject weakly by default.** Nothing else references this
+        // snapshot, so without the strong reference it is collectable the moment registration
+        // returns and every gauge below reports NaN — silently, and only in a long-running process
+        // where a collection has actually happened. This is the one line standing between a
+        // working chart and one that goes blank overnight.
+        .strongReference(true)
+        .register(registry)
+
+    NpcLevel.entries.forEach { band ->
+        listOf(
+            Metric("tto.bots.level", "Mean level of the bots at this band") { it.save.level },
+            Metric("tto.bots.mgp", "Mean purse of the bots at this band") { it.save.mgp },
+            Metric("tto.bots.collection", "Mean distinct cards owned") { it.collection },
+            Metric("tto.bots.matches", "Mean matches played") { it.save.stats.played },
+            Metric("tto.bots.wins", "Mean matches won") { it.save.stats.wins },
+        ).forEach { metric ->
+            Gauge.builder(metric.name, snapshot) { it.mean(band, metric.of) }
+                .tag("band", band.name)
+                .description(metric.description)
+                .strongReference(true)
+                .register(registry)
+        }
+    }
+}
+
+/** One gauge's name, help text and the field it reads. See [registerBotMetrics]. */
+private data class Metric(
+    val name: String,
+    val description: String,
+    val of: (BotProgress) -> Int,
+)
+
+/**
+ * One read of the roster, reused across the gauges of a single scrape.
+ *
+ * The window is deliberately shorter than any sane scrape interval and longer than the burst of
+ * calls one scrape makes: it exists to collapse *those*, not to cache. A stale reading here would
+ * be a chart that lags, which is the one thing a progression chart must not do.
+ */
+private class BotSnapshot(private val bots: BotStore) {
+    private var taken = 0L
+    private var progress: List<BotProgress> = emptyList()
+
+    @Synchronized
+    fun read(): List<BotProgress> {
+        val now = System.currentTimeMillis()
+        if (now - taken > WINDOW_MILLIS) {
+            progress = bots.progress()
+            taken = now
+        }
+        return progress
+    }
+
+    /** The mean of [of] over one band, or zero when the band has no bots in it. */
+    fun mean(band: NpcLevel, of: (BotProgress) -> Int): Double {
+        val values = read().filter { it.band == band }
+        return if (values.isEmpty()) 0.0 else values.sumOf { of(it) }.toDouble() / values.size
+    }
+
+    private companion object {
+        const val WINDOW_MILLIS = 1_000L
     }
 }
 

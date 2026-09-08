@@ -31,13 +31,6 @@ import kotlin.test.assertTrue
  * The same trade [PvpClaimTest] makes, for the same reason: every assertion here is about a
  * deadline, and over HTTP the clock is the wall clock and reaching a deadline means waiting five
  * real minutes. `PvpFlowTest` covers the route.
- *
- * ### Why no test here counts what the sweep swept
- *
- * `sweepPairing` closes every overdue row in the one Postgres the whole suite shares, and the
- * methods below leave matches behind that are overdue by then. The count it returns therefore
- * depends on execution order — it was asserted as 1 at first and CI read 5. What each test owns is
- * its own match, so each reads that row back instead.
  */
 class PvpPairingTest {
 
@@ -179,7 +172,12 @@ class PvpPairingTest {
         val matchId = pair(host, joiner, PvpStake(mgp = WAGER))
 
         now += PvpMatchRow.PAIRING_MILLIS + 1
-        referee.sweepPairing()
+        // **At least one, not exactly one**, for the reason `PvpClaimTest.theServerPicksForAWinner`
+        // gives about its own sweep: this database is shared with every other test in the run, and
+        // the clock this test moved is the same one every unattended match in it is waiting on. So
+        // the count is a fact about the suite rather than about this match. What is asserted about
+        // *this* match is on the lines below, and that is the claim the test is making.
+        assertTrue(referee.sweepPairing() >= 1, "the sweep abandoned nothing")
 
         val after = assertNotNull(pvp.matchById(matchId))
         assertEquals(PvpMatchStatus.ABANDONED, after.status)
@@ -195,7 +193,12 @@ class PvpPairingTest {
         referee.attend(matchId, row.blueAccount)
 
         now += PvpMatchRow.PAIRING_MILLIS + 1
-        referee.sweepPairing()
+        // **At least one, not exactly one**, for the reason `PvpClaimTest.theServerPicksForAWinner`
+        // gives about its own sweep: this database is shared with every other test in the run, and
+        // the clock this test moved is the same one every unattended match in it is waiting on. So
+        // the count is a fact about the suite rather than about this match. What is asserted about
+        // *this* match is on the lines below, and that is the claim the test is making.
+        assertTrue(referee.sweepPairing() >= 1, "the sweep abandoned nothing")
 
         val after = assertNotNull(pvp.matchById(matchId))
         assertEquals(PvpMatchStatus.ABANDONED, after.status)
@@ -208,6 +211,10 @@ class PvpPairingTest {
         val matchId = pair("early")
 
         now += PvpMatchRow.PAIRING_MILLIS - 1
+        // The count is deliberately not asserted, and for the same reason the two tests above do
+        // not assert it either: a sweep is over the whole database, so "nothing was swept" is a
+        // claim about every other test's matches rather than about this one. The status below is
+        // the claim — *this* match was left alone — and it is the one that cannot pass by accident.
         referee.sweepPairing()
         assertEquals(PvpMatchStatus.PLAYING, assertNotNull(pvp.matchById(matchId)).status)
     }
@@ -233,6 +240,10 @@ class PvpPairingTest {
         assertTrue(played is Played.Accepted, "the move was refused: $played")
 
         now += PvpMatchRow.PAIRING_MILLIS + 1
+        // The count is deliberately not asserted, and for the same reason the two tests above do
+        // not assert it either: a sweep is over the whole database, so "nothing was swept" is a
+        // claim about every other test's matches rather than about this one. The status below is
+        // the claim — *this* match was left alone — and it is the one that cannot pass by accident.
         referee.sweepPairing()
         assertEquals(PvpMatchStatus.PLAYING, assertNotNull(pvp.matchById(matchId)).status)
     }
