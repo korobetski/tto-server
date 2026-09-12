@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -242,6 +243,98 @@ class ServerConfigTest {
         assertEquals(defaults.tableWaitMillis, policy.tableWaitMillis)
     }
 
+    /**
+     * Neither `TTO_ADMIN_*` variable set is the steady state, not a misconfiguration.
+     *
+     * A deployment past its first boot has an administrator in the table and nothing in its
+     * environment — which is what `.env.prod.sample` tells the operator to arrange. Demanding them
+     * on every boot would mean keeping an administrator's password in an environment file for ever.
+     */
+    @Test
+    fun aDeploymentPastItsFirstBootNeedsNoAdministratorVariables() {
+        assertNull(ServerConfig.from(production(MAILER)::get).admin)
+    }
+
+    /** Both together, and the bootstrap is what it says. */
+    @Test
+    fun bothAdministratorVariablesTogetherDescribeTheFirstAdministrator() {
+        val environment = production(
+            MAILER,
+            "TTO_ADMIN_USERNAME" to "  ada  ",
+            "TTO_ADMIN_PASSWORD" to ADMIN_PASSWORD,
+        )
+
+        val admin = assertNotNull(ServerConfig.from(environment::get).admin)
+
+        // Trimmed, because a trailing space in an environment file is invisible and would otherwise
+        // become part of a username nobody can type.
+        assertEquals("ada", admin.username)
+        assertEquals(ADMIN_PASSWORD, admin.password)
+    }
+
+    /**
+     * One of the two without the other refuses to start, and the message names the variable.
+     *
+     * The half-configured case is the one worth being loud about: a username with no password is an
+     * administrator nobody can sign in as, and a password with no username is a secret in an
+     * environment file doing nothing — both of which look like a working deploy from outside.
+     */
+    @Test
+    fun oneAdministratorVariableWithoutTheOtherRefusesToBoot() {
+        val halves = listOf("TTO_ADMIN_USERNAME" to "ada", "TTO_ADMIN_PASSWORD" to ADMIN_PASSWORD)
+        for (half in halves) {
+            val failure = assertFailsWith<IllegalStateException> {
+                ServerConfig.from(production(MAILER, half)::get)
+            }
+
+            assertTrue(
+                failure.message.orEmpty().contains("TTO_ADMIN_USERNAME"),
+                "the message must name the variables, got: ${failure.message}",
+            )
+            assertFalse(
+                failure.message.orEmpty().contains(ADMIN_PASSWORD),
+                "and must never quote the value",
+            )
+        }
+    }
+
+    /**
+     * A name the database would refuse, and a password too short to guard an economy, are refused
+     * here — where the message can name the variable.
+     *
+     * The alternative is a `CHECK` violation from an INSERT at start-up, which surfaces as a
+     * `SQLException` an operator has to decode. Both bounds are duplicated from `V19__admin.sql`
+     * and from `FirstAdministrator` on purpose: the schema is the one that must hold, and this is
+     * the one that can explain itself.
+     */
+    @Test
+    fun anAdministratorTheSchemaWouldRefuseIsRefusedAtStartUp() {
+        val rejected = listOf(
+            "ad" to ADMIN_PASSWORD,
+            "a".repeat(TOO_LONG_USERNAME) to ADMIN_PASSWORD,
+            "ada" to "short",
+            "ada" to "é".repeat(TOO_MANY_BYTES),
+        )
+
+        for ((username, password) in rejected) {
+            val environment = production(
+                MAILER,
+                "TTO_ADMIN_USERNAME" to username,
+                "TTO_ADMIN_PASSWORD" to password,
+            )
+
+            val failure = assertFailsWith<IllegalStateException> {
+                ServerConfig.from(environment::get)
+            }
+
+            assertTrue(
+                failure.message.orEmpty().startsWith("TTO_ADMIN_"),
+                "got: ${failure.message}",
+            )
+            assertFalse(failure.message.orEmpty().contains(password), "the value is not quoted")
+        }
+    }
+
     /** Everything a production boot needs, plus whatever the test is about. */
     private fun production(vararg extra: Pair<String, String>) = mapOf(
         "TTO_ENV" to "production",
@@ -260,5 +353,15 @@ class ServerConfigTest {
 
         /** Shaped like a Brevo key and belonging to nobody. Never sent anywhere: see [Mailer]. */
         const val NOT_A_REAL_KEY = "xkeysib-0000000000000000-not-a-real-key"
+
+        /** Every production boot needs one, and none of these tests is about mail. */
+        val MAILER = "BREVO_API_KEY" to NOT_A_REAL_KEY
+
+        /** Long enough for `FirstAdministrator`, and a password for nothing that exists. */
+        const val ADMIN_PASSWORD = "not-a-real-admin-password"
+
+        /** One past `admins_username_length`, and one past bcrypt's 72 in two-byte letters. */
+        const val TOO_LONG_USERNAME = 25
+        const val TOO_MANY_BYTES = 37
     }
 }

@@ -58,6 +58,8 @@ server.
 | `BREVO_API_KEY` | — | **secret.** Required outside development; see below |
 | `MAIL_FROM` | `no-reply@localhost` | the envelope sender, and a sender Brevo has verified |
 | `MAIL_SENDER_NAME` | `Triple Triad` | what the recipient sees in the From line |
+| `TTO_ADMIN_USERNAME` | — | the first administrator's name. Unset on every boot after the first — see below |
+| `TTO_ADMIN_PASSWORD` | — | **secret.** Their password, at least 12 characters. Remove both after the first sign-in |
 | `TTO_UNLOCK_MULTIPLAYER` | `5` | the level refereed play opens at |
 | `TTO_UNLOCK_AUCTION` | `5` | the level the auction house opens at |
 | `TTO_BOTS_ENABLED` | `false` | **off everywhere until set.** Whether this server plays accounts of its own — see below |
@@ -287,6 +289,108 @@ problem. `.env.sample`'s block walks `pg_tables` and `pg_sequences` for that rea
 The two development defaults in the table above are now a `./gradlew run` fallback and nothing
 else. They name a role whose password is machine-specific, so that path needs `DATABASE_USER` and
 `DATABASE_PASSWORD` set explicitly from `.env`.
+
+### The figures live in a schema of their own
+
+`V18__stats_views.sql` puts the numbers the console's dashboard shows — and the ones a Grafana
+would show — into a `stats` schema: `stats.accounts`, `stats.match_events`, `stats.matches`,
+`stats.economy`, and `stats.overview`, which is all of them as one row with the instant it was read
+at. Reading them is one query:
+
+```bash
+docker compose -f compose.prod.yaml exec postgres \
+  psql -U tripletriad -d tripletriad -x -c "SELECT * FROM stats.overview"
+```
+
+The definitions are in the migration, at length, because three of them have more than one
+defensible answer: which of three tables "a match" means, whether the accounts the server plays
+itself are players, and whether MGP sitting in an auction escrow still exists. That is why the
+predicate two sections above is not repeated by hand anywhere — every view applies it.
+
+**⚠️ The schema is a bootstrap step, not a migration step.** `tto_app` can create objects inside
+`public` and cannot create a schema, which needs `CREATE` on the database — and widening that would
+undo the separation the previous section is about. On a fresh volume
+`docker/postgres/init/20-stats-role.sh` creates `stats` and hands it to `tto_app`; on a volume that
+already exists **nothing does**, and the first deployment carrying `V18` fails its migration and
+exits 70. One command, before that deployment:
+
+```bash
+docker compose -f compose.prod.yaml exec postgres \
+  psql -U tripletriad -d tripletriad -v ON_ERROR_STOP=1 \
+  -c "CREATE SCHEMA IF NOT EXISTS stats AUTHORIZATION tto_app"
+```
+
+**`tto_stats` is optional and exists for readers that are not the server.** It may `SELECT` those
+views and reach nothing else — not `accounts`, not `sessions`, not an address — so a Grafana
+reached over an SSH tunnel, or a notebook, can be given a connection that cannot leak anything a
+privacy notice has to mention. `STATS_DB_PASSWORD` in `.env` creates it on a fresh volume;
+`.env.prod.sample` carries the four statements that create it on a volume that already exists. A
+deployment nobody graphs does not need it: the server reads the views as itself.
+
+### Getting into the administration console the first time
+
+The console has no "sign up", by design: a route that creates an administrator is either
+unauthenticated — a console anybody on the internet can enrol into — or authenticated, which is the
+chicken and the egg. So the first administrator is created from the environment, once:
+
+```bash
+# In .env.prod, for one deployment only
+TTO_ADMIN_USERNAME=ada
+TTO_ADMIN_PASSWORD=<from a password manager, 12 characters or more>
+```
+
+Then `docker compose -f compose.prod.yaml up -d`, sign in at the console's own hostname —
+`{$TTO_ADMIN_DOMAIN}` in the `Caddyfile`, which is the only host from which `/admin/*` is reachable
+at all — and **remove both lines again**. The server logs that an administrator was created and does not log which — the
+name is half of a credential for the one surface that can move balances.
+
+Leaving them set is inert rather than dangerous: `ensureFirstAdministrator` never touches an
+administrator who already exists — not the password, not the second factor, not `disabled_at` — so a
+redeploy does not reset a password and a retired administrator does not come back. It is still worth
+removing them, because a password in an environment file is a password in a backup of that file.
+
+**The first sign-in enrols the second factor.** Password alone the first time; the server answers with
+a TOTP secret and an `otpauth://` URI, the browser shows it once as a QR code, and the same form is
+submitted again with the first six digits from the authenticator. Nothing is signed in until that
+second submission. From then on the secret cannot be replaced by anybody holding the password —
+`totp_enrolled_at IS NULL` in the `UPDATE`'s `WHERE` clause is what closes that window, permanently.
+
+It follows that the window between creating an administrator and their first sign-in is one where the
+password alone chooses the authenticator. Sign in immediately after the boot that created the
+account. The alternative — a secret generated at start-up — would have to be printed, logged or left
+in a container's environment, which is the failure this flow exists to avoid.
+
+### A lost authenticator, and a second administrator
+
+Neither has a screen, and both are one command. **Create a second administrator** the same way the
+first one was: set the two variables, restart, sign in, remove them. Two people who can reach the
+console is not redundancy for its own sake — an administrator locked out by a lost phone is otherwise
+a database query.
+
+**Clear a lost second factor** so the next sign-in enrols a new one:
+
+```bash
+docker compose -f compose.prod.yaml exec postgres   psql -U tripletriad -d tripletriad -v ON_ERROR_STOP=1   -c "UPDATE admins SET totp_secret = NULL, totp_enrolled_at = NULL, totp_last_step = NULL
+      WHERE username_key = lower('ada')"
+```
+
+That reopens the bootstrap window for that administrator, so it is the same rule as above: they sign
+in straight away. Anybody who can run it already holds the database, which is why it is deliberately
+this and not a route.
+
+**Withdraw access** by disabling rather than deleting — `admin_audit` names the administrator who did
+each thing, and rows about them outlive their access on purpose:
+
+```bash
+docker compose -f compose.prod.yaml exec postgres   psql -U tripletriad -d tripletriad -v ON_ERROR_STOP=1   -c "UPDATE admins SET disabled_at = now() WHERE username_key = lower('ada')"
+```
+
+It takes effect on the **next request**, not at the next sign-in: the query that validates a console
+cookie joins `admins` and requires `disabled_at IS NULL`, so a session already open stops working.
+
+**What an administrator's session is worth:** twelve hours absolute, thirty minutes idle, in a
+`__Host-` cookie no script can read. Two clocks because the threat is an unattended screen rather
+than a stolen cookie, and neither is renewable — a console left open on a desk signs itself out.
 
 ### Exit codes
 

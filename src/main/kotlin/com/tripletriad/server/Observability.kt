@@ -84,6 +84,14 @@ private fun Application.installRateLimits(accounts: AccountStore) {
             requestKey { call -> call.callerAddress() }
         }
 
+        // Getting into the administration console. Its own bucket, and by address: there is no
+        // session yet, and the whole surface is two or three people who must not be competing for
+        // budget with the game's own sign-in form. See [ADMIN_SIGN_IN].
+        register(RateLimitName(ADMIN_SIGN_IN)) {
+            rateLimiter(limit = ADMIN_SIGN_IN_LIMIT, refillPeriod = ADMIN_SIGN_IN_WINDOW)
+            requestKey { call -> call.callerAddress() }
+        }
+
         // Creating accounts. A **separate** bucket from signing in — see [REGISTER].
         register(RateLimitName(REGISTER)) {
             rateLimiter(limit = REGISTER_LIMIT, refillPeriod = REGISTER_WINDOW)
@@ -334,6 +342,7 @@ const val INTENT = "intent"
 const val PLAY = "play"
 const val CODES = "codes"
 const val AUCTION = "auction"
+const val ADMIN_SIGN_IN = "admin-sign-in"
 
 /**
  * Ten code requests or code attempts per address per five minutes.
@@ -354,6 +363,31 @@ private val CODES_WINDOW = 5.minutes
 /** Ten tries per address per five minutes. A person who has forgotten their password uses three. */
 private const val SIGN_IN_LIMIT = 10
 private val SIGN_IN_WINDOW = 5.minutes
+
+/**
+ * Ten attempts at the administration console per address per five minutes.
+ *
+ * ### Why a separate bucket and not [SIGN_IN]'s
+ *
+ * The argument [REGISTER_LIMIT] makes, which is that sharing a budget means the honest burst pays
+ * for the hostile one — and here the honest burst is the one person who can investigate an
+ * incident, refused because the game's sign-in form is being hammered at the same moment. Those two
+ * things happening together is not a coincidence to design against; it is the likeliest case.
+ *
+ * ### Why the same number, when the surface is two people
+ *
+ * Because an administrator spends more than one attempt per sign-in. A first sign-in is two
+ * requests — the enrolment, then the code — and a mistyped six digits from an authenticator is
+ * common enough that three tries is a bad afternoon rather than an attack. Ten leaves room for both
+ * and still caps a guesser at a rate that makes a six-digit code with a thirty-second life
+ * unreachable: the space is a million, the window admits three steps, and this admits ten shots per
+ * five minutes.
+ *
+ * What actually stops a password guesser here is bcrypt at cost 12, exactly as on the player's
+ * side. This bucket is what stops a *parallel* one from spending the server's cores doing it.
+ */
+private const val ADMIN_SIGN_IN_LIMIT = 10
+private val ADMIN_SIGN_IN_WINDOW = 5.minutes
 
 /**
  * Ten new accounts per address per hour, in a bucket of their own.

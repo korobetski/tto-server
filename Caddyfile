@@ -1,14 +1,29 @@
 # The only thing on this VPS the internet can reach.
 #
-# Caddy obtains and renews the certificate for {$TTO_DOMAIN} from Let's Encrypt by itself, on first
-# start and every 60 days after, and redirects :80 to :443 without being asked. That is the whole
-# reason it is here rather than Nginx: a renewal nobody has to remember is a renewal that does not
-# expire on a Sunday.
+# Caddy obtains and renews the certificates for {$TTO_DOMAIN} and {$TTO_ADMIN_DOMAIN} from Let's
+# Encrypt by itself, on first start and every 60 days after, and redirects :80 to :443 without being
+# asked. That is the whole reason it is here rather than Nginx: a renewal nobody has to remember is
+# a renewal that does not expire on a Sunday.
 #
-# It has two jobs, and the route block below is where they are told apart: it serves the portal's
-# static files for the handful of paths that are the portal's, and hands everything else to the
-# API. Both live on this one hostname on purpose — see docs/web-platform.md for why the API's
-# hostname is the one thing here that can never move, and why sharing it removes CORS entirely.
+# Two hostnames, and the split between them is the point:
+#
+#   {$TTO_DOMAIN}        the portal's static files for the handful of paths that are the portal's,
+#                        and the API for everything else. One origin, which is what removes CORS
+#                        from the sign-up form entirely — docs/web-platform.md says why at length.
+#   {$TTO_ADMIN_DOMAIN}  the administration console's static files, and `/admin/*` proxied to the
+#                        same server. Nothing else: a path that is neither is answered out of the
+#                        console's directory or not at all.
+#
+# `/admin/*` answers 404 on the portal's host, and it did so before the first admin route was
+# written — a prefix that was never briefly public by accident. The console's host is the only place
+# those routes are reachable, and that is what lets the admin session be a `__Host-` cookie:
+# `SameSite=Strict`, same origin as the console, and no cross-site request left to forge.
+#
+# {$TTO_ADMIN_DOMAIN} defaults to `http://admin.localhost`, which matches nothing on a public
+# network and asks for no certificate. A deployment that has not set it therefore keeps a working
+# portal and a working API, and simply has no console — which is the right failure for an optional
+# second host, and much better than a proxy that refuses to start over a variable somebody has not
+# heard of yet.
 #
 # No blank line before the block below, and it is not an oversight: `caddy fmt` removes it, and
 # scripts/deploy.sh reloads Caddy on every deployment — so the blank line costs a formatting
@@ -19,12 +34,18 @@
 	email {$TTO_TLS_EMAIL}
 }
 
-{$TTO_DOMAIN} {
+# What both hosts send, and how both of them log, written once.
+#
+# Two copies of a security header block is one copy that gets updated and one that does not, and the
+# one that does not is discovered by the next person to read a penetration test. `import` costs a
+# line per site and removes that whole class of drift.
+(common) {
 	encode zstd gzip
 
-	# Nothing this API accepts is large. The biggest honest body is a whole `GameSave` on
-	# `PUT /me/save`, which names its cards by integer id and does not come close to this; the
-	# server refuses the same number itself, in `BodyLimit.kt`, and says there why.
+	# Nothing either host accepts is large. The biggest honest body on the API is a whole `GameSave`
+	# on `PUT /me/save`, which names its cards by integer id and does not come close to this; the
+	# server refuses the same number itself, in `BodyLimit.kt`, and says there why. The biggest on
+	# the console is a sign-in.
 	#
 	# It is enforced here as well because this is the layer that can refuse a body **before it is
 	# read**, including one sent with `Transfer-Encoding: chunked`, and because the cheapest place
@@ -33,6 +54,43 @@
 	request_body {
 		max_size 256KB
 	}
+
+	log {
+		output stdout
+		format json
+	}
+
+	header {
+		# HSTS. Note what it commits to: a browser that sees this will refuse plain HTTP to this
+		# domain for a year, and there is no way to withdraw that faster than it expires. Correct
+		# for hosts that are HTTPS-only and staying that way, which both of these are.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		# Nothing here has any business being framed: an API response is not a document, the
+		# portal's one interactive page is a sign-up form, and the console is a console.
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		# The proxy's own version, on every response, is free reconnaissance.
+		-Server
+	}
+}
+
+# The policy the static branches carry, and the reason it can be this absolute: both sites are
+# hand-written HTML, CSS and TypeScript with no framework, no inline script and no `style=`
+# attribute, and `tto-web`'s build fails if one appears. `connect-src 'self'` is what lets the
+# portal's sign-up form call `POST /accounts` and the console call `/admin/*` — same origin in both
+# cases, which is the whole reason each site lives on the host it does.
+#
+# It is not in the `header` blocks above because the API is not a document source: a CSP on a JSON
+# response is inert, and whoever first relaxes this for a page would be quietly relaxing it for
+# every API response as well. The line is long because a Caddyfile token cannot be wrapped — a
+# header value has nowhere to put a newline.
+(static_policy) {
+	header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+}
+
+{$TTO_DOMAIN} {
+	import common
 
 	# `/metrics` is unauthenticated by design — it is meant for a scraper on a private network, and
 	# it leaks route names, latencies and traffic volume to anyone who asks. Nothing scrapes it from
@@ -43,11 +101,10 @@
 	# both of which reach the server directly on the compose network. Published, they are a free
 	# readiness oracle for anyone probing the host.
 	#
-	# `/admin/*` is refused here before a single admin route exists. The administration console gets
-	# its own hostname and proxies those routes itself; on this one — the host every installed client
-	# is pinned to, and the only one a stranger has a reason to guess — they are not reachable at
-	# all. A prefix that 404s from the day the first admin route is written is a prefix that was
-	# never briefly public by accident.
+	# `/admin/*` is refused here. The administration console has its own hostname and proxies those
+	# routes itself; on this one — the host every installed client is pinned to, and the only one a
+	# stranger has a reason to guess — they are not reachable at all. The console's deployment
+	# checks this on every run, so a 404 here is a tested property rather than a comment.
 	@internal path /metrics /health/* /admin/*
 
 	# The portal's paths, enumerated. Everything not named here belongs to the API; see the fallback
@@ -83,18 +140,7 @@
 		handle @portal {
 			root * /srv/web/portal
 			file_server
-
-			# The static branch only. The portal is hand-written HTML, CSS and TypeScript with no
-			# framework and no inline script, so a policy this absolute costs it nothing, and
-			# `connect-src 'self'` is what lets its sign-up form call `POST /accounts` — same origin,
-			# which is the whole reason the portal lives on this host rather than its own.
-			#
-			# It is not in the site-wide `header` block below because the API is not a document
-			# source: a CSP on a JSON response is inert, and whoever first relaxes this for a portal
-			# page would be quietly relaxing it for every API response as well. The line is long
-			# because a Caddyfile token cannot be wrapped — a header value has nowhere to put a
-			# newline.
-			header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+			import static_policy
 		}
 
 		# The fallback, and it is the API on purpose. A portal path left out of `@portal` above 404s:
@@ -117,23 +163,39 @@
 			}
 		}
 	}
+}
 
-	log {
-		output stdout
-		format json
-	}
+# The administration console, and the only host from which `/admin/*` is reachable.
+{$TTO_ADMIN_DOMAIN} {
+	import common
 
-	header {
-		# HSTS. Note what it commits to: a browser that sees this will refuse plain HTTP to this
-		# domain for a year, and there is no way to withdraw that faster than it expires. Correct
-		# for a host that is HTTPS-only and staying that way, which this one is.
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		# Neither branch of the route above has anything a browser should frame: an API response is
-		# not a document, and the portal's one interactive page is a sign-up form.
-		X-Frame-Options "DENY"
-		Referrer-Policy "no-referrer"
-		# The proxy's own version, on every response, is free reconnaissance.
-		-Server
+	route {
+		# The fallback direction is the opposite of the portal's, and for a reason that does not
+		# apply there: the API surface on this host is one prefix rather than a list of paths, so
+		# there is no forgotten route for `file_server` to swallow. Everything the server answers
+		# here begins with `/admin/`; everything else is a file or a 404.
+		#
+		# That also makes the guarantee cheap to state and cheap to test. `/accounts`, `/sessions`,
+		# `/pvp/*`, `/metrics`, `/health/*` — none of them are reachable from this hostname, not
+		# because they are listed somewhere, but because nothing but `/admin/*` is proxied at all.
+		handle /admin/* {
+			reverse_proxy server:8080 {
+				header_up X-Request-Id {http.request.header.X-Request-Id}
+			}
+		}
+
+		# Filled by `tto-web`'s CI, like the portal's directory beside it, and empty until the
+		# console is first deployed — which is a host that answers 404 to everything and an
+		# administration API that is still reachable at `/admin/*` for whoever holds a session.
+		#
+		# Serving the console from its own directory rather than a path under the portal's is the
+		# arrangement `docs/web-platform.md` chose, and the build in `tto-web` produces two outputs
+		# to keep it: a single root read by both hosts would put the console's files one mistake in
+		# this file away from the public hostname.
+		handle {
+			root * /srv/web/console
+			file_server
+			import static_policy
+		}
 	}
 }

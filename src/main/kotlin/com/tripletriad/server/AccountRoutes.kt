@@ -953,15 +953,15 @@ internal suspend fun RoutingContext.acceptsOperationId(request: Idempotent): Boo
  *
  * A wrong username and a wrong password give the **same** answer, which is what stops this endpoint
  * from being a way to find out which accounts exist. The password is still verified against a real
- * digest when the account is unknown — see [verifyOrDecoy] — so the two paths take the same time as
- * well as saying the same thing.
+ * digest when the account is unknown — `PasswordHasher.verifyOrDecoy` — so the two paths take the
+ * same time as well as saying the same thing.
  */
 private suspend fun RoutingContext.signIn(store: AccountStore, clock: () -> Long) {
     if (!requireCompatibleClient()) return
     val credentials = call.receive<Credentials>()
 
     val stored = store.credentialsFor(credentials.username.trim())
-    if (!verifyOrDecoy(credentials.password, stored?.passwordHash)) {
+    if (!PasswordHasher.verifyOrDecoy(credentials.password, stored?.passwordHash)) {
         return call.respond(
             HttpStatusCode.Unauthorized,
             AccountFailure(
@@ -1002,22 +1002,6 @@ private fun AccountStore.newSession(accountId: Long, now: Long): Session {
     )
 }
 
-/**
- * Verifies [password] against [digest], or burns the same time when there is no account.
- *
- * Without the decoy, a sign-in for an unknown username returns in microseconds and one for a known
- * username takes bcrypt's quarter-second — which turns the response time into a perfectly good
- * account-existence oracle, defeating the identical error message above. The decoy digest is a real
- * bcrypt hash of a value nobody knows, so the work is genuinely the same.
- */
-private fun verifyOrDecoy(password: String, digest: String?): Boolean {
-    if (digest == null) {
-        PasswordHasher.verify(password, DECOY_DIGEST)
-        return false
-    }
-    return PasswordHasher.verify(password, digest)
-}
-
 private suspend fun io.ktor.server.application.ApplicationCall.respondMalformed() = respond(
     HttpStatusCode.BadRequest,
     AccountFailure(
@@ -1042,12 +1026,3 @@ internal const val MAX_OPERATION_ID = 128
 /** Thirty days: long enough that a player is not asked again on a device they use weekly. */
 private const val SESSION_DAYS = 30L
 private const val SESSION_LIFETIME_MILLIS = SESSION_DAYS * 24 * 60 * 60 * 1000
-
-/**
- * A bcrypt digest of a random value, computed once at start-up.
- *
- * Not a constant in the source: a checked-in digest is a checked-in hash of *something*, and the
- * one thing worse than a decoy is a decoy somebody eventually tries to recover. This one exists
- * only in memory and nobody — including this process — knows its pre-image after the line runs.
- */
-private val DECOY_DIGEST: String = PasswordHasher.hash(Tokens.issue())

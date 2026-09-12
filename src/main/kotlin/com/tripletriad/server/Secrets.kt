@@ -94,12 +94,53 @@ object PasswordHasher {
     fun verify(password: String, digest: String): Boolean =
         isUsable(password) && BCrypt.verifyer().verify(password.toCharArray(), digest).verified
 
+    /**
+     * Verifies [password] against [digest], or burns the same time when there is no account.
+     *
+     * ### The oracle this closes
+     *
+     * Without the decoy, a sign-in for an unknown name returns in microseconds and one for a known
+     * name takes bcrypt's quarter-second — which turns the response time into a perfectly good
+     * account-existence oracle, defeating the identical error message the two paths are careful to
+     * share. The decoy is a real digest of a value nobody knows, so the work is genuinely the same
+     * rather than a sleep that approximates it.
+     *
+     * ### Why it lives here and not beside a sign-in
+     *
+     * It was `AccountRoutes`'s private helper until the administration console needed the same
+     * property, and two copies of a timing defence is one copy that will be updated. The thing it
+     * defends is a property of *verifying a password against a digest that may not exist*, which is
+     * this object's subject.
+     *
+     * @param digest the stored digest, or null when nothing was found for the name that was typed.
+     */
+    fun verifyOrDecoy(password: String, digest: String?): Boolean {
+        if (digest == null) {
+            verify(password, DECOY_DIGEST)
+            return false
+        }
+        return verify(password, digest)
+    }
+
     /** True when [digest] was made at a weaker cost than the current one and should be replaced. */
     fun needsRehash(digest: String): Boolean = runCatching {
         BCrypt.verifyer()
         // `$2a$10$…` — the cost is the second field, and reading it is cheaper than a full parse.
         digest.split('$').getOrNull(2)?.toIntOrNull()?.let { it < COST } ?: true
     }.getOrDefault(true)
+
+    /**
+     * A digest of a random value, computed the first time [verifyOrDecoy] needs one.
+     *
+     * Not a constant in the source: a checked-in digest is a checked-in hash of *something*, and
+     * the one thing worse than a decoy is a decoy somebody eventually recovers. This one exists
+     * only in memory and nobody — including this process — knows its pre-image after the line runs.
+     *
+     * Lazy rather than eager because [Tokens] is initialised below this object, and a
+     * quarter-second of bcrypt at class-load time is a quarter-second added to start-up for
+     * something the first failed sign-in can pay for instead.
+     */
+    private val DECOY_DIGEST: String by lazy { hash(Tokens.issue()) }
 }
 
 /**

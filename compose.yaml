@@ -28,6 +28,12 @@ services:
       # a human uses for psql, and the application is not a human.
       APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env - see .env.sample}
       APP_DB_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env - see .env.sample}
+      # Read by docker/postgres/init/20-stats-role.sh, also on first boot only, and the only one of
+      # these four that is allowed to be empty. Unset means "no second reader": the `stats` schema
+      # is still created and `V18__stats_views.sql` still fills it, but no role exists to read it
+      # from outside the server. Set it and `tto_stats` can SELECT the views and nothing else —
+      # which is what a Grafana on an SSH tunnel should be connecting as.
+      STATS_DB_PASSWORD: ${STATS_DB_PASSWORD:-}
     ports:
       # Loopback, not 0.0.0.0. The `5432:5432` most examples use publishes the database to every
       # machine on the network, with the development password above.
@@ -95,6 +101,10 @@ services:
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-no-reply@localhost}
       MAIL_SENDER_NAME: ${MAIL_SENDER_NAME:-Triple Triad}
+      # The first administrator, created at start-up if the name is free and left alone if it is
+      # not. Blank is the steady state: they are set for one boot and cleared again. See .env.sample.
+      TTO_ADMIN_USERNAME: ${TTO_ADMIN_USERNAME:-}
+      TTO_ADMIN_PASSWORD: ${TTO_ADMIN_PASSWORD:-}
       # Unset means `:core`'s defaults. See Unlocks in the core package.
       TTO_UNLOCK_MULTIPLAYER: ${TTO_UNLOCK_MULTIPLAYER:-}
       TTO_UNLOCK_AUCTION: ${TTO_UNLOCK_AUCTION:-}
@@ -142,6 +152,11 @@ services:
       # a certificate from its own internal CA and listen on 443 instead, so every check above
       # would need `curl -k` and would be testing a code path the VPS does not take.
       TTO_DOMAIN: ${TTO_DOMAIN:-http://localhost}
+      # The administration console, on the same port, told apart by the Host header. Nothing in a
+      # browser resolves `admin.localhost` to this container's published port on its own, so a
+      # local check is `curl -H 'Host: admin.localhost' localhost:${TTO_WEB_PORT:-8081}/` — which
+      # is exactly what the VPS does with a real name in front of it.
+      TTO_ADMIN_DOMAIN: ${TTO_ADMIN_DOMAIN:-http://admin.localhost}
       # Nothing here renews a certificate, so this is never read. It is set because the global
       # block in the Caddyfile names it, and an unset variable there is a hard start-up failure.
       TTO_TLS_EMAIL: ${TTO_TLS_EMAIL:-dev@localhost}

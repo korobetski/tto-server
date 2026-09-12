@@ -30,6 +30,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tripletriad}
       APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env}
       APP_DB_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
+      # Optional, unlike the four above, and empty by default. It creates `tto_stats` — a role that
+      # may SELECT the `stats` views and reach nothing else — on a **fresh volume only**. A host
+      # that already has its data directory needs the role created by hand; `.env.prod.sample` has
+      # the command. Leaving it unset costs nothing: the views exist either way, and the server
+      # reads them as itself.
+      STATS_DB_PASSWORD: ${STATS_DB_PASSWORD:-}
     # No `ports:` at all. Not even `127.0.0.1:5432` — reaching it from the host is what
     # `docker compose exec postgres psql` is for, and an OVH VPS with a published database port is
     # found by a scanner within the hour.
@@ -79,6 +85,11 @@ services:
       BREVO_API_KEY: ${BREVO_API_KEY:?set BREVO_API_KEY in .env - see .env.prod.sample}
       MAIL_FROM: ${MAIL_FROM:?set MAIL_FROM in .env - a sender Brevo has verified}
       MAIL_SENDER_NAME: ${MAIL_SENDER_NAME:-Triple Triad}
+      # The first administrator. Deliberately **not** `:?` like the key above: these are set for
+      # one boot and cleared again, so requiring them would make the steady state the one that
+      # refuses to start. A boot with no administrator and nothing here says so in the log.
+      TTO_ADMIN_USERNAME: ${TTO_ADMIN_USERNAME:-}
+      TTO_ADMIN_PASSWORD: ${TTO_ADMIN_PASSWORD:-}
       # Blank means `:core`'s defaults, and blank is the normal state. See Unlocks in the core
       # package; raising one of these is a restart, not a client release.
       TTO_UNLOCK_MULTIPLAYER: ${TTO_UNLOCK_MULTIPLAYER:-}
@@ -126,6 +137,17 @@ services:
     environment:
       TTO_DOMAIN: ${TTO_DOMAIN:?set TTO_DOMAIN in .env - the DNS name pointing at this VPS}
       TTO_TLS_EMAIL: ${TTO_TLS_EMAIL:?set TTO_TLS_EMAIL in .env - Let's Encrypt expiry warnings}
+      # The administration console's hostname, and the only one from which /admin/* is reachable.
+      #
+      # Optional, unlike the two above, and the default is the reason: a deployment that has not
+      # set it keeps a working portal and a working API and simply has no console. `admin.localhost`
+      # matches no request that can arrive from a network, and the explicit `http://` means Caddy
+      # asks Let's Encrypt for nothing — so the cost of the default is a site block that never
+      # answers, rather than a proxy that refuses to start over a variable somebody has not heard
+      # of yet or a certificate order that fails every hour.
+      #
+      # Point the DNS name at this VPS **before** setting it, for the same reason TTO_DOMAIN says.
+      TTO_ADMIN_DOMAIN: ${TTO_ADMIN_DOMAIN:-http://admin.localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # The portal, and eventually the browser client. This directory is not in this repository

@@ -239,7 +239,14 @@ a credential designed for a completely different threat model.
 - **`admin_audit`** — append-only: who, when, what, on whom, before and after.
 
 TOTP is not optional. It is the highest-value control available for an authenticated surface on the
-public internet, and it costs one small vetted library and one column.
+public internet, and it costs about forty lines and one column.
+
+**This paragraph said "one small vetted library" and the implementation went the other way.** `Totp.kt`
+argues it out: the JDK already has HMAC-SHA1 and lacks only base32, RFC 6238 publishes test vectors —
+so the arithmetic can be *checked* rather than trusted, which `TotpTest` does with all six of Appendix
+B's — and a dependency on the classpath of the process refereeing the economy is a worse trade than
+forty lines of published arithmetic. The contrast with bcrypt is the point: that is a primitive nobody
+should implement, and it has no published vectors that would tell you if you had.
 
 ### The first administrator, without a secret in a log
 

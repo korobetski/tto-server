@@ -71,6 +71,17 @@ fun main() {
         exitProcess(EXIT_MIGRATION_FAILED)
     }
 
+    // After the migration, because `admins` has to exist, and before the port opens, because a
+    // console nobody can sign in to is a misconfiguration rather than a runtime surprise. It
+    // creates nothing when the environment names nobody, which is every boot after the first.
+    try {
+        ensureFirstAdministrator(AdminStore(dataSource), config.admin, logger::info)
+    } catch (failure: Exception) {
+        logger.error("Refusing to start: the first administrator could not be created", failure)
+        dataSource.close()
+        exitProcess(EXIT_MISCONFIGURED)
+    }
+
     val registry = prometheusRegistry()
     val server = embeddedServer(Netty, port = config.port, host = config.host) {
         module(
@@ -142,6 +153,11 @@ fun Application.module(
     // rather than for years.
     val codes = CodeStore(dataSource)
 
+    // The administration console's own store. Separate from `accounts` on the line `V19__admin.sql`
+    // draws: that one owns who a player is, this one owns who an *administrator* is, and the two
+    // share no credential at all.
+    val admins = AdminStore(dataSource)
+
     // The auction house. Its own store for the reason the three above have theirs, and one
     // more: it is the only thing here that writes *two* profiles in one transaction, which is why
     // it needs `AccountStore` rather than the pool alone.
@@ -152,7 +168,7 @@ fun Application.module(
     // stake policy to keep in step.
     val pvpReferee = PvpReferee(Catalogs.cards, Catalogs.formats, accounts, pvp, stakes)
 
-    sweepAbandonedMatches(pvpReferee, accounts, codes, auctions)
+    sweepAbandonedMatches(pvpReferee, accounts, codes, auctions, admins)
 
     // The accounts this server plays itself. Inert unless the deployment asked for them.
     playBots(BotStore(dataSource), accounts, pve, pvp, pvpReferee, registry, bots, unlocks, stakes)
@@ -177,6 +193,12 @@ fun Application.module(
         )
         pveRoutes(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts, pve)
         auctionRoutes(auctions, accounts, unlocks)
+
+        // The administration console. Reachable only through `admintto.moebiuscore.fr` in the
+        // deployment — the other two hosts answer 404 for the prefix — and mounted unconditionally
+        // here, because "is there an administrator" is a question about the table rather than about
+        // this process's configuration.
+        adminAuthRoutes(admins, identity)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.
@@ -208,11 +230,16 @@ fun Application.module(
  * are safe to, because `finish` and `recordClaim` both gate on the status they are changing, so a
  * second sweeper settles nothing twice.
  */
+// Five collaborators, each owning one table the pass touches. Grouping them behind a holder to
+// satisfy the counter would put an indirection between this function and the list of things it
+// sweeps, which is the whole of what it is — the argument `module` makes above its own suppression.
+@Suppress("LongParameterList")
 private fun Application.sweepAbandonedMatches(
     referee: PvpReferee,
     accounts: AccountStore,
     codes: CodeStore,
     auctions: AuctionStore,
+    admins: AdminStore,
 ) {
     launch {
         var sinceOperationPrune = 0L
@@ -263,6 +290,14 @@ private fun Application.sweepAbandonedMatches(
                     // correctness, and tidiness does not need to run every thirty seconds.
                     val stale = codes.purgeExpired(System.currentTimeMillis())
                     if (stale > 0) logger.info("Purged {} expired codes", stale)
+
+                    // And on the same interval, for the same reason again: `AdminStore.session`
+                    // refuses an expired row in its `WHERE` clause, so nothing depends on this
+                    // having run. What it buys is that a table of credentials does not accumulate
+                    // rows nobody will ever accept — the least interesting kind of tidiness, and
+                    // the one it is least excusable to skip in a table like this.
+                    val ended = admins.sweepSessions()
+                    if (ended > 0) logger.info("Ended {} expired administrator sessions", ended)
                 }
             } catch (failure: Exception) {
                 logger.error("The sweep failed; retrying at the next interval", failure)

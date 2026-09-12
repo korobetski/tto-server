@@ -37,6 +37,8 @@ data class ServerConfig(
     val auction: AuctionPolicy,
     val stakes: PvpStakePolicy,
     val bots: BotPolicy,
+    /** The administrator to create at start-up, or null — which is the steady state. */
+    val admin: FirstAdministrator? = null,
 ) {
     companion object {
         /**
@@ -72,6 +74,7 @@ data class ServerConfig(
                 auction = auctionFrom(lookup),
                 stakes = stakesFrom(lookup),
                 bots = BotPolicy.from(lookup),
+                admin = FirstAdministrator.from(lookup),
             )
         }
 
@@ -132,6 +135,85 @@ data class ServerConfig(
 
         /** The username and the password happen to coincide in `compose.yaml`. */
         private const val DEV_DATABASE_CREDENTIAL = "tripletriad"
+    }
+}
+
+/**
+ * The administrator the process creates at start-up, when the environment names one.
+ *
+ * ### Why the first administrator is an environment variable at all
+ *
+ * Because there is no other credential to use. A route that creates one would be unauthenticated —
+ * a console anybody on the internet can enrol into — or authenticated, which is the chicken and the
+ * egg. An environment variable and a restart is something only somebody with the host can do, which
+ * is the right bar for the first one. `ensureFirstAdministrator` is where it is applied, and it
+ * never touches a row that already exists.
+ *
+ * ### Why there is no TOTP secret here
+ *
+ * A password only, deliberately. The second factor is generated at the first sign-in and shown
+ * once, in the console — because a secret placed in an environment variable is a secret in a `.env`
+ * file, in `docker inspect`, in the output of `docker compose config`, and in whatever shell
+ * history put it there. `web-platform.md` § "The first administrator, without a secret in a log" is
+ * the long form, and this repository's rule about secrets is the reason.
+ *
+ * A password in the environment is the same category of exposure, and the difference is that it can
+ * be *changed by using it*: it is a bootstrap credential whose whole life is one sign-in, after
+ * which the variables come out of the environment. A shared TOTP secret cannot be rotated by being
+ * used.
+ *
+ * ### Why a half-configured pair refuses to boot
+ *
+ * One variable without the other is somebody halfway through setting this up, and the two failure
+ * modes of guessing are both bad: inventing a password would create an account nobody can sign in
+ * to, and ignoring the pair would leave a deployment that looks configured and has no console. So
+ * it is `check`ed, in the same breath as a missing database password and for the same reason.
+ *
+ * @property password **secret**. It reaches `PasswordHasher.hash` and nothing else. No message in
+ *   this file names it, including the failure messages, which name the *variable*.
+ */
+data class FirstAdministrator(val username: String, val password: String) {
+    companion object {
+        fun from(lookup: (String) -> String?): FirstAdministrator? {
+            val username = lookup("TTO_ADMIN_USERNAME")?.trim()?.takeIf { it.isNotBlank() }
+            val password = lookup("TTO_ADMIN_PASSWORD")?.takeIf { it.isNotBlank() }
+            if (username == null && password == null) return null
+
+            check(username != null && password != null) {
+                "TTO_ADMIN_USERNAME and TTO_ADMIN_PASSWORD must be set together: " +
+                    "one without the other creates an administrator nobody can sign in as"
+            }
+            check(username.length in USERNAME_LENGTH) {
+                "TTO_ADMIN_USERNAME must be ${USERNAME_LENGTH.first}-${USERNAME_LENGTH.last} " +
+                    "characters, which is what the admins_username_length constraint allows"
+            }
+            check(password.length >= MIN_PASSWORD_LENGTH) {
+                "TTO_ADMIN_PASSWORD must be at least $MIN_PASSWORD_LENGTH characters"
+            }
+            check(PasswordHasher.isUsable(password)) {
+                "TTO_ADMIN_PASSWORD is longer than " +
+                    "${PasswordHasher.MAX_PASSWORD_BYTES} bytes once encoded, which bcrypt refuses"
+            }
+            return FirstAdministrator(username, password)
+        }
+
+        /**
+         * The same range as `admins_username_length` in `V19__admin.sql`.
+         *
+         * Checked here as well as there because a `CHECK` violation at start-up surfaces as a
+         * `SQLException` from an INSERT, and "refusing to start: TTO_ADMIN_USERNAME must be 3-24
+         * characters" is the line an operator can act on.
+         */
+        private val USERNAME_LENGTH = 3..24
+
+        /**
+         * Twelve, against the eight `Credentials.PASSWORD_LENGTH` asks a player for.
+         *
+         * A higher bar for a password that guards the economy rather than one profile, and an
+         * affordable one: this is typed by one of two people, once, from a password manager, and
+         * never on a phone keyboard between matches.
+         */
+        private const val MIN_PASSWORD_LENGTH = 12
     }
 }
 
