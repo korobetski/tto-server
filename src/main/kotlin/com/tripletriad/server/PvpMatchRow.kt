@@ -9,6 +9,7 @@ import com.tripletriad.model.MatchResult
 import com.tripletriad.model.MatchScore
 import com.tripletriad.model.MatchState
 import com.tripletriad.model.MatchView
+import com.tripletriad.model.PlayResult
 import com.tripletriad.model.TOTAL_CARDS
 import com.tripletriad.model.TradeRule
 import com.tripletriad.model.TradeRules
@@ -134,7 +135,19 @@ data class PvpMatchRow(
      * refereed match are the same match with a different opponent, and Sudden Death was offerable
      * on a multiplayer table while settling a draw as a draw.
      */
-    fun position(cards: CardCatalog): MatchPosition? {
+    fun position(cards: CardCatalog): MatchPosition? = replayFrom(cards)?.end
+
+    /**
+     * Every placement, as the engine resolved it — the match inspector's payload.
+     *
+     * `PveMatchRow.timeline`'s twin, and its KDoc is the argument: which cells a placement flipped,
+     * and under which rule, are facts about the board rather than about the two numbers stored per
+     * move, so they can only come out of the replay.
+     */
+    fun timeline(cards: CardCatalog): List<PlayResult>? = replayFrom(cards)?.plays
+
+    /** The opening deal walked through [moves] — see [MatchPosition.replaying]. */
+    private fun replayFrom(cards: CardCatalog): Replay? {
         val blue = blueHand.map { cards.byId[it] ?: return null }
         val red = redHand.map { cards.byId[it] ?: return null }
 
@@ -143,44 +156,9 @@ data class PvpMatchRow(
         // the same elements and the same Three Open slots every time.
         val random = Random(seed)
         val opening = MatchPreparation.prepareVersus(blue, red, first, rules, random)
-
-        return walk(
-            MatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0),
-            random,
-        )
+        return MatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0)
+            .replaying(moves.map { it.handIndex to it.position }, random)
     }
-
-    /**
-     * Applies every stored placement in order, starting a new board wherever one ended.
-     *
-     * The trailing [boardFor] is not redundant — see `PveMatchRow.walk`, which explains it at
-     * length: without it a Sudden Death draw would leave the position on the board that *drew*,
-     * and every caller asking whose turn it is would be told nobody's.
-     */
-    private fun walk(from: MatchPosition, random: Random): MatchPosition? {
-        var at = from
-        for (move in moves) {
-            at = boardFor(at, random)?.advanced(move.handIndex, move.position) ?: return null
-        }
-        return boardFor(at, random) ?: at
-    }
-
-    /** The board the next placement lands on: this one, or the next after a Sudden Death draw. */
-    private fun boardFor(at: MatchPosition, random: Random): MatchPosition? = when {
-        !at.state.isFinished -> at
-        !continuesAfter(at.state) -> null
-        else -> MatchPreparation.prepareRematch(at.state, random).let { next ->
-            MatchPosition(
-                state = next.state,
-                blueSeesRed = next.opponentVisibility,
-                redSeesBlue = next.playerVisibility,
-                rematch = at.rematch + 1,
-            )
-        }
-    }
-
-    private fun continuesAfter(state: MatchState): Boolean =
-        state.rules.suddenDeath && state.score.winner() == null
 
     /** The board as it stands, or null on a row that cannot be replayed. */
     fun replay(cards: CardCatalog): MatchState? = position(cards)?.state

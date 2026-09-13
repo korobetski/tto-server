@@ -307,25 +307,35 @@ defensible answer: which of three tables "a match" means, whether the accounts t
 itself are players, and whether MGP sitting in an auction escrow still exists. That is why the
 predicate two sections above is not repeated by hand anywhere — every view applies it.
 
-**⚠️ The schema is a bootstrap step, not a migration step.** `tto_app` can create objects inside
-`public` and cannot create a schema, which needs `CREATE` on the database — and widening that would
-undo the separation the previous section is about. On a fresh volume
-`docker/postgres/init/20-stats-role.sh` creates `stats` and hands it to `tto_app`; on a volume that
-already exists **nothing does**, and the first deployment carrying `V18` fails its migration and
-exits 70. One command, before that deployment:
+**The schema is a bootstrap step, not a migration step, and nothing is asked of you for it.**
+`tto_app` can create objects inside `public` and cannot create a schema, which needs `CREATE` on the
+database — and widening that would undo the separation the previous section is about. So the schema
+is made by the superuser, in the `postgres-bootstrap` container both compose files declare, which
+runs on every boot and exits; `server` waits for it with
+`condition: service_completed_successfully`.
 
-```bash
-docker compose -f compose.prod.yaml exec postgres \
-  psql -U tripletriad -d tripletriad -v ON_ERROR_STOP=1 \
-  -c "CREATE SCHEMA IF NOT EXISTS stats AUTHORIZATION tto_app"
+This was an init script, and the deployment that carried `V18` to the VPS is why it is not one any
+more. Init scripts run on an empty data directory and never again, so on a host that already had one
+the schema was never created and the migration stopped with
+
+```text
+SQL State  : 42501
+Message    : ERROR: permission denied for database tripletriad
+  Where: SQL statement "CREATE SCHEMA stats"
 ```
+
+The documented remedy was one `psql` typed before the release went out, which is the kind of step
+that is skipped at the worst moment by whoever is on call rather than by whoever read the note. If
+you are reading this because you see that error, the fix is a `docker compose -f compose.prod.yaml
+up -d` on a checkout that contains `docker/postgres/bootstrap` — not a statement typed by hand.
 
 **`tto_stats` is optional and exists for readers that are not the server.** It may `SELECT` those
 views and reach nothing else — not `accounts`, not `sessions`, not an address — so a Grafana
 reached over an SSH tunnel, or a notebook, can be given a connection that cannot leak anything a
-privacy notice has to mention. `STATS_DB_PASSWORD` in `.env` creates it on a fresh volume;
-`.env.prod.sample` carries the four statements that create it on a volume that already exists. A
-deployment nobody graphs does not need it: the server reads the views as itself.
+privacy notice has to mention. Set `STATS_DB_PASSWORD` in `.env` and restart: the bootstrap creates
+the role, and because it runs on every boot, changing that value and restarting is also how the
+password is rotated. Leave it empty and there is no such role — a deployment nobody graphs does not
+need one, and the server reads the views as itself either way.
 
 ### Getting into the administration console the first time
 

@@ -199,6 +199,7 @@ fun Application.module(
         // here, because "is there an administrator" is a question about the table rather than about
         // this process's configuration.
         adminAuthRoutes(admins, identity)
+        adminRoutes(admins, accounts, pve, pvp)
 
         // Plain text, because that is the format Prometheus scrapes. Not behind authentication
         // yet, and not exposed publicly either — see docs/operations.md.

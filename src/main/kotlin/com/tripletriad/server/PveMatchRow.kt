@@ -7,6 +7,7 @@ import com.tripletriad.model.MatchPreparation
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.MatchState
 import com.tripletriad.model.MatchView
+import com.tripletriad.model.PlayResult
 import com.tripletriad.protocol.Placement
 import com.tripletriad.protocol.PveMatchStatus
 import com.tripletriad.protocol.PveMatchView
@@ -113,7 +114,23 @@ data class PveMatchRow(
      * and how many boards have been played is something [MatchPosition.rematch] counts rather
      * than a column to be kept in step.
      */
-    fun position(cards: CardCatalog): MatchPosition? {
+    fun position(cards: CardCatalog): MatchPosition? = replayFrom(cards)?.end
+
+    /**
+     * Every placement, as the engine resolved it — the match inspector's payload.
+     *
+     * The console shows a move list rather than a board (`web-platform.md` argues why), and a move
+     * list is not something the row stores: `moves` holds two numbers per placement, and which
+     * cells flipped and under which rule are facts about the *board* the placement landed on. So
+     * they come out of the replay, which is the only place they can come from without a second
+     * implementation of the rules.
+     *
+     * Null on a row that cannot be replayed, as [position] is, and for the same reason.
+     */
+    fun timeline(cards: CardCatalog): List<PlayResult>? = replayFrom(cards)?.plays
+
+    /** The opening deal walked through [moves] — see [MatchPosition.replaying]. */
+    private fun replayFrom(cards: CardCatalog): Replay? {
         val blue = blueHand.map { cards.byId[it] ?: return null }
         val red = redHand.map { cards.byId[it] ?: return null }
 
@@ -122,52 +139,8 @@ data class PveMatchRow(
         // the same elements and the same Three Open slots every time.
         val random = Random(seed)
         val opening = MatchPreparation.prepareVersus(blue, red, first, rules, random)
-
-        return walk(
-            MatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0),
-            random,
-        )
-    }
-
-    /**
-     * Applies every stored placement in order, starting a new board wherever one ended.
-     *
-     * The trailing [boardFor] is not redundant. Without it a Sudden Death draw would leave the
-     * position on the board that *drew* — full, finished, with no current player — until the next
-     * move happened to be applied. Every caller asking whose turn it is would be told nobody's, and
-     * the opponent would never take its turn on the new board because nothing would ever notice one
-     * had begun.
-     *
-     * So a position always names the board the **next** placement will be played on. It costs
-     * nothing in determinism: the rematch is prepared from the generator at exactly the point the
-     * next `walk` will prepare it from, so both reads produce the same board.
-     */
-    private fun walk(from: MatchPosition, random: Random): MatchPosition? {
-        var at = from
-        for (move in moves) {
-            at = boardFor(at, random)?.advanced(move.handIndex, move.position) ?: return null
-        }
-        // Null here means the match is genuinely over, and the finished board is the answer.
-        return boardFor(at, random) ?: at
-    }
-
-    /**
-     * The board [move] will be played on: this one, or the next after a Sudden Death draw.
-     *
-     * Null is the corrupt-row answer — moves left over on a board that was full *and settled* are
-     * placements the match had no room for.
-     */
-    private fun boardFor(at: MatchPosition, random: Random): MatchPosition? = when {
-        !at.state.isFinished -> at
-        !continuesAfter(at.state) -> null
-        else -> MatchPreparation.prepareRematch(at.state, random).let { next ->
-            MatchPosition(
-                state = next.state,
-                blueSeesRed = next.opponentVisibility,
-                redSeesBlue = next.playerVisibility,
-                rematch = at.rematch + 1,
-            )
-        }
+        return MatchPosition(opening.state, opening.blueSeesRed, opening.redSeesBlue, 0)
+            .replaying(moves.map { it.handIndex to it.position }, random)
     }
 
     /** The board as it stands, or null on a row that cannot be replayed. */
@@ -214,7 +187,7 @@ data class PveMatchRow(
      */
     fun isOver(cards: CardCatalog): Boolean {
         val state = replay(cards) ?: return false
-        return state.isFinished && !continuesAfter(state)
+        return state.isFinished && state.settlesTheMatch
     }
 
     /** How this ended from the player's side, or null while it is still being played. */
@@ -238,9 +211,6 @@ data class PveMatchRow(
      * differ by one do not walk each other's sequence one turn apart.
      */
     private fun turnRandom(): Random = Random(seed * TURN_MIX + moves.size)
-
-    private fun continuesAfter(state: MatchState): Boolean =
-        state.rules.suddenDeath && state.score.winner() == null
 
     companion object {
         /** An odd multiplier, so the seed and the turn number do not cancel in the low bits. */

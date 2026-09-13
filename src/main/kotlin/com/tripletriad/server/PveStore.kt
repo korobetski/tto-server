@@ -163,6 +163,29 @@ class PveStore(
     }
 
     /**
+     * The same row, without the account.
+     *
+     * ### Why the scoped one is not simply widened
+     *
+     * [matchById] takes an account id because every player-facing caller has one and must not be
+     * able to read somebody else's match by guessing an id — the scope is the authorisation, in the
+     * `WHERE` clause where it cannot be forgotten. Adding an overload that drops it is the shape of
+     * change that quietly becomes the one everybody calls, so this has a name that says what it is
+     * for and would look wrong anywhere else.
+     *
+     * Its one caller is the administration console's match inspector, behind a session that cost a
+     * password and a second factor, and reading any match at all is the entire point of a screen
+     * for arbitrating disputes. `PvpStore.matchById` is unscoped for a different reason — a PvP
+     * match has two accounts and the row itself says which — and neither is an accident.
+     */
+    fun matchForInspection(id: String): PveMatchRow? = transaction { db ->
+        db.prepareStatement("SELECT * FROM pve_matches WHERE id = ?").use { statement ->
+            statement.setString(1, id)
+            statement.executeQuery().use { rows -> if (rows.next()) rows.toMatch() else null }
+        }
+    }
+
+    /**
      * Appends [moves] and refuses if the match moved on underneath.
      *
      * **Plural, and that is the point.** One request produces the player's placement and the

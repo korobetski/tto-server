@@ -34,9 +34,12 @@
 -- Guarded by a lookup rather than written `CREATE SCHEMA IF NOT EXISTS`, and the difference is a
 -- privilege one. Creating a schema requires `CREATE` **on the database**, which `tto_app`
 -- deliberately does not have — see `10-app-role.sh`, where the whole point of the role is that it
--- owns its own objects and nothing else. On a deployed host the schema is therefore made once, by
--- the superuser, with `AUTHORIZATION tto_app`: `20-stats-role.sh` does it on a fresh volume, and
--- `.env.sample` carries the one-off `psql` for a volume that already exists.
+-- owns its own objects and nothing else. On a deployed host the schema is therefore made by the
+-- superuser, with `AUTHORIZATION tto_app`, before this migration runs — by the `postgres-bootstrap`
+-- container in both compose files, on every boot. It was an init script when this migration was
+-- written, and the deployment that carried it out proved why that was the wrong place: init scripts
+-- run on an empty data directory only, so on a host that already had one the schema was never
+-- created and this migration stopped with exactly the error two paragraphs below.
 --
 -- `CREATE SCHEMA IF NOT EXISTS stats` would then look like a no-op, and is not one: Postgres 17
 -- checks the privilege **before** the existence, so that statement fails with `permission denied
@@ -240,11 +243,11 @@ FROM stats.accounts a, stats.matches m, stats.economy e;
 -- role that is supposed to read them.
 --
 -- **Conditional, because the role is optional.** It is created by the superuser
--- (`20-stats-role.sh` on a fresh volume, a one-off `psql` otherwise) and only when somebody has
+-- (`docker/postgres/bootstrap/bootstrap.sh`, on every boot) and only when somebody has
 -- set a password for it; a deployment that never wanted a second reader has no such role, and a
 -- migration that failed on its absence would turn an unused feature into a refusal to start. The
 -- name is a literal here — it cannot come from the environment, because a migration is a file
--- with a checksum — so the init script and this file agree by both spelling it out, and renaming
+-- with a checksum — so the bootstrap and this file agree by both spelling it out, and renaming
 -- it is a new migration.
 --
 -- Two grants and not one: `ALL TABLES` covers what exists this instant, and `ALTER DEFAULT

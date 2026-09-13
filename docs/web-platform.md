@@ -262,6 +262,11 @@ existing `AccountStore` methods and `applyOnce`, so a retried refund returns the
 instead of performing a second one — and the audit row is written **in the same transaction as the
 effect**. An audit that can be missing while the effect happened is worth nothing.
 
+The wire shapes live in `AdminRoutes.kt`, beside the handlers that send them, and `AdminStore`
+fills them. `tto-web/console/lib/api.ts` is the specification those types follow: a property added
+on one side is a property added on the other, and the console reads `null` and an absent key as two
+different answers, so the routes encode with `explicitNulls` on and no defaults but `nextCursor`.
+
 `CLAUDE.md` requires `requireCompatibleClient()` on every new route. These are not game-client
 routes and replay no transcript, so the gate does not apply — but that is an exception, and it is
 expected to be **written down beside the code**, the way a detekt suppression carries the reason
@@ -307,10 +312,14 @@ otherwise resolve them differently and silently:
 Then a compromise of whatever reads those views cannot reach `password_hash`, the email addresses
 `data-inventory.md` tracks, or `sessions.token_hash`.
 
-This is the reasoning of `docker/postgres/init/10-app-role.sh` applied a second time — and it
-carries that file's trap: `/docker-entrypoint-initdb.d` runs **only on an empty data directory**.
-On the deployed host the role is created by a one-off `psql`; the init script exists so that
-`docker compose down -v && docker compose up -d` still produces a working database.
+This is the reasoning of `docker/postgres/init/10-app-role.sh` applied a second time — but not in
+that file's place, because of that file's trap: `/docker-entrypoint-initdb.d` runs **only on an
+empty data directory**, so a role added there never reaches a host whose volume already exists.
+The `stats` schema and `tto_stats` are made instead by `postgres-bootstrap`, the one-shot container
+both compose files declare, which runs `docker/postgres/bootstrap/bootstrap.sh` as the superuser on
+**every** `up` and is written to be idempotent. The server waits for it to complete before
+migrating, so `V18` always finds the schema it fills — and the server's own role never needs
+`CREATE` on the database, which is the privilege whose absence was the `42501` CI caught.
 
 ### Grafana is a stopgap, on purpose
 

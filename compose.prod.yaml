@@ -30,17 +30,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tripletriad}
       APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env}
       APP_DB_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
-      # Optional, unlike the four above, and empty by default. It creates `tto_stats` — a role that
-      # may SELECT the `stats` views and reach nothing else — on a **fresh volume only**. A host
-      # that already has its data directory needs the role created by hand; `.env.prod.sample` has
-      # the command. Leaving it unset costs nothing: the views exist either way, and the server
-      # reads them as itself.
-      STATS_DB_PASSWORD: ${STATS_DB_PASSWORD:-}
     # No `ports:` at all. Not even `127.0.0.1:5432` — reaching it from the host is what
     # `docker compose exec postgres psql` is for, and an OVH VPS with a published database port is
     # found by a scanner within the hour.
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Once, on an empty data directory, and never again — so only what must be true *before the
+      # first connection* belongs here. Everything that must hold on every boot is in
+      # `postgres-bootstrap` below, which exists because that distinction was learnt the hard way.
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
       # Where scripts/backup.sh writes. A bind mount, so the dumps outlive `docker compose down -v`
       # — which is the one command that destroys the volume next to them.
@@ -54,6 +51,43 @@ services:
       retries: 10
       start_period: 10s
 
+  # The privileged statements the server cannot make for itself, run on every boot and then gone.
+  #
+  # `V18__stats_views.sql` needs the `stats` schema to exist, and creating a schema needs `CREATE` on
+  # the database — which `tto_app`, the role the server connects as, deliberately does not have. This
+  # was an init script until the deployment carrying `V18` to this very host failed on exactly that:
+  # init scripts run once, on an empty data directory, so on a host that already had one the schema
+  # was never created and the migration stopped with `permission denied for database tripletriad`.
+  #
+  # It is idempotent and it exits. See docker/postgres/bootstrap/bootstrap.sh for the whole argument.
+  postgres-bootstrap:
+    # Same image as the database, so psql's version is the server's version and there is nothing
+    # else to pull on a host whose only job is to run this stack.
+    image: postgres:17-alpine
+    # Not `unless-stopped`: this is a task, and a task that restarts for ever is a task that failed.
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # libpq's own variables, which is what keeps the password off the command line — `docker
+      # inspect` shows `Cmd` to anybody who can reach the docker socket, and an argument is not a
+      # secret.
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      PGDATABASE: ${POSTGRES_DB:-tripletriad}
+      # Who owns the schema: the role that will create views in it, not the superuser making it.
+      APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env}
+      # The only optional one here, and empty by default. It creates `tto_stats` — a role that may
+      # SELECT the `stats` views and reach nothing else — and, because this runs on every boot,
+      # rotating it in `.env` and restarting is now how that password changes. Leaving it unset
+      # costs nothing: the views exist either way and the server reads them as itself.
+      STATS_DB_PASSWORD: ${STATS_DB_PASSWORD:-}
+    volumes:
+      - ./docker/postgres/bootstrap:/bootstrap:ro
+    entrypoint: ["/bootstrap/bootstrap.sh"]
+
   server:
     # Set by scripts/deploy.sh from the tag being deployed, never edited by hand. Pinned to a
     # digest-stable tag rather than `latest`, so `docker compose up -d` after a reboot brings back
@@ -63,6 +97,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      postgres-bootstrap:
+        # And not before the schema `V18` fills exists. `service_completed_successfully` also means a
+        # bootstrap that failed stops the deployment here, with its own error, rather than surfacing
+        # as a migration failure two containers away — which is how the 42501 above was first read.
+        condition: service_completed_successfully
     environment:
       # Anything that is not `development` is production, and production refuses every credential
       # default. See ServerConfig.kt.

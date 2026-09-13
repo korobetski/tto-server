@@ -185,7 +185,8 @@ docker compose -f compose.prod.yaml logs -f
 ```
 
 Expect the first start to take a minute: Postgres initialises its data directory and runs
-`docker/postgres/init/10-app-role.sh`, the server runs Flyway, and Caddy negotiates a certificate.
+`docker/postgres/init/10-app-role.sh`, `postgres-bootstrap` creates the `stats` schema and
+exits, the server runs Flyway, and Caddy negotiates a certificate.
 
 ---
 

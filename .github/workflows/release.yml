@@ -228,16 +228,21 @@ jobs:
       # Deliberately not `--delete`-style: /srv/tto also holds .env, ./backups and the volumes'
       # mount points, none of which are in the repository and all of which must survive.
       #
+      # `docker/postgres` rather than `docker/postgres/init`: the `bootstrap/` beside it runs on
+      # every boot and is mounted into a container, so a release that delivered one and not the other
+      # would run the previous version of it. `chmod +x` for the same reason — the executable bit
+      # survives in git and in the tar, and the one time it does not is the one time the stack stops.
+      #
       # `deploy/` carries the systemd units. They are *delivered* on every release so the host has
       # the current copy, and *installed* only by hand — a release that could rewrite what runs as
       # root on a schedule is a release that could be made to.
       - name: Sync the deployment files
         run: |
-          tar czf - compose.prod.yaml Caddyfile scripts docker/postgres/init deploy \
+          tar czf - compose.prod.yaml Caddyfile scripts docker/postgres deploy \
             | ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" \
                 -o BatchMode=yes -o StrictHostKeyChecking=yes \
                 "$VPS_USER@$VPS_HOST" \
-                'tar xzf - -C /srv/tto && chmod +x /srv/tto/scripts/*.sh'
+                'tar xzf - -C /srv/tto && chmod +x /srv/tto/scripts/*.sh /srv/tto/docker/postgres/*/*.sh'
 
       # deploy.sh pulls, pins the digest into /srv/tto/.env, restarts, waits for /health/ready, and
       # rolls back to the previous digest if it never comes. Its exit code is this job's, so a

@@ -28,12 +28,6 @@ services:
       # a human uses for psql, and the application is not a human.
       APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env - see .env.sample}
       APP_DB_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env - see .env.sample}
-      # Read by docker/postgres/init/20-stats-role.sh, also on first boot only, and the only one of
-      # these four that is allowed to be empty. Unset means "no second reader": the `stats` schema
-      # is still created and `V18__stats_views.sql` still fills it, but no role exists to read it
-      # from outside the server. Set it and `tto_stats` can SELECT the views and nothing else —
-      # which is what a Grafana on an SSH tunnel should be connecting as.
-      STATS_DB_PASSWORD: ${STATS_DB_PASSWORD:-}
     ports:
       # Loopback, not 0.0.0.0. The `5432:5432` most examples use publishes the database to every
       # machine on the network, with the development password above.
@@ -42,7 +36,8 @@ services:
       - postgres-data:/var/lib/postgresql/data
       # Runs **once**, on an empty data directory. Read-only because the container has no business
       # rewriting its own bootstrap. See the long note in 10-app-role.sh for what that implies when
-      # the script changes: it does not re-run, and an existing volume has to be told separately.
+      # the script changes: it does not re-run, and an existing volume has to be told separately —
+      # which is why everything that must hold on *every* boot is in `postgres-bootstrap` below.
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       # `pg_isready` with no database name reports ready during the image's own bootstrap pass,
@@ -55,6 +50,40 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  # The privileged statements the server cannot make for itself, run on every boot and then gone.
+  #
+  # `V18__stats_views.sql` needs the `stats` schema to exist, and creating a schema needs `CREATE`
+  # on the database — which `tto_app`, the role the server connects as, deliberately does not have.
+  # This was an init script until a deployment to a host with an existing volume failed on exactly
+  # that: init scripts run once, on an empty data directory, so the schema was never created and the
+  # migration stopped with `permission denied for database`. See docker/postgres/bootstrap.
+  #
+  # It exits when it is done. `server` waits for that exit rather than for a healthcheck, so the
+  # ordering is compose's business instead of a sentence in a runbook.
+  postgres-bootstrap:
+    image: postgres:17-alpine
+    # Not `unless-stopped`: this is a task, and a task that restarts for ever is a task that failed.
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # libpq's own variables, so the password never appears in a command line — `docker inspect`
+      # shows `Cmd` to anybody with docker on the host, and an argument is not a secret.
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-tripletriad}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env - see .env.sample}
+      PGDATABASE: ${POSTGRES_DB:-tripletriad}
+      # Who owns the schema: the role that will create views in it, not the superuser making it.
+      APP_DB_USER: ${DATABASE_USER:?set DATABASE_USER in .env - see .env.sample}
+      # The only optional one. Unset means "no second reader": the schema and the views exist
+      # either way, and the server reads them as itself. Set it and `tto_stats` may SELECT those
+      # views and reach nothing else — which is what a Grafana on an SSH tunnel connects as.
+      STATS_DB_PASSWORD: ${STATS_DB_PASSWORD:-}
+    volumes:
+      - ./docker/postgres/bootstrap:/bootstrap:ro
+    entrypoint: ["/bootstrap/bootstrap.sh"]
 
   server:
     build:
@@ -77,6 +106,11 @@ services:
         # `restart: unless-stopped` that becomes a crash loop that eventually succeeds — which
         # works, and hides a real failure among the noise of a start-up that always looks broken.
         condition: service_healthy
+      postgres-bootstrap:
+        # And not before the schema `V18` fills exists. `service_completed_successfully` also means
+        # a bootstrap that failed stops the stack here, with its own error, instead of surfacing as
+        # a migration failure two containers away.
+        condition: service_completed_successfully
     environment:
       TTO_ENV: development
       TTO_PORT: 8080
