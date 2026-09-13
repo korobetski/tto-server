@@ -191,6 +191,8 @@ services:
       # local check is `curl -H 'Host: admin.localhost' localhost:${TTO_WEB_PORT:-8081}/` — which
       # is exactly what the VPS does with a real name in front of it.
       TTO_ADMIN_DOMAIN: ${TTO_ADMIN_DOMAIN:-http://admin.localhost}
+      # The browser game, the same way: `curl -H 'Host: play.localhost' localhost:8081/`.
+      TTO_PLAY_DOMAIN: ${TTO_PLAY_DOMAIN:-http://play.localhost}
       # Nothing here renews a certificate, so this is never read. It is set because the global
       # block in the Caddyfile names it, and an unset variable there is a hard start-up failure.
       TTO_TLS_EMAIL: ${TTO_TLS_EMAIL:-dev@localhost}

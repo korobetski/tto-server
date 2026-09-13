@@ -122,9 +122,10 @@ dpkg-reconfigure -plow unattended-upgrades
 install -d -o deploy -g deploy /srv/tto /srv/tto/backups /srv/tto/web
 ```
 
-`/srv/tto/web` holds a site this repository does not build. Caddy mounts it read-only and serves
-`web/portal` as the portal's document root; the portal is `tto-web`, a separate repository with its
-own deployment, and no release of the server ever writes there. Create it here anyway, and create
+`/srv/tto/web` holds the sites this repository does not build. Caddy mounts it read-only and serves
+`web/portal`, `web/console` and `web/play` as the document roots of the portal, the administration
+console and the browser game; all three are deployed by `tto-web`, a separate repository, and no
+release of the server ever writes there. Create it here anyway, and create
 it as `deploy`: a bind mount whose source does not exist is created by Docker as an empty directory
 owned by `root`, and the first thing to notice is the portal's CI being unable to write into it.
 

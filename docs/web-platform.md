@@ -122,8 +122,8 @@ ordered by how specific Caddy judges their matchers to be and a named matcher's 
 something the file can state or a reader can check. `route` runs its children in written order, so
 the order above is the order that happens.
 
-The API owns nine prefixes today — `/server`, `/accounts`, `/sessions`, `/me`, `/matches`, `/pvp`,
-`/auctions`, `/health`, `/metrics` — and `/` is free. None of them collides with anything a static
+The API owns ten prefixes today — `/server`, `/accounts`, `/sessions`, `/me`, `/matches`, `/pve`,
+`/pvp`, `/auctions`, `/health`, `/metrics` — and `/` is free. None of them collides with anything a static
 site generator emits.
 
 ### Rejected: separate origins for everything, with CORS
@@ -423,13 +423,59 @@ tests in each — alongside two wasm-only ones. What the target did need:
 - **`binaries.executable()` on `:shared`**, for the tests alone: Compose will not run wasm tests
   that webpack has not bundled, because Skiko's runtime is loaded from the bundle (CMP-4906).
 
+### What step 3.3 found (2026-09-13)
+
+`:webApp` is four small files in `tto-client`: `Main.kt`, a `Clock`, a `SettingsStore` and a page
+with no inline script. The bundle it builds reached the title screen in Chrome, served under the
+CSP below by a local proxy in front of the development server. **Not verified:** sign-in, a
+complete match, Firefox for the page itself (only the tests ran there), any phone browser.
+
+**The bundle weighs 36 MB on disk**, and most of it is not code:
+
+| File | Size | gzip |
+|---|---|---|
+| `skiko.wasm` (the renderer) | 8.2 MiB | 3.3 MB |
+| `tto.wasm` (the game, `:core` included) | 6.4 MiB | 2.0 MB |
+| `tto.js` | 576 KiB | 110 KB |
+| `composeResources/` | 19 MB | — of which 17 MB is card art, already PNG |
+
+About 5.5 MB of compressed code before the first frame, then the catalogues and the art Compose
+fetches **one file at a time** as screens ask for them. Fine on a desktop connection; on a phone it
+is the number that decides whether the game is usable, and it is still unmeasured there.
+
+What had to change, besides the host itself:
+
+- **The session token lives in `localStorage`.** The page's origin serves the bundle and the API
+  and nothing else, `script-src` is `'self'`, and Compose draws on a canvas, so there is no HTML
+  sink for an injected script to arrive through. An in-memory token would sign the player out on
+  every refresh. `Main.kt` carries the reasoning, and the decision reverses in one line.
+- **A failed `fetch` is a `kotlin.Error`, not an `IOException`.** Ktor's `Js` engine throws it, so
+  every `catch (Exception)` in `:shared` let it through, and the first blocked request froze the
+  splash screen. `MatchNetwork.wasmJs.kt` wraps the engine and translates it, with a test that
+  fails without the wrapper.
+- **No release check on `WEB`.** The client asked the GitHub API for the latest release, which the
+  CSP refuses and which has nothing to offer a browser anyway.
+- **The CSP needs two relaxations**, both forced by Compose rather than chosen:
+  `script-src 'wasm-unsafe-eval'` to instantiate WebAssembly at all, and `style-src 'unsafe-inline'`
+  because Compose injects a `<style>` into its shadow root — without it the page is black. Neither
+  opens a script sink; `connect-src 'self'` stays, and is what caught the GitHub call.
+
+**Delivery.** `tto-client`'s release workflow attaches `tto-web-<version>.tar.gz` to the release.
+`tto-web` pins the version in `play-version`, fetches that asset and deploys it beside the portal
+and the console, with its own symlink, smoke test and revert. Nothing ships until the repository
+variable `PLAY_SITE` is set, so the pipeline can land before the host exists.
+
+**Caching.** Only the two `.wasm` files carry a content hash in their name, and they are served
+`immutable` for a year. Everything else — `index.html`, `tto.js`, the resources — is `no-cache`,
+so a redeployment reaches the next load after a revalidation, and a stale page never pairs with a
+new wasm.
+
 ### What is still unmeasured
 
-Bundle size, cold-start time, text input on mobile browsers, canvas focus. The engine cannot answer
-any of them: a Compose/wasm bundle is measured in megabytes because the renderer ships inside it, so
-these are the output of `:webApp` in step 3.3, not assumptions this document is entitled to make.
-Megabytes are acceptable for a game somebody chose to open, and the concrete reason the portal is
-not built this way.
+Cold start on a real connection, text input on mobile browsers, canvas focus and the on-screen
+keyboard, and whether the art should be served as something smaller than the PNGs it was extracted
+as. Megabytes are acceptable for a game somebody chose to open, and the concrete reason the portal
+is not built this way.
 
 ---
 
@@ -526,9 +572,8 @@ Named rather than discovered:
 ## What is not decided yet
 
 - Whether a server release redeploys the portal automatically.
-- Where the browser game keeps its session token — `localStorage` is readable by any script that
-  gets injected, an in-memory token dies on refresh. Decided when `:webApp` is written.
-- The bundle size, and therefore whether the game is usable on a phone browser at all.
+- Whether the game is usable on a phone browser at all. The bundle is measured (step 3.3); a phone
+  on a mobile connection is not.
 - Whether the news ever becomes a table.
 - Whether the console and the portal share a build or only a repository.
 

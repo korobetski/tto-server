@@ -89,6 +89,21 @@
 	header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
 }
 
+# The browser game's policy: `static_policy` with two relaxations, each measured against the bundle
+# rather than assumed, and each the narrowest one that works.
+#
+# - `'wasm-unsafe-eval'` in `script-src`. Compiling WebAssembly is gated behind `unsafe-eval` unless
+#   this keyword is given, and it grants exactly that and not JavaScript's `eval`.
+# - `'unsafe-inline'` in `style-src`. Compose writes a `<style>` element into the shadow root it draws
+#   in, and without it the canvas has no size and the page is a blank rectangle. A hash would be
+#   narrower and would break silently on the next Compose upgrade, which changes that text. What it
+#   permits is CSS, not script, on a page with no HTML content for an attacker to inject into.
+#
+# `blob:` for images because Skiko decodes through object URLs. No `form-action`: there is no form.
+(game_policy) {
+	header Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'"
+}
+
 {$TTO_DOMAIN} {
 	import common
 
@@ -196,6 +211,59 @@
 			root * /srv/web/console
 			file_server
 			import static_policy
+		}
+	}
+}
+
+# The browser game: `tto-client`'s `:webApp` bundle, and the API routes the game calls.
+#
+# Its own origin rather than a path under the portal's, because it is the site that holds players'
+# session tokens and the portal is the one with editorial content — docs/web-platform.md § Rejected:
+# the browser game at `tto.moebiuscore.fr/play`.
+#
+# Defaults to `http://play.localhost`, for the reason {$TTO_ADMIN_DOMAIN} gives above: a deployment
+# that has not set it has no game, and nothing else changes.
+{$TTO_PLAY_DOMAIN} {
+	import common
+
+	# Refused here as on the portal's host. The game's API is proxied; the operator's is not.
+	@internal path /metrics /health/* /admin/*
+
+	# The API prefixes the game calls, enumerated — the same list `webApp/build.gradle.kts` gives the
+	# development server. This fallback runs the other way from the portal's, and on purpose: the
+	# bundle's file names are webpack's (content-hashed `.wasm`), so they cannot be listed, while the
+	# API's prefixes can. A prefix the server adds and this list lacks is a 404 in the browser game
+	# only, found by whoever first opens that screen, and harmless to every installed client.
+	@api path /server /accounts /accounts/* /sessions /sessions/* /me /me/* /matches/* /pve/* /pvp/* /auctions /auctions/*
+
+	route {
+		handle @internal {
+			respond 404
+		}
+
+		handle @api {
+			reverse_proxy server:8080 {
+				header_up X-Request-Id {http.request.header.X-Request-Id}
+			}
+		}
+
+		# Filled by `tto-web`'s CI from a tagged `tto-client` release, and empty until then.
+		handle {
+			root * /srv/web/play
+
+			# Caching is part of shipping a wasm bundle — see docs/web-platform.md § What breaks on
+			# the first day. The `.wasm` files are named after their content, so they never change
+			# under a name and may be kept for a year. Everything else keeps its name across releases
+			# — `index.html`, `tto.js`, the resources — and is revalidated on every load, which costs
+			# a 304 when nothing changed and is the only thing that stops a browser from pairing a new
+			# loader with last week's module.
+			@hashed path_regexp ^/[0-9a-f]{20}\.wasm$
+			@named not path_regexp ^/[0-9a-f]{20}\.wasm$
+			header @hashed Cache-Control "public, max-age=31536000, immutable"
+			header @named Cache-Control "no-cache"
+
+			file_server
+			import game_policy
 		}
 	}
 }

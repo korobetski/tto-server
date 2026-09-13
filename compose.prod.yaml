@@ -187,6 +187,8 @@ services:
       #
       # Point the DNS name at this VPS **before** setting it, for the same reason TTO_DOMAIN says.
       TTO_ADMIN_DOMAIN: ${TTO_ADMIN_DOMAIN:-http://admin.localhost}
+      # The browser game's hostname, optional on exactly the same terms as the console's.
+      TTO_PLAY_DOMAIN: ${TTO_PLAY_DOMAIN:-http://play.localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # The portal, and eventually the browser client. This directory is not in this repository
