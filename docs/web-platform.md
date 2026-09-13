@@ -400,6 +400,29 @@ search-based opponents, and takes about **3.5 s on the desktop JVM and 10 s unde
 three times slower, which puts an Expert opponent's move in the tens of milliseconds. Fine for a
 turn-based game; worth remembering before anything runs the search on every frame.
 
+### What step 3.2 found (2026-09-13)
+
+`:shared` compiles for `wasmJs` without touching `commonMain`: no `java.*`, no `runBlocking`, no
+fifth `expect` hiding anywhere. The whole common suite runs in headless Chrome and Firefox — 730
+tests in each — alongside two wasm-only ones. What the target did need:
+
+- **The four actuals**, each a few lines. Ktor's `Js` engine; `matchMedia` for reduced motion; a new
+  tab for links, restricted to `http(s)` — on the other hosts a `javascript:` URL is handed to
+  another program, here it would run inside the game's origin.
+- **`ClientPlatform.WEB`, in `tto-core` 0.8.8.** The browser has nothing to download, and naming it
+  `DESKTOP` would have offered it the desktop's file. The entry carries a warning that matters to
+  the server: **no deployment may publish a `WEB` download** while older clients exist, because a
+  client that predates the entry cannot decode `ServerInfo` at all once the map names it.
+- **`BrowserDocumentStore`**, over `localStorage`, one `tto/<collection>/` prefix per collection so
+  the origin's single flat map behaves like the other hosts' directories. It does not decide what it
+  holds — the session token is still the open question below, now for `:webApp` to answer.
+- **Catalogue loading works**, and the test harness is what needed changing, not the loader:
+  Compose reads resources with a `fetch` of `./composeResources/…`, and Karma serves neither that
+  path nor that root until `shared/karma.config.d/compose-resources.js` tells it to. `:webApp`'s own
+  bundle has to serve the same tree beside the page — the first concrete item for step 3.3.
+- **`binaries.executable()` on `:shared`**, for the tests alone: Compose will not run wasm tests
+  that webpack has not bundled, because Skiko's runtime is loaded from the bundle (CMP-4906).
+
 ### What is still unmeasured
 
 Bundle size, cold-start time, text input on mobile browsers, canvas focus. The engine cannot answer
