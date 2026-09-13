@@ -12,3 +12,4 @@ local.properties
 
 # Database dumps produced by scripts/backup.sh.
 backups/
+/secrets/

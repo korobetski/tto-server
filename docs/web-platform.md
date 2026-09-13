@@ -387,12 +387,26 @@ It is the same application with another target, beside `androidApp` and `desktop
 `:core` already is — a second publication pipeline and a second version to keep in step, for a
 module with exactly one consumer. What `tto-web` receives is the build output.
 
-### What is unmeasured
+### What the spike measured (step 3.1, 2026-09-13)
 
-Bundle size, cold-start time, text input on mobile browsers, canvas focus. These are the output of
-the spike in step 3.1, not assumptions this document is entitled to make. A Compose/wasm bundle is
-measured in megabytes because the renderer ships inside it — acceptable for a game somebody chose
-to open, and the concrete reason the portal is not built this way.
+`tto-core` declares `wasmJs { browser(); nodejs() }` and nothing else changed: no `actual`, no
+source file touched, no dependency swapped. The 791 common tests pass three ways under wasm — Node,
+headless Chrome 152 and headless Firefox — besides the two JVM runs they already had, and that
+includes `ReplayDeterminismTest`'s golden values, which is the result that matters: the browser
+computes the same match from the same seed as the server does.
+
+One number came out of it that was not asked for. `MatchAiLadderTest` plays 160 matches between
+search-based opponents, and takes about **3.5 s on the desktop JVM and 10 s under wasm** — roughly
+three times slower, which puts an Expert opponent's move in the tens of milliseconds. Fine for a
+turn-based game; worth remembering before anything runs the search on every frame.
+
+### What is still unmeasured
+
+Bundle size, cold-start time, text input on mobile browsers, canvas focus. The engine cannot answer
+any of them: a Compose/wasm bundle is measured in megabytes because the renderer ships inside it, so
+these are the output of `:webApp` in step 3.3, not assumptions this document is entitled to make.
+Megabytes are acceptable for a game somebody chose to open, and the concrete reason the portal is
+not built this way.
 
 ---
 
