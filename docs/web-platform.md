@@ -3,14 +3,19 @@
 The plan for `tto-web`: a public portal, the game in a browser, and an administration console —
 the decisions that shape all three, and the order they get built in.
 
-> **Status: none of this is built.** Every host, table, route and module named below is a proposal.
-> This document exists so the choices are made once, in the open, rather than discovered one at a
-> time by the first implementation — and so the alternatives that lost stay readable next to the
-> ones that won. When a section is implemented, its future tense goes.
+> **Status (2026-09-13): steps 0 to 3 are built and in production.** The portal serves
+> `tto.moebiuscore.fr`, the console `admintto.moebiuscore.fr`, the browser game
+> `playtto.moebiuscore.fr`, and a complete PvE match has been played on the last one. What is still
+> open is listed under *What is not decided yet* and *What is still unmeasured*.
+>
+> The document was written before any of it, so the choices would be made once, in the open, rather
+> than discovered one at a time by the first implementation — and so the alternatives that lost stay
+> readable next to the ones that won. The sections named *What … found* record what building it
+> taught; where they disagree with the reasoning above them, they win.
 
 It lives in this repository rather than in `tto-web` because most of what is genuinely *decided*
-here is server-side: the hosts Caddy will serve, the schema an administration console needs, and
-the one constraint the whole design has to keep. `tto-web` will hold the pages, not the reasoning.
+here is server-side: the hosts Caddy serves, the schema the administration console needs, and the
+one constraint the whole design has to keep. `tto-web` holds the pages, not the reasoning.
 
 ---
 
@@ -274,8 +279,8 @@ the rule is wrong there.
 
 ### The match inspector shows a move list, not a board
 
-The cheapest v1 by a wide margin, and it is not a compromise for long: once `:webApp` exists at
-step 3, the console can reuse the game's own renderer. Building a second board renderer now means
+The cheapest v1 by a wide margin, and it is not meant to last: `:webApp` exists since step 3, so the
+console can reuse the game's own renderer — not done yet. Building a second board renderer now means
 throwing it away in six months.
 
 ### Rejected: administering through direct SQL
@@ -373,12 +378,12 @@ and `ServerStatus` — which is why `androidMain`, `desktopMain` and `iosMain` e
 
 The fifth is **`DocumentStore`**, which is an interface implemented per application module rather
 than an `expect`, and therefore easy to miss when counting. `ServerStores` wires four of them —
-transcript queue, session, server directory, tickets. A browser implementation over `localStorage`
-or IndexedDB is the piece that will **hold the session token**, so it deserves the most care of the
-five.
+transcript queue, session, server directory, tickets. The browser implementation, over
+`localStorage`, is the piece that **holds the session token**, so it deserved the most care of the
+five — step 3.3 records the decision.
 
-Also to verify: the catalogs are read out of the Compose resource bundle by `CatalogLoaders.kt` in
-`:shared`, and that path has to work under wasm.
+The catalogs are read out of the Compose resource bundle by `CatalogLoaders.kt` in `:shared`; that
+path works under wasm, and step 3.2 records what it took.
 
 ### `:webApp` belongs in `tto-client`
 
@@ -415,7 +420,7 @@ tests in each — alongside two wasm-only ones. What the target did need:
   client that predates the entry cannot decode `ServerInfo` at all once the map names it.
 - **`BrowserDocumentStore`**, over `localStorage`, one `tto/<collection>/` prefix per collection so
   the origin's single flat map behaves like the other hosts' directories. It does not decide what it
-  holds — the session token is still the open question below, now for `:webApp` to answer.
+  holds — the session token was left for `:webApp` to decide, and step 3.3 did.
 - **Catalogue loading works**, and the test harness is what needed changing, not the loader:
   Compose reads resources with a `fetch` of `./composeResources/…`, and Karma serves neither that
   path nor that root until `shared/karma.config.d/compose-resources.js` tells it to. `:webApp`'s own
@@ -426,9 +431,10 @@ tests in each — alongside two wasm-only ones. What the target did need:
 ### What step 3.3 found (2026-09-13)
 
 `:webApp` is four small files in `tto-client`: `Main.kt`, a `Clock`, a `SettingsStore` and a page
-with no inline script. The bundle it builds reached the title screen in Chrome, served under the
-CSP below by a local proxy in front of the development server. **Not verified:** sign-in, a
-complete match, Firefox for the page itself (only the tests ran there), any phone browser.
+with no inline script. Released as `tto-client` v1.2.1 and deployed by `tto-web`, it serves
+`playtto.moebiuscore.fr`, where a player signed in with an existing account and played a PvE match
+to the end, refereed by the production server. **Not verified:** a complete match in Firefox (the
+tests ran there, a player has not), any phone browser.
 
 **The bundle weighs 36 MB on disk**, and most of it is not code:
 
@@ -480,6 +486,10 @@ is not built this way.
 ---
 
 ## The plan
+
+Every step below is built. The tables are kept as they were planned, because the order and the
+"done when" of each are the reasoning worth keeping; what differs from the plan is in the *What …
+found* sections above.
 
 ### Step 0 — Foundations
 
@@ -549,6 +559,10 @@ early costs nothing; doing it late costs the plan.
 **Done when** a complete PvE match is played in Chrome and in Firefox and the server accepts the
 transcript.
 
+Half of that is recorded: a complete match on `playtto.moebiuscore.fr`, refereed by the server
+(2026-09-13). The Firefox match is not, and the wording has aged in one respect — PvE is refereed
+move by move now, so there is no transcript for the server to accept; it plays the match itself.
+
 ---
 
 ## What breaks on the first day
@@ -564,6 +578,8 @@ Named rather than discovered:
   how it works. Do not add `trusted_proxies` without reading why it is missing.
 - **Cache headers on the wasm bundle are part of shipping it.** A stale cached bundle is exactly
   the case `VersionGate.kt` exists for, and the browser is the one client that caches its own code.
+  The `Caddyfile` answers it on the game's host: the content-hashed `.wasm` files are `immutable`,
+  everything else is `no-cache` (step 3.3).
 - **Three hosts reach one server.** Rate limits are per address and unaffected, but every new route
   now has a question attached: which hosts should be able to see it.
 
