@@ -242,7 +242,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 4
+            "difficulty": 3
           },
           "messages": {}
         },
@@ -295,7 +295,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 4
+            "difficulty": 3
           },
           "messages": {}
         },
@@ -349,7 +349,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 5
+            "difficulty": 3
           },
           "messages": {}
         }
@@ -617,7 +617,7 @@
                 "rate": 0.125
               }
             ],
-            "difficulty": 4
+            "difficulty": 3
           },
           "messages": {}
         },
@@ -654,7 +654,7 @@
                 "rate": 0.125
               }
             ],
-            "difficulty": 9
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -700,7 +700,7 @@
                 "rate": 0.25
               }
             ],
-            "difficulty": 8
+            "difficulty": 7
           },
           "messages": {
             "start": "It's the last lap, give everything you have.",
@@ -769,7 +769,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 1
+            "difficulty": 2
           },
           "messages": {}
         },

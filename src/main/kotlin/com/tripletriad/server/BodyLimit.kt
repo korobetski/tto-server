@@ -92,7 +92,7 @@ public class BodyLimitConfig {
  * Sized against the largest honest body rather than against a round number. The biggest thing a
  * client sends is a whole `GameSave` on `PUT /me/save`: a collection held as card ids, a bag, four
  * decks and the quest and achievement state. For scale, `catalog/cards.json` — every card in the
- * game with its name, set and four ranks — is 137 KB, and a save names those cards by integer id.
+ * game with its name, set and four ranks — is 143 KB, and a save names those cards by integer id.
  * A player who owned every card several times over would not reach a quarter of this.
  *
  * Which is the property that matters: a number this far above the honest case is one that never

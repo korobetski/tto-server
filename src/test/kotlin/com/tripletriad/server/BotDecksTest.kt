@@ -101,9 +101,10 @@ class BotDecksTest {
     /**
      * **A collection of nothing but aces cannot be built into a hand, and says so.**
      *
-     * `DeckLimits` admits one five-star and two four-stars, so a profile holding twenty of the
-     * most valuable cards in the format can legally field three of them. Null is the only honest
-     * answer — there is no fourth card to reach for — and the caller keeps whatever decks it had.
+     * `DeckLimits` admits two cards of four stars or more, one five-star at most, so a profile
+     * holding twenty of the most valuable cards in the format can legally field two of them. Null
+     * is the only honest answer — there is no third card to reach for — and the caller keeps
+     * whatever decks it had.
      *
      * Worth pinning because it is the collection a bot that only ever bought the most expensive
      * pack would drift towards, and a silent short deck would be much worse than a refusal.

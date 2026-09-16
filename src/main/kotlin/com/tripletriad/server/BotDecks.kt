@@ -60,7 +60,8 @@ object BotDecks {
      *
      * ### Every hand goes through `DeckLimits`
      *
-     * The caps admit one five-star and two four-stars, so "the best five" is not the five best.
+     * The caps admit two cards of four stars or more, one five-star at most, and each card once,
+     * so "the best five" is not the five best.
      * `DeckLimits.firstLegalHand` is greedy over the order it is given and exact — a capped rank is
      * only ever refused, never required — which is what makes each of these a matter of choosing
      * an *ordering* rather than writing a search.

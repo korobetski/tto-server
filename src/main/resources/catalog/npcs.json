@@ -182,7 +182,7 @@
           "rate": 0.179
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 5,
@@ -230,7 +230,7 @@
           "rate": 0.184
         }
       ],
-      "difficulty": 9
+      "difficulty": 2
     },
     {
       "id": 6,
@@ -276,7 +276,7 @@
           "rate": 0.192
         }
       ],
-      "difficulty": 8
+      "difficulty": 7
     },
     {
       "id": 7,
@@ -328,7 +328,7 @@
           "rate": 0.095
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 8,
@@ -374,7 +374,7 @@
           "rate": 0.18
         }
       ],
-      "difficulty": 6,
+      "difficulty": 3,
       "availability": {
         "begins": 20,
         "ends": 8
@@ -425,7 +425,7 @@
           "rate": 0.161
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 10,
@@ -476,7 +476,7 @@
           "rate": 0.144
         }
       ],
-      "difficulty": 7
+      "difficulty": 3
     },
     {
       "id": 11,
@@ -530,7 +530,7 @@
           "rate": 0.096
         }
       ],
-      "difficulty": 6,
+      "difficulty": 7,
       "availability": {
         "begins": 14,
         "ends": 19
@@ -582,7 +582,7 @@
           "rate": 0.131
         }
       ],
-      "difficulty": 8
+      "difficulty": 5
     },
     {
       "id": 13,
@@ -732,7 +732,7 @@
           "rate": 0.099
         }
       ],
-      "difficulty": 9
+      "difficulty": 2
     },
     {
       "id": 16,
@@ -821,7 +821,7 @@
           "rate": 0.193
         }
       ],
-      "difficulty": 4
+      "difficulty": 2
     },
     {
       "id": 18,
@@ -873,7 +873,7 @@
           "rate": 0.122
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 19,
@@ -971,7 +971,7 @@
           "rate": 0.187
         }
       ],
-      "difficulty": 4,
+      "difficulty": 2,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -1115,7 +1115,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 5,
+      "difficulty": 3,
       "availability": {
         "begins": 12,
         "ends": 20
@@ -1170,7 +1170,7 @@
           "rate": 0.127
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 26,
@@ -1217,7 +1217,7 @@
           "rate": 0.195
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 27,
@@ -1268,7 +1268,7 @@
           "rate": 0.145
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 28,
@@ -1319,7 +1319,7 @@
           "rate": 0.095
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 29,
@@ -1366,7 +1366,7 @@
           "rate": 0.133
         }
       ],
-      "difficulty": 8,
+      "difficulty": 3,
       "availability": {
         "begins": 16,
         "ends": 8
@@ -1421,7 +1421,7 @@
           "rate": 0.123
         }
       ],
-      "difficulty": 8
+      "difficulty": 6
     },
     {
       "id": 31,
@@ -1478,7 +1478,7 @@
           "rate": 0.065
         }
       ],
-      "difficulty": 9,
+      "difficulty": 6,
       "availability": {
         "begins": 22,
         "ends": 3
@@ -1538,7 +1538,7 @@
           "rate": 0.064
         }
       ],
-      "difficulty": 8,
+      "difficulty": 1,
       "availability": {
         "begins": 6,
         "ends": 11
@@ -1589,7 +1589,7 @@
           "rate": 0.17
         }
       ],
-      "difficulty": 6
+      "difficulty": 8
     },
     {
       "id": 34,
@@ -1646,7 +1646,7 @@
           "rate": 0.063
         }
       ],
-      "difficulty": 10,
+      "difficulty": 7,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -1698,7 +1698,7 @@
           "rate": 0.13
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 36,
@@ -1755,7 +1755,7 @@
           "rate": 0.098
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 37,
@@ -1807,7 +1807,7 @@
           "rate": 0.139
         }
       ],
-      "difficulty": 8,
+      "difficulty": 10,
       "availability": {
         "begins": 21,
         "ends": 7
@@ -1855,7 +1855,7 @@
           "rate": 0.192
         }
       ],
-      "difficulty": 6,
+      "difficulty": 5,
       "availability": {
         "begins": 19,
         "ends": 23
@@ -1905,7 +1905,7 @@
           "rate": 0.162
         }
       ],
-      "difficulty": 6,
+      "difficulty": 5,
       "availability": {
         "begins": 19,
         "ends": 23
@@ -1952,7 +1952,7 @@
           "rate": 0.212
         }
       ],
-      "difficulty": 7,
+      "difficulty": 5,
       "availability": {
         "begins": 15,
         "ends": 3
@@ -1998,7 +1998,7 @@
           "rate": 0.241
         }
       ],
-      "difficulty": 2,
+      "difficulty": 4,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -2044,7 +2044,7 @@
           "rate": 0.201
         }
       ],
-      "difficulty": 7,
+      "difficulty": 4,
       "availability": {
         "begins": 9,
         "ends": 20
@@ -2090,7 +2090,7 @@
           "rate": 0.219
         }
       ],
-      "difficulty": 7,
+      "difficulty": 4,
       "availability": {
         "begins": 22,
         "ends": 6
@@ -2144,7 +2144,7 @@
           "rate": 0.142
         }
       ],
-      "difficulty": 5,
+      "difficulty": 2,
       "availability": {
         "begins": 2,
         "ends": 9
@@ -2188,7 +2188,7 @@
           "rate": 0.262
         }
       ],
-      "difficulty": 7,
+      "difficulty": 5,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2282,7 +2282,7 @@
           "rate": 0.218
         }
       ],
-      "difficulty": 8,
+      "difficulty": 3,
       "availability": {
         "begins": 16,
         "ends": 20
@@ -2341,7 +2341,7 @@
           "rate": 0.066
         }
       ],
-      "difficulty": 4,
+      "difficulty": 5,
       "availability": {
         "begins": 23,
         "ends": 4
@@ -2391,7 +2391,7 @@
           "rate": 0.193
         }
       ],
-      "difficulty": 7,
+      "difficulty": 3,
       "availability": {
         "begins": 17,
         "ends": 23
@@ -2442,7 +2442,7 @@
           "rate": 0.145
         }
       ],
-      "difficulty": 6,
+      "difficulty": 7,
       "availability": {
         "begins": 23,
         "ends": 2
@@ -2489,7 +2489,7 @@
           "rate": 0.158
         }
       ],
-      "difficulty": 9,
+      "difficulty": 7,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2544,7 +2544,7 @@
           "rate": 0.109
         }
       ],
-      "difficulty": 8,
+      "difficulty": 7,
       "availability": {
         "begins": 21,
         "ends": 8
@@ -2598,7 +2598,7 @@
           "rate": 0.104
         }
       ],
-      "difficulty": 8
+      "difficulty": 5
     },
     {
       "id": 54,
@@ -2642,7 +2642,7 @@
           "rate": 0.18
         }
       ],
-      "difficulty": 5,
+      "difficulty": 3,
       "availability": {
         "begins": 14,
         "ends": 18
@@ -2694,7 +2694,7 @@
           "rate": 0.145
         }
       ],
-      "difficulty": 8,
+      "difficulty": 6,
       "availability": {
         "begins": 6,
         "ends": 24
@@ -2749,7 +2749,7 @@
           "rate": 0.098
         }
       ],
-      "difficulty": 7,
+      "difficulty": 1,
       "availability": {
         "begins": 21,
         "ends": 3
@@ -2794,7 +2794,7 @@
           "rate": 0.255
         }
       ],
-      "difficulty": 9,
+      "difficulty": 8,
       "availability": {
         "begins": 19,
         "ends": 5
@@ -2948,7 +2948,7 @@
           "rate": 0.129
         }
       ],
-      "difficulty": 9
+      "difficulty": 4
     },
     {
       "id": 99,
@@ -3417,7 +3417,28 @@
         708,
         709,
         710,
-        711
+        711,
+        712,
+        713,
+        714,
+        715,
+        716,
+        717,
+        718,
+        719,
+        720,
+        721,
+        722,
+        723,
+        724,
+        725,
+        726,
+        727,
+        728,
+        729,
+        730,
+        731,
+        732
       ],
       "itemRewards": [
         {
@@ -3436,7 +3457,7 @@
           "rate": 0.185
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 1,
@@ -3521,7 +3542,7 @@
           "rate": 0.098
         }
       ],
-      "difficulty": 1
+      "difficulty": 2
     },
     {
       "id": 2,
@@ -3612,7 +3633,7 @@
           "rate": 0.088
         }
       ],
-      "difficulty": 1
+      "difficulty": 2
     },
     {
       "id": 2,
@@ -3700,7 +3721,7 @@
           "rate": 0.094
         }
       ],
-      "difficulty": 1
+      "difficulty": 2
     },
     {
       "id": 3,
@@ -4460,7 +4481,7 @@
           "rate": 0.171
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 13,
@@ -4533,7 +4554,7 @@
           "rate": 0.161
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 14,
@@ -4618,7 +4639,7 @@
           "rate": 0.142
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 15,
@@ -4701,7 +4722,7 @@
           "rate": 0.102
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 16,
@@ -4784,7 +4805,7 @@
           "rate": 0.115
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 17,
@@ -4867,7 +4888,7 @@
           "rate": 0.109
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 18,
@@ -4941,7 +4962,7 @@
           "rate": 0.183
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 19,
@@ -5024,7 +5045,7 @@
           "rate": 0.128
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 20,
@@ -5107,7 +5128,7 @@
           "rate": 0.145
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 21,
@@ -5192,7 +5213,7 @@
           "rate": 0.121
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 22,
@@ -5275,7 +5296,7 @@
           "rate": 0.122
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 99,
@@ -5428,7 +5449,7 @@
           "rate": 0.16
         }
       ],
-      "difficulty": 5,
+      "difficulty": 3,
       "requiresAchievement": "ac-cmp-cc"
     },
     {
@@ -5466,7 +5487,7 @@
           "rate": 0.324
         }
       ],
-      "difficulty": 8
+      "difficulty": 5
     },
     {
       "id": 62,
@@ -5503,7 +5524,7 @@
           "rate": 0.367
         }
       ],
-      "difficulty": 8
+      "difficulty": 6
     },
     {
       "id": 63,
@@ -5540,7 +5561,7 @@
           "rate": 0.295
         }
       ],
-      "difficulty": 7
+      "difficulty": 4
     },
     {
       "id": 64,
@@ -5574,7 +5595,7 @@
           "rate": 0.255
         }
       ],
-      "difficulty": 10,
+      "difficulty": 7,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -5609,7 +5630,7 @@
           "rate": 0.278
         }
       ],
-      "difficulty": 9
+      "difficulty": 7
     },
     {
       "id": 66,
@@ -5733,7 +5754,7 @@
           "rate": 0.224
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 69,
@@ -5773,7 +5794,7 @@
           "rate": 0.167
         }
       ],
-      "difficulty": 2
+      "difficulty": 3
     },
     {
       "id": 70,
@@ -5814,7 +5835,7 @@
           "rate": 0.176
         }
       ],
-      "difficulty": 7
+      "difficulty": 3
     },
     {
       "id": 71,
@@ -5855,7 +5876,7 @@
           "rate": 0.246
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 72,
@@ -5891,7 +5912,7 @@
           "rate": 0.27
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 73,
@@ -5934,7 +5955,7 @@
           "rate": 0.237
         }
       ],
-      "difficulty": 10,
+      "difficulty": 4,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -5971,7 +5992,7 @@
           "rate": 0.276
         }
       ],
-      "difficulty": 7
+      "difficulty": 1
     },
     {
       "id": 75,
@@ -6007,7 +6028,7 @@
           "rate": 0.348
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 76,
@@ -6048,7 +6069,7 @@
           "rate": 0.178
         }
       ],
-      "difficulty": 5
+      "difficulty": 1
     },
     {
       "id": 77,
@@ -6094,7 +6115,7 @@
           "rate": 0.184
         }
       ],
-      "difficulty": 9
+      "difficulty": 2
     },
     {
       "id": 78,
@@ -6130,7 +6151,7 @@
           "rate": 0.319
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 79,
@@ -6172,7 +6193,7 @@
           "rate": 0.246
         }
       ],
-      "difficulty": 5
+      "difficulty": 1
     },
     {
       "id": 80,
@@ -6208,7 +6229,7 @@
           "rate": 0.238
         }
       ],
-      "difficulty": 6
+      "difficulty": 2
     },
     {
       "id": 81,
@@ -6255,7 +6276,7 @@
           "rate": 0.133
         }
       ],
-      "difficulty": 7
+      "difficulty": 1
     },
     {
       "id": 82,
@@ -6290,7 +6311,7 @@
           "rate": 0.368
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 83,
@@ -6362,7 +6383,7 @@
           "rate": 0.358
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 85,
@@ -6399,7 +6420,7 @@
           "rate": 0.322
         }
       ],
-      "difficulty": 6
+      "difficulty": 1
     },
     {
       "id": 86,
@@ -6435,7 +6456,7 @@
           "rate": 0.27
         }
       ],
-      "difficulty": 7
+      "difficulty": 4
     },
     {
       "id": 87,
@@ -6472,7 +6493,7 @@
           "rate": 0.33
         }
       ],
-      "difficulty": 7
+      "difficulty": 3
     },
     {
       "id": 88,
@@ -6520,7 +6541,7 @@
           "rate": 0.149
         }
       ],
-      "difficulty": 7
+      "difficulty": 1
     },
     {
       "id": 89,
@@ -6568,7 +6589,7 @@
           "rate": 0.127
         }
       ],
-      "difficulty": 8
+      "difficulty": 2
     },
     {
       "id": 90,
@@ -6616,7 +6637,7 @@
           "rate": 0.123
         }
       ],
-      "difficulty": 5
+      "difficulty": 2
     },
     {
       "id": 91,
@@ -6663,7 +6684,7 @@
           "rate": 0.176
         }
       ],
-      "difficulty": 5
+      "difficulty": 1
     },
     {
       "id": 92,
@@ -6711,7 +6732,7 @@
           "rate": 0.13
         }
       ],
-      "difficulty": 8
+      "difficulty": 1
     },
     {
       "id": 93,
@@ -6755,7 +6776,7 @@
           "rate": 0.232
         }
       ],
-      "difficulty": 8
+      "difficulty": 4
     },
     {
       "id": 94,
@@ -6812,7 +6833,7 @@
           "rate": 0.064
         }
       ],
-      "difficulty": 6
+      "difficulty": 1
     },
     {
       "id": 95,
@@ -6858,7 +6879,7 @@
           "rate": 0.139
         }
       ],
-      "difficulty": 9
+      "difficulty": 3
     },
     {
       "id": 96,
@@ -6904,7 +6925,7 @@
           "rate": 0.144
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 97,
@@ -6946,7 +6967,7 @@
           "rate": 0.226
         }
       ],
-      "difficulty": 1
+      "difficulty": 3
     },
     {
       "id": 98,
@@ -7035,7 +7056,7 @@
           "rate": 0.151
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 101,
@@ -7077,7 +7098,7 @@
           "rate": 0.175
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 102,
@@ -7118,7 +7139,7 @@
           "rate": 0.257
         }
       ],
-      "difficulty": 2
+      "difficulty": 4
     },
     {
       "id": 103,
@@ -7158,7 +7179,7 @@
           "rate": 0.228
         }
       ],
-      "difficulty": 6
+      "difficulty": 5
     },
     {
       "id": 104,
@@ -7205,7 +7226,7 @@
           "rate": 0.13
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 105,
@@ -7252,7 +7273,7 @@
           "rate": 0.152
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 106,
@@ -7310,7 +7331,7 @@
           "rate": 0.093
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 107,
@@ -7362,7 +7383,7 @@
           "rate": 0.094
         }
       ],
-      "difficulty": 5
+      "difficulty": 1
     },
     {
       "id": 108,
@@ -7404,7 +7425,7 @@
           "rate": 0.195
         }
       ],
-      "difficulty": 7
+      "difficulty": 3
     },
     {
       "id": 109,
@@ -7456,7 +7477,7 @@
           "rate": 0.101
         }
       ],
-      "difficulty": 7
+      "difficulty": 4
     },
     {
       "id": 110,
@@ -7515,7 +7536,7 @@
           "rate": 0.076
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 111,
@@ -7618,7 +7639,7 @@
           "rate": 0.068
         }
       ],
-      "difficulty": 5
+      "difficulty": 4
     },
     {
       "id": 113,
@@ -7667,7 +7688,7 @@
           "rate": 0.129
         }
       ],
-      "difficulty": 10,
+      "difficulty": 7,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -7754,7 +7775,7 @@
           "rate": 0.162
         }
       ],
-      "difficulty": 6
+      "difficulty": 2
     },
     {
       "id": 116,
@@ -7799,7 +7820,7 @@
           "rate": 0.149
         }
       ],
-      "difficulty": 8
+      "difficulty": 1
     },
     {
       "id": 117,
@@ -7841,7 +7862,7 @@
           "rate": 0.258
         }
       ],
-      "difficulty": 8
+      "difficulty": 5
     },
     {
       "id": 118,
@@ -7936,7 +7957,7 @@
           "rate": 0.131
         }
       ],
-      "difficulty": 7
+      "difficulty": 1
     },
     {
       "id": 120,
@@ -7976,7 +7997,7 @@
           "rate": 0.273
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 121,
@@ -8019,7 +8040,7 @@
           "rate": 0.144
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 122,
@@ -8061,7 +8082,7 @@
           "rate": 0.256
         }
       ],
-      "difficulty": 5
+      "difficulty": 3
     },
     {
       "id": 123,
@@ -8103,7 +8124,7 @@
           "rate": 0.233
         }
       ],
-      "difficulty": 6
+      "difficulty": 3
     },
     {
       "id": 124,
@@ -8150,7 +8171,7 @@
           "rate": 0.15
         }
       ],
-      "difficulty": 4
+      "difficulty": 2
     },
     {
       "id": 125,
@@ -8242,7 +8263,7 @@
           "rate": 0.159
         }
       ],
-      "difficulty": 6
+      "difficulty": 8
     },
     {
       "id": 127,
@@ -8288,7 +8309,7 @@
           "rate": 0.146
         }
       ],
-      "difficulty": 7
+      "difficulty": 8
     },
     {
       "id": 128,
@@ -8339,7 +8360,7 @@
           "rate": 0.144
         }
       ],
-      "difficulty": 9
+      "difficulty": 7
     },
     {
       "id": 129,
@@ -8379,7 +8400,7 @@
           "rate": 0.189
         }
       ],
-      "difficulty": 8
+      "difficulty": 9
     },
     {
       "id": 130,
@@ -8416,7 +8437,7 @@
           "rate": 0.364
         }
       ],
-      "difficulty": 1
+      "difficulty": 3
     },
     {
       "id": 131,
@@ -8453,7 +8474,7 @@
           "rate": 0.356
         }
       ],
-      "difficulty": 6
+      "difficulty": 4
     },
     {
       "id": 132,
@@ -8489,7 +8510,7 @@
           "rate": 0.249
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 133,
@@ -8523,7 +8544,7 @@
           "rate": 0.36
         }
       ],
-      "difficulty": 9
+      "difficulty": 4
     },
     {
       "id": 134,

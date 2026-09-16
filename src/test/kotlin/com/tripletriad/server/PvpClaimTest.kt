@@ -457,8 +457,8 @@ class PvpClaimTest {
      * draw. PvE has replayed the rematch since it was refereed — the regrouping is a function of
      * the finished board — and this is that same walk, on the same shared [MatchPosition].
      *
-     * The draw is **constructed, not hoped for**. Both sides bring five copies of a card whose four
-     * sides are equal, so no placement can ever capture — a capture needs a strictly greater digit.
+     * The draw is **constructed, not hoped for**. Both sides bring [UNCAPTURABLE], and the harness
+     * fills the board cell by cell, so no placement can ever capture — see that list for why.
      * Nine cards down with nobody taking anything leaves each side owning exactly what it played,
      * which is five against four-plus-one-in-hand: 5-5, every time, with no seed to go stale.
      */
@@ -497,10 +497,10 @@ class PvpClaimTest {
 
     // ---- Harness ----------------------------------------------------------
 
-    /** An account whose only deck is five copies of [UNCAPTURABLE]. See the draw test. */
+    /** An account whose only deck is [UNCAPTURABLE]. See the draw test. */
     private fun mirrored(prefix: String): Long {
         val name = Postgres.freshAccount(prefix)
-        val hand = List(HAND) { UNCAPTURABLE }
+        val hand = UNCAPTURABLE
         val save = hand
             .fold(GameSave.new(name, createdAt = START)) { profile, id -> profile.withCard(id) }
             .copy(decks = listOf(Deck(GameSave.DEFAULT_DECK_NAME, hand)))
@@ -622,10 +622,16 @@ class PvpClaimTest {
         const val FORMAT = "free-play"
 
         /**
-         * Fat Chocobo — four sides of 5, the only card in the pool that cannot take or be taken by
-         * a copy of itself. A hand of five makes a board that always draws.
+         * Tonberry, Morbol, Ahriman, Coeurl, Goobbue: a hand that never captures its own mirror.
+         *
+         * [playOut] plays each side's first card in the first free cell, so the board fills 0 to 8
+         * in a checkerboard — the side that starts takes the even cells, every neighbour is the
+         * other side's, and both hands are laid in this order. Each card's side toward an earlier
+         * neighbour is no greater than that neighbour's side back, so no placement captures,
+         * whichever side the toss starts. Five distinct cards because a deck names a card once;
+         * it used to be five Fat Chocobos, the one card with four equal sides.
          */
-        const val UNCAPTURABLE = 341
+        val UNCAPTURABLE: List<Int> = listOf(258, 265, 267, 266, 268)
 
         /** Nobody in particular, for a wire read that is not about who is on the other side. */
         val NOBODY = Opponent(name = "", avatarId = null)
