@@ -145,7 +145,8 @@ class PveFlowTest {
      *
      * Read against the hand the server dealt, which the store is asked for directly — a test that
      * only checked `opponentHand` for nulls would pass just as happily against a payload carrying
-     * the cards somewhere else.
+     * the cards somewhere else. So the whole payload is searched, as values rather than as text:
+     * `valuesIn` says why the difference is the one between a red build and a real one.
      */
     @Test
     fun theOpponentsHandNeverReachesThePlayer() = server {
@@ -163,11 +164,12 @@ class PveFlowTest {
         val secret = row.redHand.filterNot { it in shown || it in view.hand }
 
         assertTrue(secret.isNotEmpty(), "the fixture revealed the whole hand; nothing was tested")
+        val values = valuesIn(body)
         for (card in secret) {
-            assertFalse("$card" in body, "the opponent's card $card reached the player: $body")
+            assertFalse("$card" in values, "the opponent's card $card reached the player: $body")
         }
         // Not vacuous: the player is certainly sent their own cards.
-        assertTrue(view.hand.all { "$it" in body })
+        assertTrue(view.hand.all { "$it" in values })
     }
 
     /**

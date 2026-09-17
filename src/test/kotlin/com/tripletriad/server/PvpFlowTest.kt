@@ -50,9 +50,10 @@ import kotlin.test.assertTrue
  * detect. A client that is sent its opponent's cards renders perfectly, plays perfectly, and cheats
  * silently — there is nothing on screen and nothing in any log to show for it.
  *
- * So it is asserted against the raw response body rather than the decoded object: "the field is
+ * So it is asserted against what was *sent* rather than against the decoded object: "the field is
  * null" and "the number is nowhere in what we sent" are different claims, and only the second one
- * survives somebody reading the payload instead of the model.
+ * survives somebody reading the payload instead of the model. `valuesIn` is how, and says why it
+ * is not a search of the body's text.
  */
 class PvpFlowTest {
 
@@ -320,6 +321,8 @@ class PvpFlowTest {
 
         val aliceBody = matchBody(alice.token)
         val bobBody = matchBody(bob.token)
+        val aliceValues = valuesIn(aliceBody)
+        val bobValues = valuesIn(bobBody)
         val aliceView = assertNotNull(currentMatch(alice.token))
         val bobView = assertNotNull(currentMatch(bob.token))
 
@@ -327,16 +330,16 @@ class PvpFlowTest {
         // rule, in which case the cards are on the wire on purpose.
         if (bobView.opponentHand.all { it == null }) {
             for (card in aliceView.hand.filterNot { it in bobView.hand }) {
-                assertFalse("$card" in bobBody, "Alice's card $card reached Bob: $bobBody")
+                assertFalse("$card" in bobValues, "Alice's card $card reached Bob: $bobBody")
             }
         }
         if (aliceView.opponentHand.all { it == null }) {
             for (card in bobView.hand.filterNot { it in aliceView.hand }) {
-                assertFalse("$card" in aliceBody, "Bob's card $card reached Alice: $aliceBody")
+                assertFalse("$card" in aliceValues, "Bob's card $card reached Alice: $aliceBody")
             }
         }
         // Not vacuous: each player is certainly sent their own cards.
-        assertTrue(aliceView.hand.all { "$it" in aliceBody })
+        assertTrue(aliceView.hand.all { "$it" in aliceValues })
     }
 
     /** Only the player to move is given anything to play, and the other is refused if they try. */
