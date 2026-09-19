@@ -153,7 +153,7 @@ class IntentRoutesTest {
     @Test
     fun enteringALadderCostsItsFee() = server {
         val ladder = openLadder()
-        val session = registerHolding(mgp = ladder.fee * 2)
+        val session = registerHolding(mgp = ladder.fee * 2, opening = ladder)
         val before = me(session.token).save
 
         val after = enterCampaign(session.token, ladder.key, "op-ladder").save
@@ -165,7 +165,7 @@ class IntentRoutesTest {
     @Test
     fun enteringALadderOpensTheRunOnItsFirstRung() = server {
         val ladder = openLadder()
-        val session = registerHolding(mgp = ladder.fee * 2)
+        val session = registerHolding(mgp = ladder.fee * 2, opening = ladder)
 
         val after = enterCampaign(session.token, ladder.key, "op-run-open").save
 
@@ -183,7 +183,7 @@ class IntentRoutesTest {
     @Test
     fun aSecondEntryTheSameDayIsRefusedAndCostsNothing() = server {
         val ladder = openLadder()
-        val session = registerHolding(mgp = ladder.fee * 4)
+        val session = registerHolding(mgp = ladder.fee * 4, opening = ladder)
 
         val first = enterCampaign(session.token, ladder.key, "op-day-1").save
         // Abandon the run the way a defeat would, leaving the day's stamp behind.
@@ -199,7 +199,7 @@ class IntentRoutesTest {
     @Test
     fun aSecondRunIsRefusedWhileOneIsStillOpen() = server {
         val ladder = openLadder()
-        val session = registerHolding(mgp = ladder.fee * 4)
+        val session = registerHolding(mgp = ladder.fee * 4, opening = ladder)
 
         val first = enterCampaign(session.token, ladder.key, "op-one-run").save
         val second = enterCampaign(session.token, ladder.key, "op-two-runs").save
@@ -211,8 +211,8 @@ class IntentRoutesTest {
     /**
      * A gated ladder takes nothing until its achievement is held.
      *
-     * The Card Club is the shipped case: Balamb Garden is the way in, so a profile that has never
-     * finished Balamb cannot buy a place in it at any price.
+     * Every shipped ladder is gated behind clearing its place, so a profile that has not cleared
+     * it cannot buy a place in its tournament at any price.
      */
     @Test
     fun aGatedLadderIsNotEnteredAndNotCharged() = server {
@@ -236,7 +236,7 @@ class IntentRoutesTest {
     @Test
     fun aLadderNobodyCanAffordIsNotEntered() = server {
         val ladder = openLadder()
-        val session = registerHolding(mgp = ladder.fee - 1)
+        val session = registerHolding(mgp = ladder.fee - 1, opening = ladder)
 
         val after = enterCampaign(session.token, ladder.key, "op-broke-ladder").save
 
@@ -352,7 +352,7 @@ class IntentRoutesTest {
     @Test
     fun replayingAnIntentDoesItOnce() = server {
         val ladder = Catalogs.campaigns.all.first { it.fee > 0 }
-        val session = registerHolding(mgp = ladder.fee * 4)
+        val session = registerHolding(mgp = ladder.fee * 4, opening = ladder)
         val offer = anOffer()
         val card = me(session.token).save.cards.keys.first()
 
@@ -431,13 +431,16 @@ class IntentRoutesTest {
     private suspend fun ApplicationTestBuilder.registerHolding(
         mgp: Int? = null,
         bag: List<Item> = emptyList(),
+        opening: Campaign? = null,
     ): Session {
         val session = register()
         val accounts = AccountStore(Postgres.dataSource)
         val id = assertNotNull(accounts.accountIdForUsername(session.player.save.username))
         val stored = assertNotNull(accounts.saveFor(id))
+        val key = opening?.requiresAchievement
+        val planted = stored.copy(bag = bag, mgp = mgp ?: stored.mgp)
         assertTrue(
-            accounts.replaceSave(id, stored.copy(bag = bag, mgp = mgp ?: stored.mgp)),
+            accounts.replaceSave(id, key?.let { planted.withAchievement(it, 0L) } ?: planted),
             "the planted profile was not stored",
         )
         return session
@@ -466,14 +469,13 @@ class IntentRoutesTest {
         intent(token, "/me/bag/discard", json.encodeToString(BagItemRequest(item, op)))
 
     /**
-     * A ladder anyone who can pay may enter — Balamb Garden, in the shipped data.
+     * A ladder that charges to enter.
      *
-     * Not `first { it.fee > 0 }` any more: the Card Club is gated behind Balamb's achievement now,
-     * so that expression picks a ladder these tests could never enter and every one of them would
-     * pass by refusing for the wrong reason.
+     * Every ladder is gated now — behind clearing its place — so the tests that enter this one
+     * register holding its achievement (`registerHolding(opening = ...)`). Without it each of them
+     * would pass by refusing for the wrong reason.
      */
-    private fun openLadder(): Campaign =
-        Catalogs.campaigns.all.first { it.fee > 0 && it.requiresAchievement == null }
+    private fun openLadder(): Campaign = Catalogs.campaigns.all.first { it.fee > 0 }
 
     private suspend fun ApplicationTestBuilder.enterCampaign(
         token: String,

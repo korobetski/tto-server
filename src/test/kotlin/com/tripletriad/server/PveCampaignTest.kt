@@ -325,13 +325,19 @@ class PveCampaignTest {
         const val MAX_PLACEMENTS = 60
 
         /**
-         * The one ladder a fresh profile can reach: open to all, and it charges to enter.
+         * A ladder that charges to enter, played in the format a fresh account's box can field.
          *
-         * Named by its properties rather than by `"balamb"` so the fixture survives the roster
-         * being re-authored — the same reason `PveFlowTest` picks its opponent by rules.
+         * Every ladder is gated behind clearing its place, and none of these tests enters one:
+         * they plant the run, and the gate is checked on entry, not on each rung. Named by its
+         * properties rather than by key so the fixture survives the ladders being re-authored —
+         * the same reason `PveFlowTest` picks its opponent by rules. The format matters: the
+         * default box is FFXIV's, and an FFVIII ladder is refused as undealable before any rule
+         * under test is reached.
          */
         val LADDER: Campaign =
-            Catalogs.campaigns.all.first { it.requiresAchievement == null && it.fee > 0 }
+            Catalogs.campaigns.all.first { it.fee > 0 && it.format == FRESH_FORMAT }
+
+        const val FRESH_FORMAT = "ff14-standard"
 
         /** Any other ladder, for the run-in-the-wrong-tournament case. */
         val OTHER_LADDER: String = Catalogs.campaigns.all.first { it.key != LADDER.key }.key

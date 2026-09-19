@@ -23,6 +23,7 @@ import com.tripletriad.model.MatchResult
 import com.tripletriad.model.MatchSearch
 import com.tripletriad.model.Npc
 import com.tripletriad.model.PlayResult
+import com.tripletriad.model.asRivalOf
 import com.tripletriad.protocol.Placement
 import com.tripletriad.protocol.PveFailure
 import com.tripletriad.protocol.PveMatchRequest
@@ -381,15 +382,43 @@ class PveReferee(
      */
     private fun replies(from: PveMatchRow): List<PveMove> {
         val moves = mutableListOf<PveMove>()
+        val options = aiOptionsFor(from)
         var at = from
-        var reply = opponentMove(at)
+        var reply = opponentMove(at, options)
 
         while (reply != null && moves.size < Board.SIZE) {
             moves += reply
             at = at.copy(moves = at.moves + reply)
-            reply = opponentMove(at)
+            reply = opponentMove(at, options)
         }
         return moves
+    }
+
+    /**
+     * How hard the opponent of [row] plays.
+     *
+     * **It comes from the opponent's authored band**, not from how hard it was measured to be —
+     * `NpcRating` deliberately stopped writing `level` so that this read cannot close the loop. An
+     * opponent whose icon no longer resolves plays the old one-move game rather than not moving: a
+     * missing row in `npcs.json` must not wedge a live match.
+     *
+     * The band is then raised by the rivalry ([asRivalOf]) the player has built with this opponent,
+     * read from the profile as it stands. That is the same profile the payout will be read from:
+     * `npcWins` only moves when a match is credited, and an account holds one live match at a
+     * time, so the opponent cannot play one band and pay another. A tournament rung is exempt, as
+     * it is from the payout — its difficulty is the ladder's, not the opponent's
+     * (`CampaignRewards.rungBoost`).
+     *
+     * Read once per reply rather than once per placement: [replies] may place several times.
+     */
+    private fun aiOptionsFor(row: PveMatchRow): MatchAiOptions {
+        val npc = npcs.byIcon(row.opponentIconId, row.formatId) ?: return MatchAiOptions()
+        val met = if (row.campaignKey == null) {
+            accounts.saveFor(row.accountId)?.let(npc::asRivalOf) ?: npc
+        } else {
+            npc
+        }
+        return MatchAiOptions.forLevel(met.level)
     }
 
     /**
@@ -402,16 +431,9 @@ class PveReferee(
      * written into the row the moment it is made, and the row is what every later read replays.
      * That is the whole of why the AI can change without a protocol version — see [PveMatchRow].
      */
-    private fun opponentMove(row: PveMatchRow): PveMove? {
+    private fun opponentMove(row: PveMatchRow, options: MatchAiOptions): PveMove? {
         val at = row.position(cards) ?: return null
         val onMove = at.state.takeIf { it.currentPlayer == CardColor.RED } ?: return null
-        val npc = npcs.byIcon(row.opponentIconId, row.formatId)
-
-        // **How hard it plays comes from the opponent's authored band**, not from how hard it was
-        // measured to be — `NpcRating` deliberately stopped writing `level` so that this read
-        // cannot close the loop. An opponent whose icon no longer resolves plays the old one-move
-        // game rather than not moving: a missing row in `npcs.json` must not wedge a live match.
-        val options = npc?.let { MatchAiOptions.forLevel(it.level) } ?: MatchAiOptions()
 
         // The opponent's **own view**, which is all it is entitled to. Handing it `onMove` would
         // hand it both hands, which is how a program ends up ignoring All Open and Three Open
