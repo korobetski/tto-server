@@ -357,7 +357,7 @@
       "dropMultiplier": 2,
       "xpMultiplier": 1.5,
       "payoutMultiplier": 2,
-      "requiresAchievement": "ac-cmp-balamb"
+      "requiresAchievement": "ac-zone-card-club"
     },
     {
       "key": "gs",
@@ -698,6 +698,11 @@
                 "booster": "PLATINUM_BOOSTER",
                 "type": "booster",
                 "rate": 0.25
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
               }
             ],
             "difficulty": 7
@@ -711,7 +716,8 @@
       ],
       "dropMultiplier": 2,
       "xpMultiplier": 1.5,
-      "payoutMultiplier": 2
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-gold-saucer"
     },
     {
       "key": "balamb",
@@ -940,7 +946,4596 @@
           "card": 2154,
           "rate": 0.1
         }
-      ]
+      ],
+      "requiresAchievement": "ac-zone-balamb"
+    },
+    {
+      "key": "uldah",
+      "nameKey": "APP_CAMPAIGN_ULDAH",
+      "format": "ff14-standard",
+      "fee": 600,
+      "steps": [
+        {
+          "npc": {
+            "id": 22,
+            "name": "STR_NPC_Fufulupa",
+            "iconID": "fufulupa",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [
+              302,
+              284,
+              289
+            ],
+            "cards": [
+              276,
+              275,
+              323,
+              269
+            ],
+            "itemRewards": [
+              {
+                "card": 281,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 302,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.156
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.156
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 18,
+            "name": "STR_NPC_Momodi",
+            "iconID": "momodi",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [
+              284,
+              285,
+              286
+            ],
+            "cards": [
+              302,
+              264,
+              292,
+              269,
+              266
+            ],
+            "itemRewards": [
+              {
+                "card": 268,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "card": 284,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 285,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.122
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.122
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 16,
+            "name": "STR_NPC_Fhobhas",
+            "iconID": "fhobhas",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [
+              301,
+              292,
+              270
+            ],
+            "cards": [
+              279,
+              281,
+              261,
+              290,
+              262
+            ],
+            "itemRewards": [
+              {
+                "card": 292,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.18
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.18
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 36,
+            "name": "STR_NPC_PAPALYMO",
+            "iconID": "papalymo",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              277,
+              281,
+              284,
+              285,
+              286,
+              300,
+              301,
+              302,
+              304,
+              305,
+              306,
+              334
+            ],
+            "itemRewards": [
+              {
+                "card": 277,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "card": 281,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "card": 334,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.098
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.098
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 30,
+            "name": "STR_NPC_Hab",
+            "iconID": "hab",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_DESCENSION"
+            ],
+            "fetishesCards": [
+              318,
+              301
+            ],
+            "cards": [
+              323,
+              308,
+              302,
+              290,
+              259
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 1
+              },
+              {
+                "card": 301,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "card": 302,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "card": 318,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.123
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 6
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-uldah"
+    },
+    {
+      "key": "limsa",
+      "nameKey": "APP_CAMPAIGN_LIMSA",
+      "format": "ff14-standard",
+      "fee": 500,
+      "steps": [
+        {
+          "npc": {
+            "id": 7,
+            "name": "STR_NPC_Memeroon",
+            "iconID": "memeroon",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ALL_OPEN",
+              "RULE_SAME"
+            ],
+            "fetishesCards": [
+              293,
+              270,
+              257
+            ],
+            "cards": [
+              277,
+              268,
+              263,
+              258
+            ],
+            "itemRewards": [
+              {
+                "card": 258,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 270,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 293,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "potion": "SMALL_XP_BOOST",
+                "type": "potion",
+                "rate": 0.095
+              },
+              {
+                "potion": "SMALL_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.095
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 9,
+            "name": "STR_NPC_Baderon",
+            "iconID": "baderon",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [
+              284,
+              285,
+              286
+            ],
+            "cards": [
+              312,
+              294,
+              305,
+              283,
+              277
+            ],
+            "itemRewards": [
+              {
+                "card": 274,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 285,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.161
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.161
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 10,
+            "name": "STR_NPC_Mimidoa",
+            "iconID": "mimidoa",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN",
+              "RULE_ASCENSION"
+            ],
+            "fetishesCards": [
+              310,
+              306,
+              289
+            ],
+            "cards": [
+              293,
+              283,
+              281
+            ],
+            "itemRewards": [
+              {
+                "card": 277,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 283,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 289,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.144
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.144
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 93,
+            "name": "STR_NPC_Furtive_Former_Imperial",
+            "iconID": "furtive-former-imperial",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SWAP",
+              "RULE_FALLEN_ACE"
+            ],
+            "fetishesCards": [
+              559,
+              500,
+              436,
+              431
+            ],
+            "cards": [
+              548,
+              432,
+              494,
+              448,
+              307
+            ],
+            "itemRewards": [
+              {
+                "card": 559,
+                "type": "card",
+                "rate": 0.0557
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.232
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.232
+              },
+              {
+                "card": 263,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 12,
+            "name": "STR_NPC_Gegeruju",
+            "iconID": "gegeruju",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              319,
+              312,
+              305
+            ],
+            "cards": [
+              322,
+              321,
+              287,
+              286,
+              311
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.125
+              },
+              {
+                "card": 305,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "card": 312,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.131
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-limsa"
+    },
+    {
+      "key": "gridania",
+      "nameKey": "APP_CAMPAIGN_GRIDANIA",
+      "format": "ff14-standard",
+      "fee": 400,
+      "steps": [
+        {
+          "npc": {
+            "id": 15,
+            "name": "STR_NPC_Mother_Miounne",
+            "iconID": "miounne",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN",
+              "RULE_REVERSE"
+            ],
+            "fetishesCards": [
+              286,
+              285,
+              284
+            ],
+            "cards": [
+              304,
+              268,
+              291,
+              267,
+              261
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.05
+              },
+              {
+                "card": 268,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "card": 272,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "card": 286,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.099
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 25,
+            "name": "STR_NPC_Sezul_Totoloc",
+            "iconID": "sezul-totoloc",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              314,
+              307,
+              289
+            ],
+            "cards": [
+              301,
+              303,
+              294
+            ],
+            "itemRewards": [
+              {
+                "card": 289,
+                "type": "card",
+                "rate": 0.15
+              },
+              {
+                "card": 294,
+                "type": "card",
+                "rate": 0.15
+              },
+              {
+                "card": 314,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.127
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.127
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 27,
+            "name": "STR_NPC_Buscarron",
+            "iconID": "buscarron",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ORDER"
+            ],
+            "fetishesCards": [
+              322,
+              308,
+              299
+            ],
+            "cards": [
+              300,
+              304,
+              295,
+              298
+            ],
+            "itemRewards": [
+              {
+                "card": 279,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 304,
+                "type": "card",
+                "rate": 0.18
+              },
+              {
+                "card": 300,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.145
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.145
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 19,
+            "name": "STR_NPC_Momo",
+            "iconID": "momo",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              259,
+              260,
+              261,
+              262,
+              263,
+              264,
+              265,
+              266,
+              267,
+              268,
+              269,
+              276,
+              299
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.05
+              },
+              {
+                "card": 276,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 299,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.129
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 26,
+            "name": "STR_NPC_Landenel",
+            "iconID": "landenel",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_FALLEN_ACE",
+              "RULE_RANDOM"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              308,
+              297,
+              290,
+              317,
+              296,
+              301,
+              288,
+              269
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.05
+              },
+              {
+                "card": 297,
+                "type": "card",
+                "rate": 0.2
+              },
+              {
+                "card": 308,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.195
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-gridania"
+    },
+    {
+      "key": "mor-dhona",
+      "nameKey": "APP_CAMPAIGN_MOR_DHONA",
+      "format": "ff14-standard",
+      "fee": 800,
+      "steps": [
+        {
+          "npc": {
+            "id": 81,
+            "name": "STR_NPC_Prudence",
+            "iconID": "prudence",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              607,
+              608,
+              396
+            ],
+            "cards": [
+              609,
+              610,
+              388,
+              391
+            ],
+            "itemRewards": [
+              {
+                "card": 608,
+                "type": "card",
+                "rate": 0.1509
+              },
+              {
+                "card": 607,
+                "type": "card",
+                "rate": 0.1213
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.133
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.133
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 35,
+            "name": "STR_NPC_Tataru",
+            "iconID": "tataru",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              275,
+              289,
+              302,
+              305,
+              306,
+              318,
+              336
+            ],
+            "itemRewards": [
+              {
+                "card": 275,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 306,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 336,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.13
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.13
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 33,
+            "name": "STR_NPC_Rowena",
+            "iconID": "rowena",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              303,
+              302,
+              306,
+              290,
+              285,
+              317,
+              316,
+              301
+            ],
+            "itemRewards": [
+              {
+                "card": 290,
+                "type": "card",
+                "rate": 0.5
+              },
+              {
+                "card": 316,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.17
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.17
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-mor-dhona"
+    },
+    {
+      "key": "battlehall",
+      "nameKey": "APP_CAMPAIGN_BATTLEHALL",
+      "format": "ff14-standard",
+      "fee": 800,
+      "steps": [
+        {
+          "npc": {
+            "id": 132,
+            "name": "STR_NPC_Prideful_Stag",
+            "iconID": "prideful-stag",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              301,
+              414,
+              282
+            ],
+            "cards": [
+              284,
+              338,
+              264,
+              269
+            ],
+            "itemRewards": [
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.249
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.249
+              },
+              {
+                "card": 414,
+                "type": "card",
+                "rate": 0.15
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 133,
+            "name": "STR_NPC_Flichoirel_The_Lordling",
+            "iconID": "flichoirel",
+            "rules": [
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [
+              423,
+              395
+            ],
+            "cards": [
+              350,
+              294,
+              342,
+              351,
+              301
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.36
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.36
+              },
+              {
+                "card": 411,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 423,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 63,
+            "name": "STR_NPC_Malevolent_Weasel",
+            "iconID": "malevolent-weasel",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [
+              694,
+              305,
+              309,
+              318
+            ],
+            "cards": [
+              302,
+              301,
+              294
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.295
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.295
+              },
+              {
+                "card": 694,
+                "type": "card",
+                "rate": 0.1
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 6,
+            "name": "STR_NPC_King_Elmer",
+            "iconID": "elmer",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              317,
+              306,
+              301
+            ],
+            "cards": [
+              318,
+              295,
+              305,
+              297
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.25
+              },
+              {
+                "card": 301,
+                "type": "card",
+                "rate": 0.125
+              },
+              {
+                "card": 317,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.192
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 7
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 134,
+            "name": "STR_NPC_Hall_Overseer",
+            "iconID": "hall-overseer",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_FALLEN_ACE",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [
+              329,
+              376,
+              315
+            ],
+            "cards": [
+              321,
+              314,
+              351
+            ],
+            "itemRewards": [
+              {
+                "card": 329,
+                "type": "card",
+                "rate": 0.0159
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.186
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.186
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 416,
+                "type": "card",
+                "rate": 0.15
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-battlehall"
+    },
+    {
+      "key": "ishgard",
+      "nameKey": "APP_CAMPAIGN_ISHGARD",
+      "format": "ff14-standard",
+      "fee": 300,
+      "steps": [
+        {
+          "npc": {
+            "id": 21,
+            "name": "STR_NPC_Joellaut",
+            "iconID": "joellaut",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              294,
+              289,
+              283
+            ],
+            "cards": [
+              306,
+              282,
+              298,
+              271,
+              315
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.05
+              },
+              {
+                "card": 271,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 315,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.185
+              },
+              {
+                "card": 428,
+                "type": "card",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 28,
+            "name": "STR_NPC_Ourdilic",
+            "iconID": "ourdilic",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ORDER"
+            ],
+            "fetishesCards": [
+              311,
+              307,
+              306
+            ],
+            "cards": [
+              300,
+              282,
+              294,
+              289
+            ],
+            "itemRewards": [
+              {
+                "card": 267,
+                "type": "card",
+                "rate": 0.5
+              },
+              {
+                "card": 282,
+                "type": "card",
+                "rate": 0.4
+              },
+              {
+                "card": 294,
+                "type": "card",
+                "rate": 0.3
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.095
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.095
+              },
+              {
+                "card": 351,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-ishgard"
+    },
+    {
+      "key": "dravania",
+      "nameKey": "APP_CAMPAIGN_DRAVANIA",
+      "format": "ff14-standard",
+      "fee": 800,
+      "steps": [
+        {
+          "npc": {
+            "id": 60,
+            "name": "STR_NPC_Seika",
+            "iconID": "seika",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_REVERSE",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              274,
+              363,
+              270,
+              362,
+              373,
+              271,
+              273
+            ],
+            "itemRewards": [
+              {
+                "card": 362,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 363,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 373,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.129
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.129
+              },
+              {
+                "card": 431,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 110,
+            "name": "STR_NPC_Mero_Roggo",
+            "iconID": "mero-roggo",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [
+              507,
+              350,
+              417,
+              386
+            ],
+            "cards": [
+              348,
+              363,
+              362,
+              367,
+              489
+            ],
+            "itemRewards": [
+              {
+                "card": 386,
+                "type": "card",
+                "rate": 0.0241
+              },
+              {
+                "card": 507,
+                "type": "card",
+                "rate": 0.0155
+              },
+              {
+                "card": 417,
+                "type": "card",
+                "rate": 0.0155
+              },
+              {
+                "card": 350,
+                "type": "card",
+                "rate": 0.0137
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.076
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.076
+              },
+              {
+                "card": 430,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 53,
+            "name": "STR_NPC_Vath_Deftarm",
+            "iconID": "vath-deftarm",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              344,
+              346,
+              353,
+              315,
+              339,
+              361,
+              365
+            ],
+            "itemRewards": [
+              {
+                "card": 353,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 365,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 341,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.104
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.104
+              },
+              {
+                "card": 433,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 58,
+            "name": "STR_NPC_Mogmill",
+            "iconID": "mogmill",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ROULETTE",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [
+              322,
+              354,
+              339
+            ],
+            "cards": [
+              356,
+              299,
+              353,
+              338
+            ],
+            "itemRewards": [
+              {
+                "card": 338,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 339,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 364,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 371,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.082
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.082
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 438,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 59,
+            "name": "STR_NPC_Midnight_Dew",
+            "iconID": "midnight-dew",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ROULETTE",
+              "RULE_RANDOM"
+            ],
+            "fetishesCards": [
+              344,
+              356,
+              342
+            ],
+            "cards": [
+              353,
+              355,
+              348,
+              305
+            ],
+            "itemRewards": [
+              {
+                "card": 348,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.198
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.198
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 367,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 424,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-dravania"
+    },
+    {
+      "key": "gyr-abania",
+      "nameKey": "APP_CAMPAIGN_GYR_ABANIA",
+      "format": "ff14-standard",
+      "fee": 700,
+      "steps": [
+        {
+          "npc": {
+            "id": 91,
+            "name": "STR_NPC_Arsieu",
+            "iconID": "arsieu",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_ASCENSION"
+            ],
+            "fetishesCards": [
+              555,
+              556,
+              464,
+              436
+            ],
+            "cards": [
+              506,
+              485,
+              465
+            ],
+            "itemRewards": [
+              {
+                "card": 556,
+                "type": "card",
+                "rate": 0.1365
+              },
+              {
+                "card": 555,
+                "type": "card",
+                "rate": 0.1067
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.176
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.176
+              },
+              {
+                "card": 469,
+                "type": "card",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 115,
+            "name": "STR_NPC_Umber_Torrent",
+            "iconID": "umber-torrent",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              473,
+              352,
+              393
+            ],
+            "cards": [
+              365,
+              418,
+              430
+            ],
+            "itemRewards": [
+              {
+                "card": 445,
+                "type": "card",
+                "rate": 0.0612
+              },
+              {
+                "card": 473,
+                "type": "card",
+                "rate": 0.0442
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.162
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.162
+              },
+              {
+                "card": 480,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 124,
+            "name": "STR_NPC_Garima",
+            "iconID": "garima",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_ASCENSION"
+            ],
+            "fetishesCards": [
+              394,
+              441,
+              304
+            ],
+            "cards": [
+              364,
+              401,
+              275,
+              461
+            ],
+            "itemRewards": [
+              {
+                "card": 441,
+                "type": "card",
+                "rate": 0.128
+              },
+              {
+                "card": 461,
+                "type": "card",
+                "rate": 0.0745
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.15
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.15
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 109,
+            "name": "STR_NPC_Ironworks_Hand",
+            "iconID": "ironworks-hand",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [
+              503,
+              453,
+              496
+            ],
+            "cards": [
+              269,
+              341,
+              289,
+              314,
+              356
+            ],
+            "itemRewards": [
+              {
+                "card": 503,
+                "type": "card",
+                "rate": 0.0584
+              },
+              {
+                "card": 453,
+                "type": "card",
+                "rate": 0.0283
+              },
+              {
+                "card": 496,
+                "type": "card",
+                "rate": 0.0142
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.101
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.101
+              },
+              {
+                "card": 502,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 128,
+            "name": "STR_NPC_Imperial_Deserter",
+            "iconID": "imperial-deserter",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_FALLEN_ACE"
+            ],
+            "fetishesCards": [
+              322,
+              423,
+              454
+            ],
+            "cards": [
+              436,
+              344,
+              304,
+              463
+            ],
+            "itemRewards": [
+              {
+                "card": 448,
+                "type": "card",
+                "rate": 0.1471
+              },
+              {
+                "card": 463,
+                "type": "card",
+                "rate": 0.0294
+              },
+              {
+                "card": 454,
+                "type": "card",
+                "rate": 0.0294
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.144
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.144
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 7
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-gyr-abania"
+    },
+    {
+      "key": "kugane",
+      "nameKey": "APP_CAMPAIGN_KUGANE",
+      "format": "ff14-standard",
+      "fee": 500,
+      "steps": [
+        {
+          "npc": {
+            "id": 106,
+            "name": "STR_NPC_Hetsukaze",
+            "iconID": "hetsukaze",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_SAME"
+            ],
+            "fetishesCards": [
+              499,
+              493,
+              498,
+              501
+            ],
+            "cards": [
+              482,
+              492,
+              483,
+              479
+            ],
+            "itemRewards": [
+              {
+                "card": 499,
+                "type": "card",
+                "rate": 0.0904
+              },
+              {
+                "card": 501,
+                "type": "card",
+                "rate": 0.0816
+              },
+              {
+                "card": 498,
+                "type": "card",
+                "rate": 0.0612
+              },
+              {
+                "card": 493,
+                "type": "card",
+                "rate": 0.0372
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.093
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.093
+              },
+              {
+                "card": 489,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 120,
+            "name": "STR_NPC_Kotokaze",
+            "iconID": "kotokaze",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME"
+            ],
+            "fetishesCards": [
+              343,
+              443,
+              258
+            ],
+            "cards": [
+              284,
+              285,
+              286
+            ],
+            "itemRewards": [
+              {
+                "card": 443,
+                "type": "card",
+                "rate": 0.0436
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.273
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.273
+              },
+              {
+                "card": 490,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 112,
+            "name": "STR_NPC_Botan",
+            "iconID": "botan",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [
+              483,
+              492,
+              455
+            ],
+            "cards": [
+              482,
+              479,
+              290
+            ],
+            "itemRewards": [
+              {
+                "card": 482,
+                "type": "card",
+                "rate": 0.0787
+              },
+              {
+                "card": 483,
+                "type": "card",
+                "rate": 0.04
+              },
+              {
+                "card": 492,
+                "type": "card",
+                "rate": 0.04
+              },
+              {
+                "card": 479,
+                "type": "card",
+                "rate": 0.0112
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.068
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.068
+              },
+              {
+                "card": 500,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 111,
+            "name": "STR_NPC_Hokushin",
+            "iconID": "hokushin",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              487,
+              495,
+              467
+            ],
+            "cards": [
+              439,
+              443,
+              318,
+              440
+            ],
+            "itemRewards": [
+              {
+                "card": 487,
+                "type": "card",
+                "rate": 0.184
+              },
+              {
+                "card": 495,
+                "type": "card",
+                "rate": 0.0105
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.154
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.154
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 117,
+            "name": "STR_NPC_Kikimo",
+            "iconID": "kikimo",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SWAP",
+              "RULE_FALLEN_ACE"
+            ],
+            "fetishesCards": [
+              475,
+              395,
+              320
+            ],
+            "cards": [
+              314,
+              385,
+              369,
+              419
+            ],
+            "itemRewards": [
+              {
+                "card": 475,
+                "type": "card",
+                "rate": 0.0163
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.258
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.258
+              },
+              {
+                "card": 455,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-kugane"
+    },
+    {
+      "key": "othard",
+      "nameKey": "APP_CAMPAIGN_OTHARD",
+      "format": "ff14-standard",
+      "fee": 900,
+      "steps": [
+        {
+          "npc": {
+            "id": 118,
+            "name": "STR_NPC_Isobe",
+            "iconID": "isobe",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              476,
+              316,
+              318
+            ],
+            "cards": [
+              468,
+              396,
+              423,
+              407,
+              408
+            ],
+            "itemRewards": [
+              {
+                "card": 468,
+                "type": "card",
+                "rate": 0.0947
+              },
+              {
+                "card": 476,
+                "type": "card",
+                "rate": 0.0101
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.153
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.153
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 484,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 7
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 125,
+            "name": "STR_NPC_Munglig",
+            "iconID": "munglig",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [
+              309,
+              314,
+              452
+            ],
+            "cards": [
+              298,
+              345,
+              349
+            ],
+            "itemRewards": [
+              {
+                "card": 452,
+                "type": "card",
+                "rate": 0.0203
+              },
+              {
+                "card": 444,
+                "type": "card",
+                "rate": 0.0111
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.141
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.141
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 505,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 126,
+            "name": "STR_NPC_Ogodei",
+            "iconID": "ogodei",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_FALLEN_ACE",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              313,
+              435,
+              451
+            ],
+            "cards": [
+              373,
+              366,
+              403
+            ],
+            "itemRewards": [
+              {
+                "card": 451,
+                "type": "card",
+                "rate": 0.0234
+              },
+              {
+                "card": 444,
+                "type": "card",
+                "rate": 0.0154
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.159
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.159
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 486,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 127,
+            "name": "STR_NPC_Nigen",
+            "iconID": "nigen",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              312,
+              354,
+              450
+            ],
+            "cards": [
+              381,
+              417,
+              301
+            ],
+            "itemRewards": [
+              {
+                "card": 444,
+                "type": "card",
+                "rate": 0.0441
+              },
+              {
+                "card": 450,
+                "type": "card",
+                "rate": 0.0252
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.146
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.146
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 129,
+            "name": "STR_NPC_Kiuka",
+            "iconID": "kiuka",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [
+              458,
+              409,
+              315
+            ],
+            "cards": [
+              312,
+              348,
+              340
+            ],
+            "itemRewards": [
+              {
+                "card": 458,
+                "type": "card",
+                "rate": 0.0093
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.189
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.189
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 9
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-othard"
+    },
+    {
+      "key": "norvrandt",
+      "nameKey": "APP_CAMPAIGN_NORVRANDT",
+      "format": "ff14-standard",
+      "fee": 500,
+      "steps": [
+        {
+          "npc": {
+            "id": 101,
+            "name": "STR_NPC_Gyuf_Uin",
+            "iconID": "gyuf-uin",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              514,
+              367,
+              518,
+              359
+            ],
+            "cards": [
+              411,
+              263,
+              509
+            ],
+            "itemRewards": [
+              {
+                "card": 514,
+                "type": "card",
+                "rate": 0.0762
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.175
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.175
+              },
+              {
+                "card": 535,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 536,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 545,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 546,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 102,
+            "name": "STR_NPC_Glynard",
+            "iconID": "glynard",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [
+              509,
+              281,
+              426
+            ],
+            "cards": [
+              264,
+              522,
+              411,
+              257
+            ],
+            "itemRewards": [
+              {
+                "card": 509,
+                "type": "card",
+                "rate": 0.2308
+              },
+              {
+                "potion": "SMALL_XP_BOOST",
+                "type": "potion",
+                "rate": 0.257
+              },
+              {
+                "potion": "SMALL_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.257
+              },
+              {
+                "card": 580,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 581,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 582,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 104,
+            "name": "STR_NPC_Hargra",
+            "iconID": "hargra",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [
+              515,
+              525
+            ],
+            "cards": [
+              266,
+              519,
+              426,
+              361,
+              294
+            ],
+            "itemRewards": [
+              {
+                "card": 515,
+                "type": "card",
+                "rate": 0.1466
+              },
+              {
+                "card": 525,
+                "type": "card",
+                "rate": 0.0337
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.13
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.13
+              },
+              {
+                "card": 549,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 550,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 560,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 561,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 105,
+            "name": "STR_NPC_Grewenn",
+            "iconID": "grewenn",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              523,
+              527
+            ],
+            "cards": [
+              517,
+              519,
+              520,
+              294,
+              524
+            ],
+            "itemRewards": [
+              {
+                "card": 523,
+                "type": "card",
+                "rate": 0.1053
+              },
+              {
+                "card": 527,
+                "type": "card",
+                "rate": 0.0132
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.152
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.152
+              },
+              {
+                "card": 528,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 529,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 538,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 539,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 103,
+            "name": "STR_NPC_Lamlyn",
+            "iconID": "lamlyn",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [
+              522
+            ],
+            "cards": [
+              294,
+              517,
+              426,
+              366,
+              281
+            ],
+            "itemRewards": [
+              {
+                "card": 522,
+                "type": "card",
+                "rate": 0.087
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.228
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.228
+              },
+              {
+                "card": 572,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 573,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 583,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-norvrandt"
+    },
+    {
+      "key": "sharlayan",
+      "nameKey": "APP_CAMPAIGN_SHARLAYAN",
+      "format": "ff14-standard",
+      "fee": 400,
+      "steps": [
+        {
+          "npc": {
+            "id": 75,
+            "name": "STR_NPC_Maillart",
+            "iconID": "maillart",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_CHAOS",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              655,
+              656
+            ],
+            "cards": [
+              368,
+              465,
+              311,
+              454
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.348
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.348
+              },
+              {
+                "card": 655,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 656,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 623,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 632,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 633,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 643,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 659,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 87,
+            "name": "STR_NPC_Celia",
+            "iconID": "celia",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              595,
+              348,
+              489
+            ],
+            "cards": [
+              598,
+              507,
+              315,
+              316
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.33
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.33
+              },
+              {
+                "card": 595,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 598,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 640,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 641,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 650,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 658,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 596,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 84,
+            "name": "STR_NPC_Mehryde",
+            "iconID": "mehryde",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              587,
+              593
+            ],
+            "cards": [
+              480,
+              447,
+              441,
+              426,
+              585
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.358
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.358
+              },
+              {
+                "card": 587,
+                "type": "card",
+                "rate": 0.15
+              },
+              {
+                "card": 660,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 601,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 602,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 603,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 624,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 78,
+            "name": "STR_NPC_Gamingway",
+            "iconID": "gamingway",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SWAP"
+            ],
+            "fetishesCards": [
+              626,
+              588,
+              526
+            ],
+            "cards": [
+              601,
+              260,
+              381,
+              429
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.319
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.319
+              },
+              {
+                "card": 626,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 599,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 600,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 611,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 612,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 622,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 86,
+            "name": "STR_NPC_Worldly_Imperial",
+            "iconID": "worldly-imperial",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ROULETTE"
+            ],
+            "fetishesCards": [
+              597,
+              550
+            ],
+            "cards": [
+              494,
+              500,
+              436,
+              432,
+              431
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.27
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.27
+              },
+              {
+                "card": 597,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 634,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 644,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 645,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 661,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-sharlayan"
+    },
+    {
+      "key": "tural",
+      "nameKey": "APP_CAMPAIGN_TURAL",
+      "format": "ff14-standard",
+      "fee": 700,
+      "steps": [
+        {
+          "npc": {
+            "id": 71,
+            "name": "STR_NPC_Luwyawa",
+            "iconID": "luwyawa",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              667,
+              520
+            ],
+            "cards": [
+              546,
+              397,
+              567,
+              358
+            ],
+            "itemRewards": [
+              {
+                "card": 667,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.246
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.246
+              },
+              {
+                "card": 712,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 718,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 719,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 720,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 72,
+            "name": "STR_NPC_Larisa",
+            "iconID": "larisa",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS",
+              "RULE_ALL_OPEN"
+            ],
+            "fetishesCards": [
+              669,
+              405,
+              481
+            ],
+            "cards": [
+              576,
+              370,
+              535
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.27
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.27
+              },
+              {
+                "card": 669,
+                "type": "card",
+                "rate": 0.15
+              },
+              {
+                "card": 674,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 678,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 702,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 707,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 710,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 61,
+            "name": "STR_NPC_Hume_Black_Mage",
+            "iconID": "hume-black-mage",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_CHAOS"
+            ],
+            "fetishesCards": [
+              699,
+              700,
+              354,
+              375
+            ],
+            "cards": [
+              473,
+              575,
+              651
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.324
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.324
+              },
+              {
+                "card": 703,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 697,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 704,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 705,
+                "type": "card",
+                "rate": 0.03
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 62,
+            "name": "STR_NPC_Pudeel_Ja",
+            "iconID": "pudeel-ja",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ASCENSION",
+              "RULE_SAME"
+            ],
+            "fetishesCards": [
+              694,
+              305,
+              309,
+              318
+            ],
+            "cards": [
+              302,
+              301,
+              294
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.367
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.367
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 699,
+                "type": "card",
+                "rate": 0.15
+              },
+              {
+                "card": 700,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 713,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 721,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 728,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 729,
+                "type": "card",
+                "rate": 0.03
+              },
+              {
+                "card": 676,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 6
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 65,
+            "name": "STR_NPC_Pawkukwe",
+            "iconID": "pawkukwe",
+            "rules": [
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [
+              685,
+              686,
+              453,
+              322
+            ],
+            "cards": [
+              449,
+              575,
+              492
+            ],
+            "itemRewards": [
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.278
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.278
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              },
+              {
+                "card": 685,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 686,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 696,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 711,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 714,
+                "type": "card",
+                "rate": 0.015
+              },
+              {
+                "card": 730,
+                "type": "card",
+                "rate": 0.015
+              }
+            ],
+            "difficulty": 7
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-tural"
+    },
+    {
+      "key": "galbadia",
+      "nameKey": "APP_CAMPAIGN_GALBADIA",
+      "format": "ff8-standard",
+      "fee": 300,
+      "steps": [
+        {
+          "npc": {
+            "id": 7,
+            "name": "STR_NPC_ZONE",
+            "iconID": "zone",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2063,
+              2064,
+              2065,
+              2066,
+              2067,
+              2068,
+              2069,
+              2070,
+              2071,
+              2072,
+              2073,
+              2074,
+              2075,
+              2077,
+              2078,
+              2132
+            ],
+            "itemRewards": [
+              {
+                "card": 2132,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2090,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2057,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2080,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "SMALL_XP_BOOST",
+                "type": "potion",
+                "rate": 0.17
+              },
+              {
+                "potion": "SMALL_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.17
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 12,
+            "name": "STR_NPC_MARTINE",
+            "iconID": "martine",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2063,
+              2064,
+              2065,
+              2066,
+              2067,
+              2068,
+              2069,
+              2070,
+              2071,
+              2072,
+              2073,
+              2074,
+              2075,
+              2077,
+              2078
+            ],
+            "itemRewards": [
+              {
+                "card": 2089,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2103,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2056,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2079,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "SMALL_XP_BOOST",
+                "type": "potion",
+                "rate": 0.162
+              },
+              {
+                "potion": "SMALL_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.162
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 6,
+            "name": "STR_NPC_WATTS",
+            "iconID": "watts",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2063,
+              2064,
+              2065,
+              2066,
+              2067,
+              2068,
+              2069,
+              2070,
+              2071,
+              2072,
+              2073,
+              2074,
+              2075,
+              2077,
+              2078,
+              2127
+            ],
+            "itemRewards": [
+              {
+                "card": 2127,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2094,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2065,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.198
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.198
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 11,
+            "name": "STR_NPC_CARAWAY",
+            "iconID": "caraway",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ELEMENTAL",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2063,
+              2064,
+              2065,
+              2066,
+              2067,
+              2068,
+              2069,
+              2070,
+              2071,
+              2072,
+              2073,
+              2074,
+              2075,
+              2077,
+              2078,
+              2155
+            ],
+            "itemRewards": [
+              {
+                "card": 2155,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2091,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2060,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2081,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.121
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.121
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-galbadia"
+    },
+    {
+      "key": "fishermans-horizon",
+      "nameKey": "APP_CAMPAIGN_FISHERMANS_HORIZON",
+      "format": "ff8-standard",
+      "fee": 300,
+      "steps": [
+        {
+          "npc": {
+            "id": 16,
+            "name": "STR_NPC_DOBE",
+            "iconID": "dobe",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_PLUS",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2131
+            ],
+            "itemRewards": [
+              {
+                "card": 2131,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2104,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2118,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2049,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2061,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2073,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.115
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.115
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 15,
+            "name": "STR_NPC_FLO",
+            "iconID": "flo",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_PLUS",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2153
+            ],
+            "itemRewards": [
+              {
+                "card": 2153,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2111,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2125,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2056,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2068,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2080,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.102
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.102
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-fishermans-horizon"
+    },
+    {
+      "key": "centra",
+      "nameKey": "APP_CAMPAIGN_CENTRA",
+      "format": "ff8-standard",
+      "fee": 300,
+      "steps": [
+        {
+          "npc": {
+            "id": 2,
+            "name": "STR_NPC_CHOCOBOY",
+            "iconID": "chocoboy",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2049,
+              2050,
+              2051,
+              2052,
+              2053,
+              2054,
+              2055,
+              2056,
+              2057,
+              2058,
+              2059,
+              2060,
+              2061,
+              2062,
+              2063,
+              2064,
+              2065,
+              2066,
+              2067,
+              2068,
+              2069,
+              2126,
+              2130
+            ],
+            "itemRewards": [
+              {
+                "card": 2064,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2068,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2126,
+                "type": "card",
+                "rate": 0.08
+              },
+              {
+                "card": 2130,
+                "type": "card",
+                "rate": 0.08
+              },
+              {
+                "card": 2082,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2095,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2049,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2066,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "SMALL_XP_BOOST",
+                "type": "potion",
+                "rate": 0.088
+              },
+              {
+                "potion": "SMALL_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.088
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 2,
+            "name": "STR_NPC_UFO",
+            "iconID": "ufo",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME_WALL",
+              "RULE_THREE_OPEN"
+            ],
+            "fetishesCards": [
+              2096
+            ],
+            "cards": [
+              2049,
+              2050,
+              2051,
+              2052,
+              2053,
+              2054,
+              2055,
+              2056,
+              2057,
+              2058,
+              2059,
+              2060,
+              2061,
+              2062,
+              2063,
+              2064,
+              2065,
+              2066,
+              2067,
+              2068,
+              2069
+            ],
+            "itemRewards": [
+              {
+                "card": 2051,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2070,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 1
+              },
+              {
+                "card": 2059,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2069,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2096,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2084,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2098,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "potion": "SMALL_XP_BOOST",
+                "type": "potion",
+                "rate": 0.094
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 17,
+            "name": "STR_NPC_EDEA",
+            "iconID": "edea",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2156
+            ],
+            "itemRewards": [
+              {
+                "card": 2156,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2109,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2123,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2054,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2066,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2078,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.109
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.109
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 19,
+            "name": "STR_NPC_CID",
+            "iconID": "cid",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2157
+            ],
+            "itemRewards": [
+              {
+                "card": 2157,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2108,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2122,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2053,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2065,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2077,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.128
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.128
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-centra"
+    },
+    {
+      "key": "esthar",
+      "nameKey": "APP_CAMPAIGN_ESTHAR",
+      "format": "ff8-standard",
+      "fee": 300,
+      "steps": [
+        {
+          "npc": {
+            "id": 13,
+            "name": "STR_NPC_PIET",
+            "iconID": "piet",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_SAME_WALL",
+              "RULE_PLUS",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2143
+            ],
+            "itemRewards": [
+              {
+                "card": 2143,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2117,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2060,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2072,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.171
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.171
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 13,
+            "name": "STR_NPC_ODINE",
+            "iconID": "odine",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ELEMENTAL",
+              "RULE_SAME_WALL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2148
+            ],
+            "itemRewards": [
+              {
+                "card": 2148,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2114,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2059,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2071,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.161
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.161
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 21,
+            "name": "STR_NPC_ELLONE",
+            "iconID": "ellone",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_SAME_WALL",
+              "RULE_PLUS",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2150
+            ],
+            "itemRewards": [
+              {
+                "card": 2150,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2110,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2124,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2055,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2067,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2079,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.121
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.121
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 22,
+            "name": "STR_NPC_LAGUNA",
+            "iconID": "laguna",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_ELEMENTAL",
+              "RULE_SAME_WALL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2081,
+              2082,
+              2083,
+              2084,
+              2085,
+              2086,
+              2087,
+              2088,
+              2089,
+              2090,
+              2091,
+              2092,
+              2093,
+              2094,
+              2095,
+              2096,
+              2097,
+              2098,
+              2099,
+              2100,
+              2101,
+              2102,
+              2158
+            ],
+            "itemRewards": [
+              {
+                "card": 2158,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2107,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2121,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2052,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2064,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2076,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "potion": "XP_BOOST",
+                "type": "potion",
+                "rate": 0.122
+              },
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.122
+              }
+            ],
+            "difficulty": 3
+          },
+          "messages": {}
+        }
+      ],
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-esthar"
     }
   ]
 }

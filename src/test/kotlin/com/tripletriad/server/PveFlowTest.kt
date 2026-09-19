@@ -2,6 +2,8 @@ package com.tripletriad.server
 
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.OpenRule
+import com.tripletriad.model.Rivalry
+import com.tripletriad.model.asRivalOf
 import com.tripletriad.protocol.CURRENT_VERSION
 import com.tripletriad.protocol.Credentials
 import com.tripletriad.protocol.PveMatchRequest
@@ -273,6 +275,32 @@ class PveFlowTest {
             setBody(json.encodeToString(PveMove(0, 0)))
         }
         assertEquals(HttpStatusCode.Conflict, late.status)
+    }
+
+    /**
+     * **An opponent beaten often enough pays as the harder one it has become.**
+     *
+     * The rivalry is read off the stored profile by both halves of the referee — the AI's band
+     * when it moves, the payout when the match is credited — and this is the half a player can
+     * see. `npcWins` is written straight into the row, which is the fixture's shortcut, not a
+     * route: nothing a client sends can do it (see `withServerOwnedFrom`).
+     */
+    @Test
+    fun aRivalPaysAtTheBandItHasClimbedTo() = server {
+        val session = register(Postgres.freshAccount("pve-rival"))
+        val accounts = AccountStore(Postgres.dataSource)
+        val accountId = accountIdOf(session)
+        val save = assertNotNull(accounts.saveFor(accountId))
+        val rivalled = save.copy(npcWins = mapOf(OPPONENT to Rivalry.WINS_PER_STAGE * 2))
+        assertTrue(accounts.replaceSave(accountId, rivalled))
+
+        val outcome = assertNotNull(playOut(session.token).outcome)
+        val reward = assertNotNull(outcome.reward)
+        val npc = assertNotNull(Catalogs.npcs.byIcon(OPPONENT, FORMAT))
+        val rival = npc.asRivalOf(rivalled)
+
+        assertNotEquals(npc.xpFor(outcome.result), rival.xpFor(outcome.result), "a real climb")
+        assertEquals(rival.xpFor(outcome.result), reward.xp)
     }
 
     /**

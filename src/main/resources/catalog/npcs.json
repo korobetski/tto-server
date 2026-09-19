@@ -274,6 +274,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.192
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 7
@@ -528,6 +533,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.096
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 7,
@@ -1021,6 +1031,11 @@
           "potion": "XP_BOOST",
           "type": "potion",
           "rate": 0.185
+        },
+        {
+          "card": 428,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 3
@@ -1317,6 +1332,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.095
+        },
+        {
+          "card": 351,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -1364,6 +1384,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.133
+        },
+        {
+          "card": 262,
+          "type": "card",
+          "rate": 0.12
         }
       ],
       "difficulty": 3,
@@ -1419,6 +1444,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.123
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 6
@@ -1476,6 +1506,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.065
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 6,
@@ -1587,6 +1622,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.17
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 8
@@ -1644,6 +1684,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.063
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 7,
@@ -1805,6 +1850,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.139
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 10,
@@ -1853,6 +1903,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.192
+        },
+        {
+          "card": 405,
+          "type": "card",
+          "rate": 0.1
         }
       ],
       "difficulty": 5,
@@ -1903,6 +1958,16 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.162
+        },
+        {
+          "card": 382,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 266,
+          "type": "card",
+          "rate": 0.12
         }
       ],
       "difficulty": 5,
@@ -1996,6 +2061,11 @@
           "potion": "SMALL_XP_BOOST",
           "type": "potion",
           "rate": 0.241
+        },
+        {
+          "card": 387,
+          "type": "card",
+          "rate": 0.1
         }
       ],
       "difficulty": 4,
@@ -2042,6 +2112,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.201
+        },
+        {
+          "card": 383,
+          "type": "card",
+          "rate": 0.1
         }
       ],
       "difficulty": 4,
@@ -2142,6 +2217,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.142
+        },
+        {
+          "card": 415,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 2,
@@ -2186,6 +2266,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.262
+        },
+        {
+          "card": 432,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 5,
@@ -2235,6 +2320,21 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.123
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 421,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 422,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 7,
@@ -2280,6 +2380,11 @@
           "potion": "BIG_XP_BOOST",
           "type": "potion",
           "rate": 0.218
+        },
+        {
+          "card": 427,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 3,
@@ -2389,6 +2494,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.193
+        },
+        {
+          "card": 403,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 343,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3,
@@ -2440,6 +2555,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.145
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 355,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 7,
@@ -2487,6 +2612,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.158
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 356,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 7,
@@ -2542,6 +2677,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.109
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 404,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 436,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 7,
@@ -2596,6 +2746,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.104
+        },
+        {
+          "card": 433,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 5
@@ -2692,6 +2847,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.145
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 361,
+          "type": "card",
+          "rate": 0.15
+        },
+        {
+          "card": 395,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 6,
@@ -2747,6 +2917,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.098
+        },
+        {
+          "card": 380,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 412,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 413,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 1,
@@ -2792,6 +2977,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.255
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 376,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 8,
@@ -2853,6 +3048,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.082
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 438,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 8
@@ -2895,6 +3100,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.198
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 367,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 424,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 8
@@ -2946,6 +3166,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.129
+        },
+        {
+          "card": 431,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 4
@@ -5485,6 +5710,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.324
+        },
+        {
+          "card": 703,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 697,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 704,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 705,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 5
@@ -5522,6 +5767,46 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.367
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 699,
+          "type": "card",
+          "rate": 0.15
+        },
+        {
+          "card": 700,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 713,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 721,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 728,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 729,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 676,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 6
@@ -5559,6 +5844,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.295
+        },
+        {
+          "card": 694,
+          "type": "card",
+          "rate": 0.1
         }
       ],
       "difficulty": 4
@@ -5593,6 +5883,41 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.255
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 687,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 688,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 677,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 681,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 682,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 692,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 7,
@@ -5628,6 +5953,41 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.278
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 685,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 686,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 696,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 711,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 714,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 730,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 7
@@ -5669,6 +6029,31 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.209
+        },
+        {
+          "card": 683,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 693,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 698,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 706,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 708,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 1
@@ -5710,6 +6095,26 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.188
+        },
+        {
+          "card": 709,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 715,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 716,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 717,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 1
@@ -5752,6 +6157,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.224
+        },
+        {
+          "card": 725,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -5792,6 +6202,31 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.167
+        },
+        {
+          "card": 726,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 727,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 732,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 675,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 679,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 3
@@ -5833,6 +6268,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.176
+        },
+        {
+          "card": 731,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 671,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 672,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 673,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -5874,6 +6329,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.246
+        },
+        {
+          "card": 712,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 718,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 719,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 720,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -5910,6 +6385,36 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.27
+        },
+        {
+          "card": 669,
+          "type": "card",
+          "rate": 0.15
+        },
+        {
+          "card": 674,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 678,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 702,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 707,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 710,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -5953,6 +6458,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.237
+        },
+        {
+          "card": 680,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 689,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 690,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 695,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 4,
@@ -5990,6 +6515,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.276
+        },
+        {
+          "card": 651,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 652,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 653,
+          "type": "card",
+          "rate": 0.1
         }
       ],
       "difficulty": 1
@@ -6026,6 +6566,41 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.348
+        },
+        {
+          "card": 655,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 656,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 623,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 632,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 633,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 643,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 659,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 3
@@ -6067,6 +6642,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.178
+        },
+        {
+          "card": 471,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 1
@@ -6113,6 +6693,31 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.184
+        },
+        {
+          "card": 618,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 620,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 630,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 631,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 638,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 2
@@ -6149,6 +6754,36 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.319
+        },
+        {
+          "card": 626,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 599,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 600,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 611,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 612,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 622,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 3
@@ -6191,6 +6826,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.246
+        },
+        {
+          "card": 257,
+          "type": "card",
+          "rate": 0.12
         }
       ],
       "difficulty": 1
@@ -6227,6 +6867,36 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.238
+        },
+        {
+          "card": 605,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 636,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 637,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 647,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 648,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 590,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 2
@@ -6309,6 +6979,36 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.368
+        },
+        {
+          "card": 584,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 606,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 616,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 617,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 627,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 628,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 2
@@ -6345,6 +7045,36 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.275
+        },
+        {
+          "card": 585,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 591,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 592,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 593,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 594,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 609,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 2
@@ -6381,6 +7111,36 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.358
+        },
+        {
+          "card": 587,
+          "type": "card",
+          "rate": 0.15
+        },
+        {
+          "card": 660,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 601,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 602,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 603,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 624,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 3
@@ -6418,6 +7178,41 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.322
+        },
+        {
+          "card": 588,
+          "type": "card",
+          "rate": 0.15
+        },
+        {
+          "card": 589,
+          "type": "card",
+          "rate": 0.15
+        },
+        {
+          "card": 586,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 604,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 614,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 625,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 646,
+          "type": "card",
+          "rate": 0.12
         }
       ],
       "difficulty": 1
@@ -6454,6 +7249,31 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.27
+        },
+        {
+          "card": 597,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 634,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 644,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 645,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 661,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 4
@@ -6491,6 +7311,41 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.33
+        },
+        {
+          "card": 595,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 598,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 640,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 641,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 650,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 658,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 596,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 3
@@ -6587,6 +7442,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.127
+        },
+        {
+          "card": 259,
+          "type": "card",
+          "rate": 0.12
         }
       ],
       "difficulty": 2
@@ -6635,6 +7495,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.123
+        },
+        {
+          "card": 563,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 574,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 517,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 2
@@ -6682,6 +7557,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.176
+        },
+        {
+          "card": 469,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 1
@@ -6730,6 +7610,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.13
+        },
+        {
+          "card": 530,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 540,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 562,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 532,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 1
@@ -6774,6 +7674,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.232
+        },
+        {
+          "card": 263,
+          "type": "card",
+          "rate": 0.12
         }
       ],
       "difficulty": 4
@@ -6831,6 +7736,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.064
+        },
+        {
+          "card": 447,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 1
@@ -6877,6 +7787,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.139
+        },
+        {
+          "card": 568,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 575,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 524,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 526,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 3
@@ -6923,6 +7853,26 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.144
+        },
+        {
+          "card": 534,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 542,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 543,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 552,
+          "type": "card",
+          "rate": 0.08
         }
       ],
       "difficulty": 2
@@ -6965,6 +7915,26 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.226
+        },
+        {
+          "card": 537,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 548,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 558,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 569,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 3
@@ -7007,6 +7977,21 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.232
+        },
+        {
+          "card": 547,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 564,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 565,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -7054,6 +8039,26 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.151
+        },
+        {
+          "card": 518,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 519,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 520,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 521,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -7096,6 +8101,26 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.175
+        },
+        {
+          "card": 535,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 536,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 545,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 546,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -7137,6 +8162,21 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.257
+        },
+        {
+          "card": 580,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 581,
+          "type": "card",
+          "rate": 0.03
+        },
+        {
+          "card": 582,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 4
@@ -7177,6 +8217,21 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.228
+        },
+        {
+          "card": 572,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 573,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 583,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 5
@@ -7224,6 +8279,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.13
+        },
+        {
+          "card": 549,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 550,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 560,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 561,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 4
@@ -7271,6 +8346,26 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.152
+        },
+        {
+          "card": 528,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 529,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 538,
+          "type": "card",
+          "rate": 0.015
+        },
+        {
+          "card": 539,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 4
@@ -7329,6 +8424,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.093
+        },
+        {
+          "card": 489,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -7381,6 +8481,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.094
+        },
+        {
+          "card": 472,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 1
@@ -7423,6 +8528,31 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.195
+        },
+        {
+          "card": 368,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 408,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 435,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 366,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 372,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -7475,6 +8605,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.101
+        },
+        {
+          "card": 502,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 4
@@ -7534,6 +8669,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.076
+        },
+        {
+          "card": 430,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 4
@@ -7637,6 +8777,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.068
+        },
+        {
+          "card": 500,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 4
@@ -7686,6 +8831,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.129
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 456,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 7,
@@ -7773,6 +8928,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.162
+        },
+        {
+          "card": 480,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 2
@@ -7818,6 +8978,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.149
+        },
+        {
+          "card": 462,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 1
@@ -7860,6 +9025,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.258
+        },
+        {
+          "card": 455,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 5
@@ -7908,6 +9078,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.153
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 484,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 7
@@ -7995,6 +9175,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.273
+        },
+        {
+          "card": 490,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -8038,6 +9223,11 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.144
+        },
+        {
+          "card": 446,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 1
@@ -8080,6 +9270,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.256
+        },
+        {
+          "card": 491,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 3
@@ -8215,6 +9410,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.141
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 505,
+          "type": "card",
+          "rate": 0.03
         }
       ],
       "difficulty": 8
@@ -8261,6 +9466,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.159
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 486,
+          "type": "card",
+          "rate": 0.015
         }
       ],
       "difficulty": 8
@@ -8307,6 +9522,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.146
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 8
@@ -8358,6 +9578,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.144
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 7
@@ -8398,6 +9623,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.189
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
         }
       ],
       "difficulty": 9
@@ -8435,6 +9665,11 @@
           "potion": "SMALL_MGP_BOOST",
           "type": "potion",
           "rate": 0.364
+        },
+        {
+          "card": 410,
+          "type": "card",
+          "rate": 0.25
         }
       ],
       "difficulty": 3
@@ -8472,6 +9707,11 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.356
+        },
+        {
+          "card": 420,
+          "type": "card",
+          "rate": 0.1
         }
       ],
       "difficulty": 4
@@ -8508,6 +9748,11 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.249
+        },
+        {
+          "card": 414,
+          "type": "card",
+          "rate": 0.15
         }
       ],
       "difficulty": 4
@@ -8542,6 +9787,16 @@
           "potion": "BIG_MGP_BOOST",
           "type": "potion",
           "rate": 0.36
+        },
+        {
+          "card": 411,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 423,
+          "type": "card",
+          "rate": 0.05
         }
       ],
       "difficulty": 4
@@ -8583,6 +9838,16 @@
           "potion": "MGP_BOOST",
           "type": "potion",
           "rate": 0.186
+        },
+        {
+          "potion": "LUCK_BOOST",
+          "type": "potion",
+          "rate": 0.08
+        },
+        {
+          "card": 416,
+          "type": "card",
+          "rate": 0.15
         }
       ],
       "difficulty": 8
