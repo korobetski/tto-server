@@ -2,6 +2,7 @@ package com.tripletriad.server
 
 import com.tripletriad.data.Campaign
 import com.tripletriad.data.CardValue
+import com.tripletriad.data.Inventory
 import com.tripletriad.data.ShopCatalog
 import com.tripletriad.data.StarterCatalog
 import com.tripletriad.data.StarterPack
@@ -100,6 +101,58 @@ class IntentRoutesTest {
 
         assertEquals(0, after.mgp, "a purchase nobody could pay for moved the purse")
         assertTrue(after.bag.isEmpty(), "an unaffordable purchase was delivered anyway")
+    }
+
+    /** Ten of an offer is one call, one price ten times over, and one stack of ten. */
+    @Test
+    fun buyingSeveralChargesForEachAndDeliversThemAll() = server {
+        // A purse planted at exactly ten of the asking price: a fresh account holds one item's
+        // worth, which would make "ten bought" and "none bought" the same empty purse.
+        val offer = anOffer()
+        val session = registerHolding(mgp = offer.price * TEN)
+
+        val after = buy(session.token, offer.item, "op-ten", count = TEN).save
+
+        assertEquals(0, after.mgp, "the wrong total was charged")
+        assertEquals(TEN, Inventory.count(after, offer.item), "the wrong number was delivered")
+        assertEquals(1, after.bag.size, "ten of one thing is one row")
+    }
+
+    /**
+     * A count the purse cannot cover buys none of them, rather than as many as it can.
+     *
+     * Planted at nine tenths of the asking price: enough for nine, which is exactly the profile
+     * that tells "all or nothing" apart from "as many as fit". See `ShopCatalog.buy`.
+     */
+    @Test
+    fun aCountThePurseCannotCoverBuysNoneOfThem() = server {
+        val offer = anOffer()
+        val session = registerHolding(mgp = offer.price * TEN - 1)
+
+        val after = buy(session.token, offer.item, "op-nine", count = TEN).save
+
+        assertEquals(offer.price * TEN - 1, after.mgp, "a purchase nobody could pay for was made")
+        assertTrue(after.bag.isEmpty(), "part of an unaffordable purchase was delivered")
+    }
+
+    /**
+     * A count that would overflow the charge is refused, not honoured and not credited.
+     *
+     * The count is the one quantity a client now names, so this is the field's own version of
+     * [theStackOnABuyIsNotAQuantity]: in `Int` arithmetic `price * Int.MAX_VALUE` wraps negative
+     * and a negative charge pays the buyer. `ShopCatalog` caps the count and prices it in `Long`;
+     * this proves the route reaches those guards rather than doing its own arithmetic first.
+     */
+    @Test
+    fun anAbsurdCountIsRefusedRatherThanPaid() = server {
+        val session = register()
+        val offer = anOffer()
+        val before = me(session.token).save
+
+        val after = buy(session.token, offer.item, "op-absurd", count = Int.MAX_VALUE).save
+
+        assertEquals(before.mgp, after.mgp, "an absurd count moved the purse")
+        assertEquals(before.bag, after.bag, "an absurd count was delivered")
     }
 
     /** An item that is not on the shelf is not for sale, whatever the client calls it. */
@@ -459,8 +512,12 @@ class IntentRoutesTest {
         assertTrue(accounts.replaceSave(id, change(assertNotNull(accounts.saveFor(id)))))
     }
 
-    private suspend fun ApplicationTestBuilder.buy(token: String, item: Item, op: String) =
-        intent(token, "/me/shop/buy", json.encodeToString(BuyRequest(item, FORMAT, op)))
+    private suspend fun ApplicationTestBuilder.buy(
+        token: String,
+        item: Item,
+        op: String,
+        count: Int = 1,
+    ) = intent(token, "/me/shop/buy", json.encodeToString(BuyRequest(item, FORMAT, op, count)))
 
     private suspend fun ApplicationTestBuilder.sellCard(token: String, cardId: Int, op: String) =
         intent(token, "/me/cards/sell", json.encodeToString(SellCardRequest(cardId, op)))
@@ -522,5 +579,8 @@ class IntentRoutesTest {
 
         /** The widest authored format, so the whole shelf is on sale. */
         const val FORMAT = "free-play"
+
+        /** The bulk purchase the shop's own stepper offers as its shortcut. */
+        const val TEN = 10
     }
 }

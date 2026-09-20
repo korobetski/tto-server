@@ -774,6 +774,11 @@ private fun Route.shopIntents(
      * request — see [BuyRequest]. An item that is not on that format's shelf is not for sale,
      * and `ShopCatalog.buy` returns the profile unchanged when the purse cannot cover it, so
      * both refusals are the same quiet answer: here is your profile, nothing happened.
+     *
+     * The count arrives from the client and is **not** trusted here either: `ShopCatalog.buy`
+     * caps it, prices it in `Long`, and refuses the whole purchase rather than trimming it to
+     * what the purse holds. So ten packs are one call, one price, one write — and one refusal
+     * when they cannot be paid for.
      */
     post("/me/shop/buy") {
         if (!requireCompatibleClient()) return@post
@@ -784,7 +789,7 @@ private fun Route.shopIntents(
         }
 
         respondWithProfile(store, request) { save ->
-            offer?.let { ShopCatalog.buy(save, it) } ?: save
+            offer?.let { ShopCatalog.buy(save, it, request.count) } ?: save
         }
     }
 
