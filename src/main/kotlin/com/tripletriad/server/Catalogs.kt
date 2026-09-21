@@ -23,10 +23,23 @@ import com.tripletriad.data.StarterCatalogParser
  * ### The duplication, which is a real problem and is not solved here
  *
  * `cards.json` and `npcs.json` are **copies** of the two files under the client's
- * `shared/src/commonMain/composeResources/files/`. Nothing checks that they stay identical, and
- * they will not: the day one of them is regenerated and the other is not, every transcript from the
+ * `shared/src/commonMain/composeResources/files/`. Nothing checked that they stayed identical, and
+ * they did not: the day one of them is regenerated and the other is not, every transcript from the
  * updated client is rejected by a server dealing from the old table, and the rejection will look
  * like cheating rather than like a stale file.
+ *
+ * That day was **2026-09-21**, and it was milder than the paragraph above feared and harder to read
+ * than it expected. Milder, because what the client had added was 31 opponents and six ladders
+ * rather than an edit to an existing card — no transcript replayed to a different board, the new
+ * opponents simply were not here, and every attempt to sit down against one was a
+ * `PveRefusal.NO_SUCH_OPPONENT`. Harder to read, because that refusal reaches the player as "La
+ * partie a avancé", the single sentence the client gives five of the six refusal codes.
+ *
+ * `CatalogDriftTest` now catches the shape of it that is catchable from inside this repository:
+ * `:core` carries its own copy of the map in `PlaceAchievements` and ships it *in the artifact this
+ * server links*, so the roster here can be checked against it with nothing else on hand. What still
+ * has no guard is the card pools — the half that causes the replay divergence this KDoc was written
+ * about — so the fix below remains the fix, and the test is a stopgap.
  *
  * The parsers are already shared — [CardCatalogParser] comes from `:core`, so the two sides cannot
  * disagree about how to *read* the data. Making them share the bytes as well means publishing the

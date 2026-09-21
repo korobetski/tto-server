@@ -182,7 +182,8 @@
           "rate": 0.179
         }
       ],
-      "difficulty": 3
+      "difficulty": 10,
+      "requiresAchievement": "ac-td4"
     },
     {
       "id": 5,
@@ -230,7 +231,8 @@
           "rate": 0.184
         }
       ],
-      "difficulty": 2
+      "difficulty": 10,
+      "requiresAchievement": "ac-td4"
     },
     {
       "id": 6,
@@ -281,7 +283,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 7
+      "difficulty": 5
     },
     {
       "id": 7,
@@ -379,7 +381,7 @@
           "rate": 0.18
         }
       ],
-      "difficulty": 3,
+      "difficulty": 5,
       "availability": {
         "begins": 20,
         "ends": 8
@@ -430,7 +432,7 @@
           "rate": 0.161
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 10,
@@ -481,7 +483,7 @@
           "rate": 0.144
         }
       ],
-      "difficulty": 3
+      "difficulty": 7
     },
     {
       "id": 11,
@@ -592,7 +594,7 @@
           "rate": 0.131
         }
       ],
-      "difficulty": 5
+      "difficulty": 7
     },
     {
       "id": 13,
@@ -643,7 +645,7 @@
           "rate": 0.131
         }
       ],
-      "difficulty": 1
+      "difficulty": 2
     },
     {
       "id": 14,
@@ -784,7 +786,7 @@
           "rate": 0.18
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 17,
@@ -883,7 +885,7 @@
           "rate": 0.122
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 19,
@@ -936,7 +938,7 @@
           "rate": 0.129
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 20,
@@ -981,7 +983,7 @@
           "rate": 0.187
         }
       ],
-      "difficulty": 2,
+      "difficulty": 9,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -1038,7 +1040,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 22,
@@ -1084,7 +1086,7 @@
           "rate": 0.156
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 24,
@@ -1130,7 +1132,7 @@
           "rate": 0.125
         }
       ],
-      "difficulty": 3,
+      "difficulty": 6,
       "availability": {
         "begins": 12,
         "ends": 20
@@ -1185,7 +1187,7 @@
           "rate": 0.127
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 26,
@@ -1232,7 +1234,8 @@
           "rate": 0.195
         }
       ],
-      "difficulty": 4
+      "difficulty": 10,
+      "requiresAchievement": "ac-td4"
     },
     {
       "id": 27,
@@ -1283,7 +1286,8 @@
           "rate": 0.145
         }
       ],
-      "difficulty": 3
+      "difficulty": 8,
+      "requiresAchievement": "ac-td3"
     },
     {
       "id": 28,
@@ -1339,7 +1343,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 5
     },
     {
       "id": 29,
@@ -1391,7 +1395,7 @@
           "rate": 0.12
         }
       ],
-      "difficulty": 3,
+      "difficulty": 9,
       "availability": {
         "begins": 16,
         "ends": 8
@@ -1451,7 +1455,8 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 6
+      "difficulty": 9,
+      "requiresAchievement": "ac-td4"
     },
     {
       "id": 31,
@@ -1513,7 +1518,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 6,
+      "difficulty": 10,
       "availability": {
         "begins": 22,
         "ends": 3
@@ -1573,7 +1578,7 @@
           "rate": 0.064
         }
       ],
-      "difficulty": 1,
+      "difficulty": 10,
       "availability": {
         "begins": 6,
         "ends": 11
@@ -1691,7 +1696,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 7,
+      "difficulty": 9,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -1743,7 +1748,7 @@
           "rate": 0.13
         }
       ],
-      "difficulty": 4
+      "difficulty": 8
     },
     {
       "id": 36,
@@ -1800,7 +1805,7 @@
           "rate": 0.098
         }
       ],
-      "difficulty": 3
+      "difficulty": 7
     },
     {
       "id": 37,
@@ -1857,7 +1862,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 10,
+      "difficulty": 9,
       "availability": {
         "begins": 21,
         "ends": 7
@@ -2017,7 +2022,7 @@
           "rate": 0.212
         }
       ],
-      "difficulty": 5,
+      "difficulty": 6,
       "availability": {
         "begins": 15,
         "ends": 3
@@ -2068,7 +2073,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 4,
+      "difficulty": 9,
       "availability": {
         "begins": 10,
         "ends": 20
@@ -2119,7 +2124,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 4,
+      "difficulty": 6,
       "availability": {
         "begins": 9,
         "ends": 20
@@ -2165,7 +2170,7 @@
           "rate": 0.219
         }
       ],
-      "difficulty": 4,
+      "difficulty": 10,
       "availability": {
         "begins": 22,
         "ends": 6
@@ -2224,7 +2229,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "availability": {
         "begins": 2,
         "ends": 9
@@ -2273,7 +2278,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 5,
+      "difficulty": 7,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2387,7 +2392,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 3,
+      "difficulty": 7,
       "availability": {
         "begins": 16,
         "ends": 20
@@ -2446,7 +2451,7 @@
           "rate": 0.066
         }
       ],
-      "difficulty": 5,
+      "difficulty": 7,
       "availability": {
         "begins": 23,
         "ends": 4
@@ -2567,7 +2572,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 7,
+      "difficulty": 6,
       "availability": {
         "begins": 23,
         "ends": 2
@@ -2624,7 +2629,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 7,
+      "difficulty": 10,
       "availability": {
         "begins": 2,
         "ends": 10
@@ -2694,7 +2699,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 7,
+      "difficulty": 10,
       "availability": {
         "begins": 21,
         "ends": 8
@@ -2753,7 +2758,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 5
+      "difficulty": 7
     },
     {
       "id": 54,
@@ -2797,7 +2802,7 @@
           "rate": 0.18
         }
       ],
-      "difficulty": 3,
+      "difficulty": 6,
       "availability": {
         "begins": 14,
         "ends": 18
@@ -2864,7 +2869,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 6,
+      "difficulty": 8,
       "availability": {
         "begins": 6,
         "ends": 24
@@ -2934,7 +2939,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 1,
+      "difficulty": 5,
       "availability": {
         "begins": 21,
         "ends": 3
@@ -2989,7 +2994,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 8,
+      "difficulty": 2,
       "availability": {
         "begins": 19,
         "ends": 5
@@ -3117,7 +3122,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 8
+      "difficulty": 9
     },
     {
       "id": 60,
@@ -3173,7 +3178,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 4
+      "difficulty": 8
     },
     {
       "id": 99,
@@ -3682,7 +3687,8 @@
           "rate": 0.185
         }
       ],
-      "difficulty": 3
+      "difficulty": 8,
+      "requiresAchievement": "ac-td3"
     },
     {
       "id": 1,
@@ -3767,7 +3773,7 @@
           "rate": 0.098
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 2,
@@ -3858,7 +3864,7 @@
           "rate": 0.088
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 2,
@@ -3946,7 +3952,7 @@
           "rate": 0.094
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 3,
@@ -4102,7 +4108,7 @@
           "rate": 0.067
         }
       ],
-      "difficulty": 2
+      "difficulty": 4
     },
     {
       "id": 5,
@@ -4183,7 +4189,7 @@
           "rate": 0.065
         }
       ],
-      "difficulty": 2
+      "difficulty": 4
     },
     {
       "id": 6,
@@ -4242,7 +4248,7 @@
           "rate": 0.198
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 7,
@@ -4306,7 +4312,7 @@
           "rate": 0.17
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 8,
@@ -4380,7 +4386,7 @@
           "rate": 0.076
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 9,
@@ -4567,7 +4573,7 @@
           "rate": 0.121
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 12,
@@ -4631,7 +4637,7 @@
           "rate": 0.162
         }
       ],
-      "difficulty": 2
+      "difficulty": 1
     },
     {
       "id": 13,
@@ -4706,7 +4712,7 @@
           "rate": 0.171
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 13,
@@ -4779,7 +4785,7 @@
           "rate": 0.161
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 14,
@@ -4864,7 +4870,7 @@
           "rate": 0.142
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 15,
@@ -5113,7 +5119,7 @@
           "rate": 0.109
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 18,
@@ -5187,7 +5193,7 @@
           "rate": 0.183
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 19,
@@ -5270,7 +5276,7 @@
           "rate": 0.128
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 20,
@@ -5353,7 +5359,7 @@
           "rate": 0.145
         }
       ],
-      "difficulty": 3
+      "difficulty": 5
     },
     {
       "id": 21,
@@ -5438,7 +5444,7 @@
           "rate": 0.121
         }
       ],
-      "difficulty": 3
+      "difficulty": 5
     },
     {
       "id": 22,
@@ -5521,7 +5527,7 @@
           "rate": 0.122
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 99,
@@ -5674,7 +5680,7 @@
           "rate": 0.16
         }
       ],
-      "difficulty": 3,
+      "difficulty": 6,
       "requiresAchievement": "ac-cmp-cc"
     },
     {
@@ -5732,7 +5738,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 5
+      "difficulty": 8
     },
     {
       "id": 62,
@@ -5809,7 +5815,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 6
+      "difficulty": 9
     },
     {
       "id": 63,
@@ -5851,7 +5857,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 4
+      "difficulty": 6
     },
     {
       "id": 64,
@@ -5920,7 +5926,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 7,
+      "difficulty": 10,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -5990,7 +5996,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 7
+      "difficulty": 10
     },
     {
       "id": 66,
@@ -6164,7 +6170,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 6
     },
     {
       "id": 69,
@@ -6290,7 +6296,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 7
     },
     {
       "id": 71,
@@ -6417,7 +6423,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 5
     },
     {
       "id": 73,
@@ -6480,7 +6486,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 4,
+      "difficulty": 10,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -6532,7 +6538,7 @@
           "rate": 0.1
         }
       ],
-      "difficulty": 1
+      "difficulty": 7
     },
     {
       "id": 75,
@@ -6603,7 +6609,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 3
+      "difficulty": 7
     },
     {
       "id": 76,
@@ -6649,7 +6655,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 1
+      "difficulty": 3
     },
     {
       "id": 77,
@@ -6720,7 +6726,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 2
+      "difficulty": 10
     },
     {
       "id": 78,
@@ -6786,7 +6792,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 79,
@@ -6833,7 +6839,7 @@
           "rate": 0.12
         }
       ],
-      "difficulty": 1
+      "difficulty": 6
     },
     {
       "id": 80,
@@ -6899,7 +6905,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 2
+      "difficulty": 4
     },
     {
       "id": 81,
@@ -6946,7 +6952,7 @@
           "rate": 0.133
         }
       ],
-      "difficulty": 1
+      "difficulty": 8
     },
     {
       "id": 82,
@@ -7143,7 +7149,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 3
+      "difficulty": 5
     },
     {
       "id": 85,
@@ -7215,7 +7221,7 @@
           "rate": 0.12
         }
       ],
-      "difficulty": 1
+      "difficulty": 4
     },
     {
       "id": 86,
@@ -7276,7 +7282,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 4
+      "difficulty": 7
     },
     {
       "id": 87,
@@ -7348,7 +7354,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 3
+      "difficulty": 7
     },
     {
       "id": 88,
@@ -7396,7 +7402,7 @@
           "rate": 0.149
         }
       ],
-      "difficulty": 1
+      "difficulty": 9
     },
     {
       "id": 89,
@@ -7449,7 +7455,8 @@
           "rate": 0.12
         }
       ],
-      "difficulty": 2
+      "difficulty": 10,
+      "requiresAchievement": "ac-td4"
     },
     {
       "id": 90,
@@ -7512,7 +7519,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 2
+      "difficulty": 9
     },
     {
       "id": 91,
@@ -7564,7 +7571,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 1
+      "difficulty": 8
     },
     {
       "id": 92,
@@ -7632,7 +7639,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 1
+      "difficulty": 3
     },
     {
       "id": 93,
@@ -7681,7 +7688,7 @@
           "rate": 0.12
         }
       ],
-      "difficulty": 4
+      "difficulty": 8
     },
     {
       "id": 94,
@@ -7743,7 +7750,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 1
+      "difficulty": 8
     },
     {
       "id": 95,
@@ -7809,7 +7816,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 96,
@@ -7937,7 +7944,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 98,
@@ -7994,7 +8001,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 100,
@@ -8123,7 +8130,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 102,
@@ -8179,7 +8186,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 4
+      "difficulty": 1
     },
     {
       "id": 103,
@@ -8301,7 +8308,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 4
+      "difficulty": 6
     },
     {
       "id": 105,
@@ -8368,7 +8375,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 4
+      "difficulty": 5
     },
     {
       "id": 106,
@@ -8431,7 +8438,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 107,
@@ -8488,7 +8495,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 1
+      "difficulty": 5
     },
     {
       "id": 108,
@@ -8555,7 +8562,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 9
     },
     {
       "id": 109,
@@ -8612,7 +8619,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 4
+      "difficulty": 8
     },
     {
       "id": 110,
@@ -8676,7 +8683,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 4
+      "difficulty": 5
     },
     {
       "id": 111,
@@ -8723,7 +8730,7 @@
           "rate": 0.154
         }
       ],
-      "difficulty": 5
+      "difficulty": 4
     },
     {
       "id": 112,
@@ -8784,7 +8791,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 113,
@@ -8843,7 +8850,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 7,
+      "difficulty": 10,
       "requiresAchievement": "ac-tt2"
     },
     {
@@ -8884,7 +8891,7 @@
           "rate": 0.248
         }
       ],
-      "difficulty": 3
+      "difficulty": 2
     },
     {
       "id": 115,
@@ -8935,7 +8942,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 2
+      "difficulty": 8
     },
     {
       "id": 116,
@@ -8985,7 +8992,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 1
+      "difficulty": 9
     },
     {
       "id": 117,
@@ -9032,7 +9039,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 5
+      "difficulty": 9
     },
     {
       "id": 118,
@@ -9090,7 +9097,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 7
+      "difficulty": 8
     },
     {
       "id": 119,
@@ -9137,7 +9144,7 @@
           "rate": 0.131
         }
       ],
-      "difficulty": 1
+      "difficulty": 5
     },
     {
       "id": 120,
@@ -9230,7 +9237,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 1
+      "difficulty": 2
     },
     {
       "id": 122,
@@ -9277,7 +9284,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 3
+      "difficulty": 4
     },
     {
       "id": 123,
@@ -9319,7 +9326,7 @@
           "rate": 0.233
         }
       ],
-      "difficulty": 3
+      "difficulty": 7
     },
     {
       "id": 124,
@@ -9366,7 +9373,7 @@
           "rate": 0.15
         }
       ],
-      "difficulty": 2
+      "difficulty": 4
     },
     {
       "id": 125,
@@ -9422,7 +9429,7 @@
           "rate": 0.03
         }
       ],
-      "difficulty": 8
+      "difficulty": 9
     },
     {
       "id": 126,
@@ -9478,7 +9485,7 @@
           "rate": 0.015
         }
       ],
-      "difficulty": 8
+      "difficulty": 5
     },
     {
       "id": 127,
@@ -9529,7 +9536,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 8
+      "difficulty": 7
     },
     {
       "id": 128,
@@ -9585,7 +9592,7 @@
           "rate": 0.08
         }
       ],
-      "difficulty": 7
+      "difficulty": 10
     },
     {
       "id": 129,
@@ -9672,7 +9679,7 @@
           "rate": 0.25
         }
       ],
-      "difficulty": 3
+      "difficulty": 1
     },
     {
       "id": 131,
@@ -9755,7 +9762,7 @@
           "rate": 0.15
         }
       ],
-      "difficulty": 4
+      "difficulty": 3
     },
     {
       "id": 133,
@@ -9799,7 +9806,7 @@
           "rate": 0.05
         }
       ],
-      "difficulty": 4
+      "difficulty": 10
     },
     {
       "id": 134,
@@ -9850,7 +9857,1470 @@
           "rate": 0.15
         }
       ],
+      "difficulty": 9
+    },
+    {
+      "id": 201,
+      "name": "APP_NPC_JOGGER",
+      "iconID": "jogger",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2058,
+        2060,
+        2051,
+        2069,
+        2070,
+        2064,
+        2049,
+        2050,
+        2061,
+        2067,
+        2079,
+        2059,
+        2063,
+        2055
+      ],
+      "itemRewards": [
+        {
+          "card": 2129,
+          "type": "card",
+          "rate": 0.02
+        },
+        {
+          "card": 2058,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2060,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 202,
+      "name": "APP_NPC_BENCH_MAN",
+      "iconID": "bench-man",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2079,
+        2080,
+        2053,
+        2062,
+        2054,
+        2056,
+        2052,
+        2072,
+        2057,
+        2066,
+        2068,
+        2073,
+        2075,
+        2074
+      ],
+      "itemRewards": [
+        {
+          "card": 2126,
+          "type": "card",
+          "rate": 0.02
+        },
+        {
+          "card": 2130,
+          "type": "card",
+          "rate": 0.02
+        },
+        {
+          "card": 2080,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 203,
+      "name": "APP_NPC_LIBRARY_GIRL",
+      "iconID": "library-girl",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2060,
+        2062,
+        2069,
+        2055,
+        2057,
+        2065,
+        2071,
+        2049,
+        2051,
+        2067,
+        2076,
+        2081,
+        2059,
+        2064
+      ],
+      "itemRewards": [
+        {
+          "card": 2071,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2069,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2093,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 204,
+      "name": "APP_NPC_GARDEN_FACULTY",
+      "iconID": "garden-faculty",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_SUDDEN_DEATH",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2077,
+        2097,
+        2098,
+        2093,
+        2103,
+        2086,
+        2083,
+        2089,
+        2087,
+        2082,
+        2085,
+        2092,
+        2106
+      ],
+      "itemRewards": [
+        {
+          "card": 2106,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2098,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2097,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 205,
+      "name": "APP_NPC_CAFETERIA_SEED",
+      "iconID": "cafeteria-seed",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2084,
+        2088,
+        2090,
+        2091,
+        2094,
+        2095,
+        2099,
+        2100,
+        2101,
+        2102,
+        2085,
+        2093,
+        2152
+      ],
+      "itemRewards": [
+        {
+          "card": 2152,
+          "type": "card",
+          "rate": 0.01
+        },
+        {
+          "card": 2088,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2102,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 6
+    },
+    {
+      "id": 206,
+      "name": "APP_NPC_KADOWAKI",
+      "iconID": "kadowaki",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2105,
+        2108,
+        2110,
+        2111,
+        2112,
+        2115,
+        2117,
+        2119,
+        2121,
+        2124,
+        2125,
+        2109,
+        2128
+      ],
+      "itemRewards": [
+        {
+          "card": 2128,
+          "type": "card",
+          "rate": 0.02
+        },
+        {
+          "card": 2111,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2105,
+          "type": "card",
+          "rate": 0.05
+        }
+      ],
+      "difficulty": 10,
+      "requiresAchievement": "ac-zone-card-club"
+    },
+    {
+      "id": 207,
+      "name": "APP_NPC_DOLLET_PUB_OWNER",
+      "iconID": "dollet-pub-owner",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2074,
+        2056,
+        2081,
+        2091,
+        2082,
+        2063,
+        2075,
+        2052,
+        2054,
+        2066,
+        2076,
+        2072,
+        2134
+      ],
+      "itemRewards": [
+        {
+          "card": 2134,
+          "type": "card",
+          "rate": 0.02
+        },
+        {
+          "card": 2074,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2091,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 208,
+      "name": "APP_NPC_DOLLET_RADIO_TECH",
+      "iconID": "dollet-radio-tech",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2077,
+        2097,
+        2098,
+        2106,
+        2119,
+        2122,
+        2093,
+        2103,
+        2086,
+        2110,
+        2117,
+        2115
+      ],
+      "itemRewards": [
+        {
+          "card": 2106,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2122,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2077,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 209,
+      "name": "APP_NPC_DOLLET_DUKE",
+      "iconID": "dollet-duke",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2083,
+        2089,
+        2092,
+        2094,
+        2100,
+        2104,
+        2105,
+        2109,
+        2118,
+        2123,
+        2120,
+        2114
+      ],
+      "itemRewards": [
+        {
+          "card": 2104,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2123,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2083,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 210,
+      "name": "APP_NPC_GALBADIAN_SENTRY",
+      "iconID": "galbadian-sentry",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2077,
+        2103,
+        2098,
+        2097,
+        2058,
+        2049,
+        2051,
+        2071,
+        2078,
+        2065,
+        2068,
+        2073,
+        2050,
+        2053
+      ],
+      "itemRewards": [
+        {
+          "card": 2103,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2078,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2077,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 211,
+      "name": "APP_NPC_DOLLET_FISHER",
+      "iconID": "dollet-fisher",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2074,
+        2056,
+        2081,
+        2063,
+        2075,
+        2057,
+        2069,
+        2059,
+        2061,
+        2055,
+        2062,
+        2079,
+        2080,
+        2049
+      ],
+      "itemRewards": [
+        {
+          "card": 2056,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2081,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2082,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 212,
+      "name": "APP_NPC_TIMBER_PUB_OWNER",
+      "iconID": "timber-pub-owner",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2107,
+        2111,
+        2112,
+        2116,
+        2118,
+        2120,
+        2121,
+        2123,
+        2124,
+        2125,
+        2108,
+        2113,
+        2146
+      ],
+      "itemRewards": [
+        {
+          "card": 2146,
+          "type": "card",
+          "rate": 0.01
+        },
+        {
+          "card": 2112,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2124,
+          "type": "card",
+          "rate": 0.05
+        }
+      ],
       "difficulty": 8
+    },
+    {
+      "id": 213,
+      "name": "APP_NPC_TIMBER_MANIACS",
+      "iconID": "timber-maniacs",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2103,
+        2089,
+        2083,
+        2086,
+        2096,
+        2082,
+        2087,
+        2085,
+        2090,
+        2092,
+        2095,
+        2101
+      ],
+      "itemRewards": [
+        {
+          "card": 2096,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2103,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2086,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 214,
+      "name": "APP_NPC_OWL_LOOKOUT",
+      "iconID": "owl-lookout",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_SAME_WALL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2060,
+        2051,
+        2065,
+        2071,
+        2068,
+        2070,
+        2064,
+        2067,
+        2073,
+        2078,
+        2072,
+        2050,
+        2053,
+        2054
+      ],
+      "itemRewards": [
+        {
+          "card": 2127,
+          "type": "card",
+          "rate": 0.02
+        },
+        {
+          "card": 2071,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2070,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 215,
+      "name": "APP_NPC_TRAIN_CONDUCTOR",
+      "iconID": "train-conductor",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2097,
+        2098,
+        2077,
+        2093,
+        2049,
+        2058,
+        2061,
+        2066,
+        2076,
+        2080,
+        2084,
+        2102
+      ],
+      "itemRewards": [
+        {
+          "card": 2102,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2093,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2080,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 216,
+      "name": "APP_NPC_GALBADIA_OFFICER",
+      "iconID": "galbadia-officer",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_ELEMENTAL",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2084,
+        2088,
+        2094,
+        2099,
+        2100,
+        2106,
+        2110,
+        2109,
+        2085,
+        2092,
+        2095,
+        2097,
+        2104
+      ],
+      "itemRewards": [
+        {
+          "card": 2104,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2119,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2099,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 9
+    },
+    {
+      "id": 217,
+      "name": "APP_NPC_RAINE",
+      "iconID": "raine",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_SAME",
+        "RULE_PLUS",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2111,
+        2113,
+        2114,
+        2116,
+        2118,
+        2120,
+        2123,
+        2124,
+        2125,
+        2121,
+        2107,
+        2112,
+        2150
+      ],
+      "itemRewards": [
+        {
+          "card": 2150,
+          "type": "card",
+          "rate": 0.01
+        },
+        {
+          "card": 2114,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2125,
+          "type": "card",
+          "rate": 0.05
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 218,
+      "name": "APP_NPC_WINHILL_FLORIST",
+      "iconID": "winhill-florist",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ELEMENTAL",
+        "RULE_SAME"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2060,
+        2076,
+        2079,
+        2058,
+        2050,
+        2053,
+        2062,
+        2067,
+        2069,
+        2099,
+        2116,
+        2082
+      ],
+      "itemRewards": [
+        {
+          "card": 2099,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2116,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 2079,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 219,
+      "name": "APP_NPC_VASE_LADY",
+      "iconID": "vase-lady",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2049,
+        2052,
+        2054,
+        2055,
+        2057,
+        2059,
+        2061,
+        2063,
+        2064,
+        2066,
+        2072,
+        2080,
+        2073,
+        2075
+      ],
+      "itemRewards": [
+        {
+          "card": 2054,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2072,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2083,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 220,
+      "name": "APP_NPC_WINHILL_MILITIA",
+      "iconID": "winhill-militia",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2065,
+        2068,
+        2070,
+        2071,
+        2078,
+        2081,
+        2084,
+        2087,
+        2091,
+        2092,
+        2094,
+        2097
+      ],
+      "itemRewards": [
+        {
+          "card": 2087,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2094,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2078,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 221,
+      "name": "APP_NPC_SHUMI_ELDER",
+      "iconID": "shumi-elder",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_SAME",
+        "RULE_SAME_WALL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2113,
+        2114,
+        2063,
+        2075,
+        2085,
+        2100,
+        2092,
+        2095,
+        2105,
+        2109,
+        2120,
+        2123
+      ],
+      "itemRewards": [
+        {
+          "card": 2113,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2114,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2063,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 222,
+      "name": "APP_NPC_SHUMI_ARTISAN",
+      "iconID": "shumi-artisan",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_PLUS",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2093,
+        2097,
+        2098,
+        2115,
+        2117,
+        2119,
+        2122,
+        2106,
+        2077,
+        2086,
+        2103,
+        2089
+      ],
+      "itemRewards": [
+        {
+          "card": 2117,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2115,
+          "type": "card",
+          "rate": 0.1
+        },
+        {
+          "card": 2093,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 4
+    },
+    {
+      "id": 223,
+      "name": "APP_NPC_MOOMBA",
+      "iconID": "moomba",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2159,
+        2079,
+        2080,
+        2102,
+        2116,
+        2130,
+        2126,
+        2050,
+        2053,
+        2061,
+        2069,
+        2096
+      ],
+      "itemRewards": [
+        {
+          "card": 2159,
+          "type": "card",
+          "rate": 0.005
+        },
+        {
+          "card": 2130,
+          "type": "card",
+          "rate": 0.08
+        },
+        {
+          "card": 2102,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 6
+    },
+    {
+      "id": 224,
+      "name": "APP_NPC_SHUMI_ATTENDANT",
+      "iconID": "shumi-attendant",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2049,
+        2051,
+        2055,
+        2057,
+        2060,
+        2062,
+        2065,
+        2071,
+        2076,
+        2081,
+        2083,
+        2087
+      ],
+      "itemRewards": [
+        {
+          "card": 2083,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2087,
+          "type": "card",
+          "rate": 0.12
+        },
+        {
+          "card": 2076,
+          "type": "card",
+          "rate": 0.25
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 225,
+      "name": "APP_NPC_SHUMI_SCULPTOR",
+      "iconID": "shumi-sculptor",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_PLUS",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2104,
+        2107,
+        2108,
+        2110,
+        2111,
+        2112,
+        2118,
+        2121,
+        2124,
+        2125,
+        2094,
+        2101
+      ],
+      "itemRewards": [
+        {
+          "card": 2118,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2107,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2101,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 5
+    },
+    {
+      "id": 226,
+      "name": "APP_NPC_TRABIA_CLASSMATE",
+      "iconID": "trabia-classmate",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_RANDOM",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2084,
+        2088,
+        2090,
+        2095,
+        2099,
+        2101,
+        2105,
+        2111,
+        2118,
+        2121,
+        2123,
+        2124,
+        2151
+      ],
+      "itemRewards": [
+        {
+          "card": 2151,
+          "type": "card",
+          "rate": 0.01
+        },
+        {
+          "card": 2111,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2090,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 7
+    },
+    {
+      "id": 227,
+      "name": "APP_NPC_TRABIA_CADET",
+      "iconID": "trabia-cadet",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_SAME",
+        "RULE_SUDDEN_DEATH"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2063,
+        2075,
+        2065,
+        2068,
+        2072,
+        2078,
+        2084,
+        2087,
+        2092,
+        2093,
+        2097,
+        2098
+      ],
+      "itemRewards": [
+        {
+          "card": 2075,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2063,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2092,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": 228,
+      "name": "APP_NPC_TRABIA_COACH",
+      "iconID": "trabia-coach",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_THREE_OPEN",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2049,
+        2051,
+        2054,
+        2058,
+        2060,
+        2064,
+        2067,
+        2070,
+        2073,
+        2076,
+        2079,
+        2080,
+        2050,
+        2053
+      ],
+      "itemRewards": [
+        {
+          "card": 2064,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2067,
+          "type": "card",
+          "rate": 0.25
+        },
+        {
+          "card": 2088,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": 229,
+      "name": "APP_NPC_TRABIA_MECHANIC",
+      "iconID": "trabia-mechanic",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME_WALL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2106,
+        2119,
+        2122,
+        2115,
+        2117,
+        2110,
+        2109,
+        2103,
+        2086,
+        2077,
+        2102,
+        2100
+      ],
+      "itemRewards": [
+        {
+          "card": 2122,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2119,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2097,
+          "type": "card",
+          "rate": 0.12
+        }
+      ],
+      "difficulty": 10
+    },
+    {
+      "id": 230,
+      "name": "APP_NPC_HOTEL_OWNER",
+      "iconID": "hotel-owner",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_ALL_OPEN",
+        "RULE_SAME",
+        "RULE_PLUS"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2107,
+        2108,
+        2110,
+        2112,
+        2114,
+        2116,
+        2118,
+        2120,
+        2121,
+        2123,
+        2124,
+        2125,
+        2141
+      ],
+      "itemRewards": [
+        {
+          "card": 2141,
+          "type": "card",
+          "rate": 0.01
+        },
+        {
+          "card": 2124,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2116,
+          "type": "card",
+          "rate": 0.1
+        }
+      ],
+      "difficulty": 6,
+      "requiresAchievement": "ac-zone-galbadia"
+    },
+    {
+      "id": 231,
+      "name": "APP_NPC_PRESIDENTIAL_AIDE",
+      "iconID": "presidential-aide",
+      "formats": [
+        "ff8-standard",
+        "free-play"
+      ],
+      "rules": [
+        "RULE_RANDOM",
+        "RULE_SAME",
+        "RULE_SAME_WALL",
+        "RULE_ELEMENTAL"
+      ],
+      "fetishesCards": [],
+      "cards": [
+        2109,
+        2111,
+        2115,
+        2117,
+        2119,
+        2121,
+        2122,
+        2125,
+        2106,
+        2101,
+        2099,
+        2100,
+        2144
+      ],
+      "itemRewards": [
+        {
+          "card": 2144,
+          "type": "card",
+          "rate": 0.01
+        },
+        {
+          "card": 2117,
+          "type": "card",
+          "rate": 0.05
+        },
+        {
+          "card": 2119,
+          "type": "card",
+          "rate": 0.05
+        }
+      ],
+      "difficulty": 10
     }
   ]
 }

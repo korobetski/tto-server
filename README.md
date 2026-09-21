@@ -59,12 +59,16 @@ docker compose up -d --build
 curl localhost:8080/health/ready
 ```
 
-To try an *unreleased* engine change instead, publish `:core` locally from the client repository —
-`settings.gradle.kts` prefers that copy over the published one, on purpose:
+To try an *unreleased* engine change instead, publish `core` locally from its **own** repository —
+`settings.gradle.kts` prefers that copy over the published one, on purpose. It is `tto-core`, not
+`tto-client`: the engine moved out of the client and the module `:core` no longer exists there.
 
 ```
-cd ../tto-client && ./gradlew :core:publishToMavenLocal
+cd ../tto-core && ./gradlew publishToMavenLocal -PcoreVersion=<the version pinned here>
 ```
+
+Without `-PcoreVersion` it publishes `build.gradle.kts`'s own fallback, which is usually a different
+number from the one `gradle/libs.versions.toml` pins here — and the local copy then shadows nothing.
 
 `.env` has no working defaults on purpose: compose refuses to start rather than fall back to a
 password that is published in a sample file. There are **two** roles to give a password to — the

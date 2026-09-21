@@ -98,7 +98,7 @@
                 "rate": 0.02
               }
             ],
-            "difficulty": 2
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -147,7 +147,7 @@
                 "rate": 0.1
               }
             ],
-            "difficulty": 2
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -242,7 +242,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 3
+            "difficulty": 6
           },
           "messages": {}
         },
@@ -295,7 +295,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 3
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -349,7 +349,7 @@
                 "rate": 0.01
               }
             ],
-            "difficulty": 3
+            "difficulty": 6
           },
           "messages": {}
         }
@@ -617,7 +617,7 @@
                 "rate": 0.125
               }
             ],
-            "difficulty": 3
+            "difficulty": 10
           },
           "messages": {}
         },
@@ -654,7 +654,7 @@
                 "rate": 0.125
               }
             ],
-            "difficulty": 2
+            "difficulty": 10
           },
           "messages": {}
         },
@@ -705,7 +705,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 7
+            "difficulty": 5
           },
           "messages": {
             "start": "It's the last lap, give everything you have.",
@@ -775,7 +775,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 2
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -870,7 +870,7 @@
                 "rate": 0.005
               }
             ],
-            "difficulty": 2
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -953,7 +953,7 @@
       "key": "uldah",
       "nameKey": "APP_CAMPAIGN_ULDAH",
       "format": "ff14-standard",
-      "fee": 600,
+      "fee": 900,
       "steps": [
         {
           "npc": {
@@ -997,7 +997,7 @@
                 "rate": 0.156
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -1049,7 +1049,7 @@
                 "rate": 0.122
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -1091,7 +1091,7 @@
                 "rate": 0.18
               }
             ],
-            "difficulty": 3
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -1148,7 +1148,7 @@
                 "rate": 0.098
               }
             ],
-            "difficulty": 3
+            "difficulty": 7
           },
           "messages": {}
         },
@@ -1204,7 +1204,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 6
+            "difficulty": 9
           },
           "messages": {}
         }
@@ -1218,7 +1218,7 @@
       "key": "limsa",
       "nameKey": "APP_CAMPAIGN_LIMSA",
       "format": "ff14-standard",
-      "fee": 500,
+      "fee": 700,
       "steps": [
         {
           "npc": {
@@ -1315,7 +1315,7 @@
                 "rate": 0.161
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -1366,56 +1366,7 @@
                 "rate": 0.144
               }
             ],
-            "difficulty": 3
-          },
-          "messages": {}
-        },
-        {
-          "npc": {
-            "id": 93,
-            "name": "STR_NPC_Furtive_Former_Imperial",
-            "iconID": "furtive-former-imperial",
-            "rules": [
-              "RULE_SUDDEN_DEATH",
-              "RULE_SWAP",
-              "RULE_FALLEN_ACE"
-            ],
-            "fetishesCards": [
-              559,
-              500,
-              436,
-              431
-            ],
-            "cards": [
-              548,
-              432,
-              494,
-              448,
-              307
-            ],
-            "itemRewards": [
-              {
-                "card": 559,
-                "type": "card",
-                "rate": 0.0557
-              },
-              {
-                "potion": "BIG_XP_BOOST",
-                "type": "potion",
-                "rate": 0.232
-              },
-              {
-                "potion": "BIG_MGP_BOOST",
-                "type": "potion",
-                "rate": 0.232
-              },
-              {
-                "card": 263,
-                "type": "card",
-                "rate": 0.12
-              }
-            ],
-            "difficulty": 4
+            "difficulty": 7
           },
           "messages": {}
         },
@@ -1462,7 +1413,66 @@
                 "rate": 0.131
               }
             ],
-            "difficulty": 5
+            "difficulty": 7
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 11,
+            "name": "STR_NPC_Rashaht_Rhiki",
+            "iconID": "rashaht-rhiki",
+            "rules": [
+              "RULE_SAME",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [
+              321,
+              310,
+              297
+            ],
+            "cards": [
+              314,
+              294,
+              306,
+              305,
+              286,
+              280
+            ],
+            "itemRewards": [
+              {
+                "potion": "MGP_BOOST",
+                "type": "potion",
+                "rate": 0.125
+              },
+              {
+                "card": 305,
+                "type": "card",
+                "rate": 0.33
+              },
+              {
+                "card": 310,
+                "type": "card",
+                "rate": 0.22
+              },
+              {
+                "card": 321,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.096
+              },
+              {
+                "potion": "LUCK_BOOST",
+                "type": "potion",
+                "rate": 0.08
+              }
+            ],
+            "difficulty": 7
           },
           "messages": {}
         }
@@ -1476,7 +1486,7 @@
       "key": "gridania",
       "nameKey": "APP_CAMPAIGN_GRIDANIA",
       "format": "ff14-standard",
-      "fee": 400,
+      "fee": 1000,
       "steps": [
         {
           "npc": {
@@ -1578,7 +1588,7 @@
                 "rate": 0.127
               }
             ],
-            "difficulty": 3
+            "difficulty": 6
           },
           "messages": {}
         },
@@ -1629,7 +1639,7 @@
                 "rate": 0.145
               }
             ],
-            "difficulty": 3
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -1682,7 +1692,7 @@
                 "rate": 0.129
               }
             ],
-            "difficulty": 3
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -1729,7 +1739,7 @@
                 "rate": 0.195
               }
             ],
-            "difficulty": 4
+            "difficulty": 10
           },
           "messages": {}
         }
@@ -1788,7 +1798,7 @@
                 "rate": 0.133
               }
             ],
-            "difficulty": 1
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -1839,7 +1849,7 @@
                 "rate": 0.13
               }
             ],
-            "difficulty": 4
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -1905,7 +1915,7 @@
       "key": "battlehall",
       "nameKey": "APP_CAMPAIGN_BATTLEHALL",
       "format": "ff14-standard",
-      "fee": 800,
+      "fee": 1000,
       "steps": [
         {
           "npc": {
@@ -1944,7 +1954,7 @@
                 "rate": 0.15
               }
             ],
-            "difficulty": 4
+            "difficulty": 3
           },
           "messages": {}
         },
@@ -1989,7 +1999,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 4
+            "difficulty": 10
           },
           "messages": {}
         },
@@ -2031,7 +2041,7 @@
                 "rate": 0.1
               }
             ],
-            "difficulty": 4
+            "difficulty": 6
           },
           "messages": {}
         },
@@ -2082,7 +2092,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 7
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -2133,7 +2143,7 @@
                 "rate": 0.15
               }
             ],
-            "difficulty": 8
+            "difficulty": 9
           },
           "messages": {}
         }
@@ -2147,7 +2157,7 @@
       "key": "ishgard",
       "nameKey": "APP_CAMPAIGN_ISHGARD",
       "format": "ff14-standard",
-      "fee": 300,
+      "fee": 500,
       "steps": [
         {
           "npc": {
@@ -2198,7 +2208,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -2254,7 +2264,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 3
+            "difficulty": 5
           },
           "messages": {}
         }
@@ -2268,7 +2278,7 @@
       "key": "dravania",
       "nameKey": "APP_CAMPAIGN_DRAVANIA",
       "format": "ff14-standard",
-      "fee": 800,
+      "fee": 900,
       "steps": [
         {
           "npc": {
@@ -2322,7 +2332,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 4
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -2386,7 +2396,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 4
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -2441,7 +2451,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 5
+            "difficulty": 7
           },
           "messages": {}
         },
@@ -2565,7 +2575,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 8
+            "difficulty": 9
           },
           "messages": {}
         }
@@ -2579,103 +2589,49 @@
       "key": "gyr-abania",
       "nameKey": "APP_CAMPAIGN_GYR_ABANIA",
       "format": "ff14-standard",
-      "fee": 700,
+      "fee": 1000,
       "steps": [
         {
           "npc": {
-            "id": 91,
-            "name": "STR_NPC_Arsieu",
-            "iconID": "arsieu",
+            "id": 121,
+            "name": "STR_NPC_Ercanbald",
+            "iconID": "ercanbald",
             "rules": [
-              "RULE_SUDDEN_DEATH",
-              "RULE_PLUS",
-              "RULE_ASCENSION"
+              "RULE_SUDDEN_DEATH"
             ],
             "fetishesCards": [
-              555,
-              556,
-              464,
-              436
+              304,
+              442,
+              426
             ],
             "cards": [
-              506,
-              485,
-              465
+              290,
+              270,
+              261
             ],
             "itemRewards": [
               {
-                "card": 556,
+                "card": 442,
                 "type": "card",
-                "rate": 0.1365
+                "rate": 0.0755
               },
               {
-                "card": 555,
+                "card": 342,
                 "type": "card",
-                "rate": 0.1067
+                "rate": 0.0162
               },
               {
-                "potion": "BIG_XP_BOOST",
+                "potion": "XP_BOOST",
                 "type": "potion",
-                "rate": 0.176
+                "rate": 0.144
               },
               {
-                "potion": "BIG_MGP_BOOST",
+                "potion": "MGP_BOOST",
                 "type": "potion",
-                "rate": 0.176
+                "rate": 0.144
               },
               {
-                "card": 469,
-                "type": "card",
-                "rate": 0.08
-              }
-            ],
-            "difficulty": 1
-          },
-          "messages": {}
-        },
-        {
-          "npc": {
-            "id": 115,
-            "name": "STR_NPC_Umber_Torrent",
-            "iconID": "umber-torrent",
-            "rules": [
-              "RULE_SUDDEN_DEATH",
-              "RULE_SAME",
-              "RULE_PLUS"
-            ],
-            "fetishesCards": [
-              473,
-              352,
-              393
-            ],
-            "cards": [
-              365,
-              418,
-              430
-            ],
-            "itemRewards": [
-              {
-                "card": 445,
-                "type": "card",
-                "rate": 0.0612
-              },
-              {
-                "card": 473,
-                "type": "card",
-                "rate": 0.0442
-              },
-              {
-                "potion": "BIG_XP_BOOST",
-                "type": "potion",
-                "rate": 0.162
-              },
-              {
-                "potion": "BIG_MGP_BOOST",
-                "type": "potion",
-                "rate": 0.162
-              },
-              {
-                "card": 480,
+                "card": 446,
                 "type": "card",
                 "rate": 0.05
               }
@@ -2727,7 +2683,58 @@
                 "rate": 0.15
               }
             ],
-            "difficulty": 2
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 115,
+            "name": "STR_NPC_Umber_Torrent",
+            "iconID": "umber-torrent",
+            "rules": [
+              "RULE_SUDDEN_DEATH",
+              "RULE_SAME",
+              "RULE_PLUS"
+            ],
+            "fetishesCards": [
+              473,
+              352,
+              393
+            ],
+            "cards": [
+              365,
+              418,
+              430
+            ],
+            "itemRewards": [
+              {
+                "card": 445,
+                "type": "card",
+                "rate": 0.0612
+              },
+              {
+                "card": 473,
+                "type": "card",
+                "rate": 0.0442
+              },
+              {
+                "potion": "BIG_XP_BOOST",
+                "type": "potion",
+                "rate": 0.162
+              },
+              {
+                "potion": "BIG_MGP_BOOST",
+                "type": "potion",
+                "rate": 0.162
+              },
+              {
+                "card": 480,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -2784,7 +2791,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 4
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -2840,7 +2847,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 7
+            "difficulty": 10
           },
           "messages": {}
         }
@@ -2854,7 +2861,7 @@
       "key": "kugane",
       "nameKey": "APP_CAMPAIGN_KUGANE",
       "format": "ff14-standard",
-      "fee": 500,
+      "fee": 900,
       "steps": [
         {
           "npc": {
@@ -2915,7 +2922,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -3021,7 +3028,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 4
+            "difficulty": 3
           },
           "messages": {}
         },
@@ -3068,7 +3075,7 @@
                 "rate": 0.154
               }
             ],
-            "difficulty": 5
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -3115,7 +3122,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 5
+            "difficulty": 9
           },
           "messages": {}
         }
@@ -3185,7 +3192,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 7
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -3241,7 +3248,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 8
+            "difficulty": 9
           },
           "messages": {}
         },
@@ -3297,7 +3304,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 8
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -3348,7 +3355,7 @@
                 "rate": 0.08
               }
             ],
-            "difficulty": 8
+            "difficulty": 7
           },
           "messages": {}
         },
@@ -3407,7 +3414,7 @@
       "key": "norvrandt",
       "nameKey": "APP_CAMPAIGN_NORVRANDT",
       "format": "ff14-standard",
-      "fee": 500,
+      "fee": 600,
       "steps": [
         {
           "npc": {
@@ -3467,7 +3474,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 3
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -3523,7 +3530,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 4
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -3590,7 +3597,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 4
+            "difficulty": 6
           },
           "messages": {}
         },
@@ -3657,7 +3664,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 4
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -3726,7 +3733,7 @@
       "key": "sharlayan",
       "nameKey": "APP_CAMPAIGN_SHARLAYAN",
       "format": "ff14-standard",
-      "fee": 400,
+      "fee": 700,
       "steps": [
         {
           "npc": {
@@ -3795,7 +3802,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 3
+            "difficulty": 7
           },
           "messages": {}
         },
@@ -3866,7 +3873,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 3
+            "difficulty": 7
           },
           "messages": {}
         },
@@ -3932,7 +3939,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 3
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -3998,7 +4005,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -4059,7 +4066,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 4
+            "difficulty": 7
           },
           "messages": {}
         }
@@ -4073,7 +4080,7 @@
       "key": "tural",
       "nameKey": "APP_CAMPAIGN_TURAL",
       "format": "ff14-standard",
-      "fee": 700,
+      "fee": 1000,
       "steps": [
         {
           "npc": {
@@ -4198,7 +4205,7 @@
                 "rate": 0.05
               }
             ],
-            "difficulty": 3
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -4255,7 +4262,7 @@
                 "rate": 0.03
               }
             ],
-            "difficulty": 5
+            "difficulty": 8
           },
           "messages": {}
         },
@@ -4332,7 +4339,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 6
+            "difficulty": 9
           },
           "messages": {}
         },
@@ -4402,7 +4409,7 @@
                 "rate": 0.015
               }
             ],
-            "difficulty": 7
+            "difficulty": 10
           },
           "messages": {}
         }
@@ -4416,7 +4423,7 @@
       "key": "galbadia",
       "nameKey": "APP_CAMPAIGN_GALBADIA",
       "format": "ff8-standard",
-      "fee": 300,
+      "fee": 200,
       "steps": [
         {
           "npc": {
@@ -4478,7 +4485,7 @@
                 "rate": 0.17
               }
             ],
-            "difficulty": 2
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -4541,7 +4548,7 @@
                 "rate": 0.162
               }
             ],
-            "difficulty": 2
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -4600,7 +4607,7 @@
                 "rate": 0.198
               }
             ],
-            "difficulty": 3
+            "difficulty": 2
           },
           "messages": {}
         },
@@ -4666,7 +4673,7 @@
                 "rate": 0.121
               }
             ],
-            "difficulty": 3
+            "difficulty": 2
           },
           "messages": {}
         }
@@ -4858,7 +4865,7 @@
       "key": "centra",
       "nameKey": "APP_CAMPAIGN_CENTRA",
       "format": "ff8-standard",
-      "fee": 300,
+      "fee": 600,
       "steps": [
         {
           "npc": {
@@ -4947,7 +4954,7 @@
                 "rate": 0.088
               }
             ],
-            "difficulty": 2
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -5035,7 +5042,7 @@
                 "rate": 0.094
               }
             ],
-            "difficulty": 2
+            "difficulty": 1
           },
           "messages": {}
         },
@@ -5118,7 +5125,7 @@
                 "rate": 0.109
               }
             ],
-            "difficulty": 3
+            "difficulty": 6
           },
           "messages": {}
         },
@@ -5201,7 +5208,7 @@
                 "rate": 0.128
               }
             ],
-            "difficulty": 3
+            "difficulty": 6
           },
           "messages": {}
         }
@@ -5215,7 +5222,7 @@
       "key": "esthar",
       "nameKey": "APP_CAMPAIGN_ESTHAR",
       "format": "ff8-standard",
-      "fee": 300,
+      "fee": 600,
       "steps": [
         {
           "npc": {
@@ -5288,7 +5295,7 @@
                 "rate": 0.171
               }
             ],
-            "difficulty": 3
+            "difficulty": 6
           },
           "messages": {}
         },
@@ -5360,7 +5367,7 @@
                 "rate": 0.161
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         },
@@ -5445,7 +5452,7 @@
                 "rate": 0.121
               }
             ],
-            "difficulty": 3
+            "difficulty": 5
           },
           "messages": {}
         },
@@ -5527,7 +5534,7 @@
                 "rate": 0.122
               }
             ],
-            "difficulty": 3
+            "difficulty": 4
           },
           "messages": {}
         }
@@ -5536,6 +5543,1387 @@
       "xpMultiplier": 1.5,
       "payoutMultiplier": 2,
       "requiresAchievement": "ac-zone-esthar"
+    },
+    {
+      "key": "balamb-garden",
+      "nameKey": "APP_CAMPAIGN_BALAMB_GARDEN",
+      "format": "ff8-standard",
+      "fee": 600,
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-balamb-garden",
+      "steps": [
+        {
+          "npc": {
+            "id": 201,
+            "name": "APP_NPC_JOGGER",
+            "iconID": "jogger",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2058,
+              2060,
+              2051,
+              2069,
+              2070,
+              2064,
+              2049,
+              2050,
+              2061,
+              2067,
+              2079,
+              2059,
+              2063,
+              2055
+            ],
+            "itemRewards": [
+              {
+                "card": 2129,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2058,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2060,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 202,
+            "name": "APP_NPC_BENCH_MAN",
+            "iconID": "bench-man",
+            "rules": [
+              "RULE_THREE_OPEN",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2079,
+              2080,
+              2053,
+              2062,
+              2054,
+              2056,
+              2052,
+              2072,
+              2057,
+              2066,
+              2068,
+              2073,
+              2075,
+              2074
+            ],
+            "itemRewards": [
+              {
+                "card": 2126,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2130,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2080,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 203,
+            "name": "APP_NPC_LIBRARY_GIRL",
+            "iconID": "library-girl",
+            "rules": [
+              "RULE_SAME",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2060,
+              2062,
+              2069,
+              2055,
+              2057,
+              2065,
+              2071,
+              2049,
+              2051,
+              2067,
+              2076,
+              2081,
+              2059,
+              2064
+            ],
+            "itemRewards": [
+              {
+                "card": 2071,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2069,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2093,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 204,
+            "name": "APP_NPC_GARDEN_FACULTY",
+            "iconID": "garden-faculty",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_SUDDEN_DEATH",
+              "RULE_ELEMENTAL"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2077,
+              2097,
+              2098,
+              2093,
+              2103,
+              2086,
+              2083,
+              2089,
+              2087,
+              2082,
+              2085,
+              2092,
+              2106
+            ],
+            "itemRewards": [
+              {
+                "card": 2106,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2098,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2097,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 205,
+            "name": "APP_NPC_CAFETERIA_SEED",
+            "iconID": "cafeteria-seed",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2084,
+              2088,
+              2090,
+              2091,
+              2094,
+              2095,
+              2099,
+              2100,
+              2101,
+              2102,
+              2085,
+              2093,
+              2152
+            ],
+            "itemRewards": [
+              {
+                "card": 2152,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2088,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2102,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 6
+          },
+          "messages": {}
+        }
+      ]
+    },
+    {
+      "key": "dollet",
+      "nameKey": "APP_CAMPAIGN_DOLLET",
+      "format": "ff8-standard",
+      "fee": 500,
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-dollet",
+      "steps": [
+        {
+          "npc": {
+            "id": 211,
+            "name": "APP_NPC_DOLLET_FISHER",
+            "iconID": "dollet-fisher",
+            "rules": [
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2074,
+              2056,
+              2081,
+              2063,
+              2075,
+              2057,
+              2069,
+              2059,
+              2061,
+              2055,
+              2062,
+              2079,
+              2080,
+              2049
+            ],
+            "itemRewards": [
+              {
+                "card": 2056,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2081,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2082,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 207,
+            "name": "APP_NPC_DOLLET_PUB_OWNER",
+            "iconID": "dollet-pub-owner",
+            "rules": [
+              "RULE_ELEMENTAL",
+              "RULE_SAME",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2074,
+              2056,
+              2081,
+              2091,
+              2082,
+              2063,
+              2075,
+              2052,
+              2054,
+              2066,
+              2076,
+              2072,
+              2134
+            ],
+            "itemRewards": [
+              {
+                "card": 2134,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2074,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2091,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 208,
+            "name": "APP_NPC_DOLLET_RADIO_TECH",
+            "iconID": "dollet-radio-tech",
+            "rules": [
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2077,
+              2097,
+              2098,
+              2106,
+              2119,
+              2122,
+              2093,
+              2103,
+              2086,
+              2110,
+              2117,
+              2115
+            ],
+            "itemRewards": [
+              {
+                "card": 2106,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2122,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2077,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 210,
+            "name": "APP_NPC_GALBADIAN_SENTRY",
+            "iconID": "galbadian-sentry",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2077,
+              2103,
+              2098,
+              2097,
+              2058,
+              2049,
+              2051,
+              2071,
+              2078,
+              2065,
+              2068,
+              2073,
+              2050,
+              2053
+            ],
+            "itemRewards": [
+              {
+                "card": 2103,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2078,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2077,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 209,
+            "name": "APP_NPC_DOLLET_DUKE",
+            "iconID": "dollet-duke",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_SAME",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2083,
+              2089,
+              2092,
+              2094,
+              2100,
+              2104,
+              2105,
+              2109,
+              2118,
+              2123,
+              2120,
+              2114
+            ],
+            "itemRewards": [
+              {
+                "card": 2104,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2123,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2083,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        }
+      ]
+    },
+    {
+      "key": "timber",
+      "nameKey": "APP_CAMPAIGN_TIMBER",
+      "format": "ff8-standard",
+      "fee": 900,
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-timber",
+      "steps": [
+        {
+          "npc": {
+            "id": 214,
+            "name": "APP_NPC_OWL_LOOKOUT",
+            "iconID": "owl-lookout",
+            "rules": [
+              "RULE_SAME",
+              "RULE_SAME_WALL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2060,
+              2051,
+              2065,
+              2071,
+              2068,
+              2070,
+              2064,
+              2067,
+              2073,
+              2078,
+              2072,
+              2050,
+              2053,
+              2054
+            ],
+            "itemRewards": [
+              {
+                "card": 2127,
+                "type": "card",
+                "rate": 0.02
+              },
+              {
+                "card": 2071,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2070,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 215,
+            "name": "APP_NPC_TRAIN_CONDUCTOR",
+            "iconID": "train-conductor",
+            "rules": [
+              "RULE_THREE_OPEN",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2097,
+              2098,
+              2077,
+              2093,
+              2049,
+              2058,
+              2061,
+              2066,
+              2076,
+              2080,
+              2084,
+              2102
+            ],
+            "itemRewards": [
+              {
+                "card": 2102,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2093,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2080,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 213,
+            "name": "APP_NPC_TIMBER_MANIACS",
+            "iconID": "timber-maniacs",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2103,
+              2089,
+              2083,
+              2086,
+              2096,
+              2082,
+              2087,
+              2085,
+              2090,
+              2092,
+              2095,
+              2101
+            ],
+            "itemRewards": [
+              {
+                "card": 2096,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2103,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2086,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 212,
+            "name": "APP_NPC_TIMBER_PUB_OWNER",
+            "iconID": "timber-pub-owner",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_SAME",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2107,
+              2111,
+              2112,
+              2116,
+              2118,
+              2120,
+              2121,
+              2123,
+              2124,
+              2125,
+              2108,
+              2113,
+              2146
+            ],
+            "itemRewards": [
+              {
+                "card": 2146,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2112,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2124,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 8
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 216,
+            "name": "APP_NPC_GALBADIA_OFFICER",
+            "iconID": "galbadia-officer",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2084,
+              2088,
+              2094,
+              2099,
+              2100,
+              2106,
+              2110,
+              2109,
+              2085,
+              2092,
+              2095,
+              2097,
+              2104
+            ],
+            "itemRewards": [
+              {
+                "card": 2104,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2119,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2099,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 9
+          },
+          "messages": {}
+        }
+      ]
+    },
+    {
+      "key": "winhill",
+      "nameKey": "APP_CAMPAIGN_WINHILL",
+      "format": "ff8-standard",
+      "fee": 500,
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-winhill",
+      "steps": [
+        {
+          "npc": {
+            "id": 219,
+            "name": "APP_NPC_VASE_LADY",
+            "iconID": "vase-lady",
+            "rules": [
+              "RULE_THREE_OPEN",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2049,
+              2052,
+              2054,
+              2055,
+              2057,
+              2059,
+              2061,
+              2063,
+              2064,
+              2066,
+              2072,
+              2080,
+              2073,
+              2075
+            ],
+            "itemRewards": [
+              {
+                "card": 2054,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2072,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2083,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 218,
+            "name": "APP_NPC_WINHILL_FLORIST",
+            "iconID": "winhill-florist",
+            "rules": [
+              "RULE_ELEMENTAL",
+              "RULE_SAME",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2060,
+              2076,
+              2079,
+              2058,
+              2050,
+              2053,
+              2062,
+              2067,
+              2069,
+              2099,
+              2116,
+              2082
+            ],
+            "itemRewards": [
+              {
+                "card": 2099,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2116,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2079,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 220,
+            "name": "APP_NPC_WINHILL_MILITIA",
+            "iconID": "winhill-militia",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2065,
+              2068,
+              2070,
+              2071,
+              2078,
+              2081,
+              2084,
+              2087,
+              2091,
+              2092,
+              2094,
+              2097
+            ],
+            "itemRewards": [
+              {
+                "card": 2087,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2094,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2078,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 217,
+            "name": "APP_NPC_RAINE",
+            "iconID": "raine",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_SAME",
+              "RULE_PLUS",
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2111,
+              2113,
+              2114,
+              2116,
+              2118,
+              2120,
+              2123,
+              2124,
+              2125,
+              2121,
+              2107,
+              2112,
+              2150
+            ],
+            "itemRewards": [
+              {
+                "card": 2150,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2114,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2125,
+                "type": "card",
+                "rate": 0.05
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        }
+      ]
+    },
+    {
+      "key": "shumi-village",
+      "nameKey": "APP_CAMPAIGN_SHUMI_VILLAGE",
+      "format": "ff8-standard",
+      "fee": 600,
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-shumi-village",
+      "steps": [
+        {
+          "npc": {
+            "id": 224,
+            "name": "APP_NPC_SHUMI_ATTENDANT",
+            "iconID": "shumi-attendant",
+            "rules": [
+              "RULE_SAME",
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2049,
+              2051,
+              2055,
+              2057,
+              2060,
+              2062,
+              2065,
+              2071,
+              2076,
+              2081,
+              2083,
+              2087
+            ],
+            "itemRewards": [
+              {
+                "card": 2083,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2087,
+                "type": "card",
+                "rate": 0.12
+              },
+              {
+                "card": 2076,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 222,
+            "name": "APP_NPC_SHUMI_ARTISAN",
+            "iconID": "shumi-artisan",
+            "rules": [
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2093,
+              2097,
+              2098,
+              2115,
+              2117,
+              2119,
+              2122,
+              2106,
+              2077,
+              2086,
+              2103,
+              2089
+            ],
+            "itemRewards": [
+              {
+                "card": 2117,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2115,
+                "type": "card",
+                "rate": 0.1
+              },
+              {
+                "card": 2093,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 4
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 221,
+            "name": "APP_NPC_SHUMI_ELDER",
+            "iconID": "shumi-elder",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_SAME",
+              "RULE_SAME_WALL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2113,
+              2114,
+              2063,
+              2075,
+              2085,
+              2100,
+              2092,
+              2095,
+              2105,
+              2109,
+              2120,
+              2123
+            ],
+            "itemRewards": [
+              {
+                "card": 2113,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2114,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2063,
+                "type": "card",
+                "rate": 0.25
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 225,
+            "name": "APP_NPC_SHUMI_SCULPTOR",
+            "iconID": "shumi-sculptor",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_PLUS",
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2104,
+              2107,
+              2108,
+              2110,
+              2111,
+              2112,
+              2118,
+              2121,
+              2124,
+              2125,
+              2094,
+              2101
+            ],
+            "itemRewards": [
+              {
+                "card": 2118,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2107,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2101,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 5
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 223,
+            "name": "APP_NPC_MOOMBA",
+            "iconID": "moomba",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_ELEMENTAL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2159,
+              2079,
+              2080,
+              2102,
+              2116,
+              2130,
+              2126,
+              2050,
+              2053,
+              2061,
+              2069,
+              2096
+            ],
+            "itemRewards": [
+              {
+                "card": 2159,
+                "type": "card",
+                "rate": 0.005
+              },
+              {
+                "card": 2130,
+                "type": "card",
+                "rate": 0.08
+              },
+              {
+                "card": 2102,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 6
+          },
+          "messages": {}
+        }
+      ]
+    },
+    {
+      "key": "trabia",
+      "nameKey": "APP_CAMPAIGN_TRABIA",
+      "format": "ff8-standard",
+      "fee": 1000,
+      "dropMultiplier": 2,
+      "xpMultiplier": 1.5,
+      "payoutMultiplier": 2,
+      "requiresAchievement": "ac-zone-trabia",
+      "steps": [
+        {
+          "npc": {
+            "id": 228,
+            "name": "APP_NPC_TRABIA_COACH",
+            "iconID": "trabia-coach",
+            "rules": [
+              "RULE_THREE_OPEN",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2049,
+              2051,
+              2054,
+              2058,
+              2060,
+              2064,
+              2067,
+              2070,
+              2073,
+              2076,
+              2079,
+              2080,
+              2050,
+              2053
+            ],
+            "itemRewards": [
+              {
+                "card": 2064,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2067,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2088,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 1
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 227,
+            "name": "APP_NPC_TRABIA_CADET",
+            "iconID": "trabia-cadet",
+            "rules": [
+              "RULE_SAME",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2063,
+              2075,
+              2065,
+              2068,
+              2072,
+              2078,
+              2084,
+              2087,
+              2092,
+              2093,
+              2097,
+              2098
+            ],
+            "itemRewards": [
+              {
+                "card": 2075,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2063,
+                "type": "card",
+                "rate": 0.25
+              },
+              {
+                "card": 2092,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 2
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 226,
+            "name": "APP_NPC_TRABIA_CLASSMATE",
+            "iconID": "trabia-classmate",
+            "rules": [
+              "RULE_ALL_OPEN",
+              "RULE_RANDOM",
+              "RULE_PLUS",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2084,
+              2088,
+              2090,
+              2095,
+              2099,
+              2101,
+              2105,
+              2111,
+              2118,
+              2121,
+              2123,
+              2124,
+              2151
+            ],
+            "itemRewards": [
+              {
+                "card": 2151,
+                "type": "card",
+                "rate": 0.01
+              },
+              {
+                "card": 2111,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2090,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 7
+          },
+          "messages": {}
+        },
+        {
+          "npc": {
+            "id": 229,
+            "name": "APP_NPC_TRABIA_MECHANIC",
+            "iconID": "trabia-mechanic",
+            "rules": [
+              "RULE_RANDOM",
+              "RULE_SAME_WALL",
+              "RULE_SUDDEN_DEATH"
+            ],
+            "fetishesCards": [],
+            "cards": [
+              2106,
+              2119,
+              2122,
+              2115,
+              2117,
+              2110,
+              2109,
+              2103,
+              2086,
+              2077,
+              2102,
+              2100
+            ],
+            "itemRewards": [
+              {
+                "card": 2122,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2119,
+                "type": "card",
+                "rate": 0.05
+              },
+              {
+                "card": 2097,
+                "type": "card",
+                "rate": 0.12
+              }
+            ],
+            "difficulty": 10
+          },
+          "messages": {}
+        }
+      ]
     }
   ]
 }

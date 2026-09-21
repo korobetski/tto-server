@@ -121,6 +121,34 @@ client's copies — drift makes every honest transcript replay to a different bo
 if it were cheating. `VersionGate` is the mitigation, not a fix. `Catalogs.preload()` forces them at
 start-up so a bad file is a failed boot rather than a failed request.
 
+**They do drift.** On 2026-09-21 the client had shipped six places, 31 opponents and two achievement
+gates that had never been copied here, and this server answered every one of those opponents with
+`PveRefusal.NO_SUCH_OPPONENT`. Two things made it hard to see, and both are working as designed:
+
+- `PveRoutes.open` answers an opponent the profile has *not earned* with the same code as an
+  opponent that does not exist, so the roster stays uninformative to a client probing it.
+- The client folds five of the six PvE refusals into one sentence — "La partie a avancé." — because
+  a player learns nothing actionable from *which* way their client was out of date.
+
+So the symptom is a player who cannot sit down against a new opponent, and a message about
+staleness. Suspect these files first. Re-syncing is a copy, from the client repository:
+
+```bash
+cp ../tto-client/shared/src/commonMain/composeResources/files/{cards,npcs,formats,campaigns,starters}.json \
+   src/main/resources/catalog/
+```
+
+and then a **rebuild and restart** — they are classpath resources, so a running server keeps dealing
+from the jar it booted with.
+
+`CatalogDriftTest` is the guard, and it is worth knowing exactly how much it guards. `:core` carries
+`PlaceAchievements`, its own copy of the map, and that copy ships *inside the artifact this server
+links* — so the server can ask, alone, whether its roster holds everybody the engine expects to find
+in it, whether its ladders exist, and whether a place's reward matches its tournament's fee. It
+cannot see card pools. A pool edited on one side only passes that test and still replays to a
+different board; the real fix is the one `Catalogs.kt` names — publishing the catalogs inside
+`:core` — and the test is what holds until then.
+
 ### Schema
 
 Flyway runs in-process at start-up from `src/main/resources/db/migration` (V1–V9 today). Rules:
