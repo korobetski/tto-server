@@ -85,8 +85,20 @@
 # response is inert, and whoever first relaxes this for a page would be quietly relaxing it for
 # every API response as well. The line is long because a Caddyfile token cannot be wrapped — a
 # header value has nowhere to put a newline.
+#
+# `font-src 'self'` is the portal's two display faces, Cinzel and Raleway, and it is worth saying
+# what it is *not*: they were briefly loaded from Google Fonts, which would have meant naming
+# `fonts.googleapis.com` in `style-src` and `fonts.gstatic.com` here. They are served from the
+# portal's own origin instead — `tto-web/src/fonts/`, hashed into `/_astro/` by its build — so this
+# policy still names no external host anywhere. Remove this directive and the pages keep working
+# and quietly lose their typography: `default-src 'none'` is what a missing `font-src` falls back
+# to, and a blocked font is not an error anybody sees.
+#
+# The console inherits it and has no use for it, which is the one cost of a shared snippet. It is
+# accepted here rather than split into two policies because `'self'` grants a site nothing it does
+# not already have: the console can serve its own files either way.
 (static_policy) {
-	header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+	header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
 }
 
 # The browser game's policy: `static_policy` with two relaxations, each measured against the bundle
@@ -177,6 +189,38 @@
 				header_up X-Request-Id {http.request.header.X-Request-Id}
 			}
 		}
+	}
+
+	# What a wrong address gets, and it used to be an empty page: `file_server` answered 404 with no
+	# body at all, so a mistyped URL under `/fr/` or `/en/` was a blank white rectangle.
+	#
+	# It is outside the `route` above because `handle_errors` is not a handler — it is where the
+	# site sends a request that a handler gave up on, whichever handler that was.
+	#
+	# Which is why it is `handle_errors 404` and not `handle_errors`. Two handlers here can fail,
+	# and only one of the two failures means what this page says. `file_server` raises 404 for a
+	# path `@portal` matched with no file behind it: that is a wrong address, and an HTML page is
+	# the right answer. `reverse_proxy` raises 502 or 503 when the API cannot be reached: that is
+	# the site being broken, not the visitor being wrong, and answering it with "cette page
+	# n'existe pas" would be a lie told to a human and an HTML body handed to an API client.
+	# Filtering on the status leaves those to Caddy's own empty response, which is at least
+	# honest. The API's *own* 404s never reach here at all — an upstream response is a response,
+	# not a Caddy error, so a client asking for a route the server does not have still gets the
+	# server's answer.
+	#
+	# `root` again, because this block is not inside the one that set it.
+	#
+	# `status {err.status_code}` is the line to not lose. Without it the page goes out as 200, and
+	# every mistyped URL becomes a page a crawler is entitled to index — a 404 that says 200 is
+	# worse than the blank page this replaces. `/404.html` is deliberately absent from `@portal`:
+	# reachable only through here, the page has no address of its own to be indexed at.
+	handle_errors 404 {
+		root * /srv/web/portal
+		rewrite * /404.html
+		file_server {
+			status {err.status_code}
+		}
+		import static_policy
 	}
 }
 
