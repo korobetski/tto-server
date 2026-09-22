@@ -15,8 +15,9 @@ import kotlin.test.assertNotNull
  * `resources/catalog/` are copies of the client's files, nothing checked that they stayed in step,
  * and on 2026-09-21 they had not — the client had shipped six new places, thirty-one opponents and
  * two achievement gates, and the server was still dealing from the roster before them. Every one of
- * those opponents answered `PveRefusal.UNKNOWN_OPPONENT`, which reads to a player as "this
- * opponent does not exist" rather than as "your server is stale".
+ * those opponents answered `PveRefusal.NO_SUCH_OPPONENT`, which reaches a player as "La partie a
+ * avancé" — the client's sentence for five of the six refusals — rather than as "your server is
+ * stale".
  *
  * The check is possible because the map is not only in the client: `:core`'s `PlaceAchievements`
  * carries its own copy of who holds each place shut and what its tournament costs, and that copy
