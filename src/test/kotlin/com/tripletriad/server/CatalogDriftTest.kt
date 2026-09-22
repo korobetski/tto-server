@@ -15,9 +15,10 @@ import kotlin.test.assertNotNull
  * `resources/catalog/` are copies of the client's files, nothing checked that they stayed in step,
  * and on 2026-09-21 they had not — the client had shipped six new places, thirty-one opponents and
  * two achievement gates, and the server was still dealing from the roster before them. Every one of
- * those opponents answered `PveRefusal.NO_SUCH_OPPONENT`, which reaches a player as "La partie a
- * avancé" — the client's sentence for five of the six refusals — rather than as "your server is
- * stale".
+ * those opponents answered `PveRefusal.NO_SUCH_OPPONENT`, which then reached a player as "La partie
+ * a avancé", the client's staleness sentence, rather than as "your server is stale". The client
+ * has since given that refusal a sentence of its own (2026-09-22), but a player still cannot
+ * repair a stale server, and a build that fails here can.
  *
  * The check is possible because the map is not only in the client: `:core`'s `PlaceAchievements`
  * carries its own copy of who holds each place shut and what its tournament costs, and that copy

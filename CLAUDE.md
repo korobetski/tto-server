@@ -123,15 +123,18 @@ start-up so a bad file is a failed boot rather than a failed request.
 
 **They do drift.** On 2026-09-21 the client had shipped six places, 31 opponents and two achievement
 gates that had never been copied here, and this server answered every one of those opponents with
-`PveRefusal.NO_SUCH_OPPONENT`. Two things made it hard to see, and both are working as designed:
+`PveRefusal.NO_SUCH_OPPONENT`. Two things made it hard to see:
 
 - `PveRoutes.open` answers an opponent the profile has *not earned* with the same code as an
   opponent that does not exist, so the roster stays uninformative to a client probing it.
-- The client folds five of the six PvE refusals into one sentence — "La partie a avancé." — because
-  a player learns nothing actionable from *which* way their client was out of date.
+- The client folded this code into its staleness sentence, "La partie a avancé." Since client
+  2026-09-22 it reads "Ce serveur ne vous propose pas cette partie. Il n'est peut-être pas à jour
+  avec votre version du jeu." — "peut-être" because of the point above. The first point is by
+  design; the second was not, and is fixed.
 
-So the symptom is a player who cannot sit down against a new opponent, and a message about
-staleness. Suspect these files first. Re-syncing is a copy, from the client repository:
+So the symptom is a player who cannot sit down against a new opponent, and a message saying
+the server may be behind (on a client older than 2026-09-22: a message about staleness).
+Suspect these files first. Re-syncing is a copy, from the client repository:
 
 ```bash
 cp ../tto-client/shared/src/commonMain/composeResources/files/{cards,npcs,formats,campaigns,starters}.json \
