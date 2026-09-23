@@ -236,13 +236,20 @@ jobs:
       # `deploy/` carries the systemd units. They are *delivered* on every release so the host has
       # the current copy, and *installed* only by hand — a release that could rewrite what runs as
       # root on a schedule is a release that could be made to.
+      #
+      # `--overwrite`, because the Caddyfile is bind-mounted into the proxy *as a single file*, and
+      # a single-file bind mount is pinned to an inode, not to a path. tar's default is to unlink
+      # an existing file and create a new one beside it: the host then reads the new Caddyfile, the
+      # container keeps reading the old one, and deploy.sh's `caddy reload` succeeds — on the old
+      # configuration. v0.12.6 to v0.12.9 all went out green that way with none of their routing
+      # applied. `--overwrite` writes into the existing file instead, which the container sees.
       - name: Sync the deployment files
         run: |
           tar czf - compose.prod.yaml Caddyfile scripts docker/postgres deploy \
             | ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" \
                 -o BatchMode=yes -o StrictHostKeyChecking=yes \
                 "$VPS_USER@$VPS_HOST" \
-                'tar xzf - -C /srv/tto && chmod +x /srv/tto/scripts/*.sh /srv/tto/docker/postgres/*/*.sh'
+                'tar xzf - --overwrite -C /srv/tto && chmod +x /srv/tto/scripts/*.sh /srv/tto/docker/postgres/*/*.sh'
 
       # deploy.sh pulls, pins the digest into /srv/tto/.env, restarts, waits for /health/ready, and
       # rolls back to the previous digest if it never comes. Its exit code is this job's, so a
