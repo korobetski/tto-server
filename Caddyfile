@@ -146,11 +146,24 @@
 	# root would have to pick a language with no visitor to ask and no page to ask them on. A
 	# request for `/rss.xml` reaches the API and gets a clean 404.
 	#
-	# `/images/*` matches nothing today: the portal's screenshots are processed at build time and
-	# come out under `/_astro/`. It is listed for the files that will not be — an Open Graph image,
-	# a logo — because adding a path here later means redeploying this repository to fix a 404 in
-	# the other one.
-	@portal path / /fr /en /fr/* /en/* /_astro/* /images/* /favicon.ico /favicon.svg /robots.txt
+	# `/images/*` is for the files that must keep their name, which today means the Open Graph cards:
+	# the screenshots are processed at build time and come out under hashed names in `/_astro/`, and
+	# a link preview cached by a chat service would be holding a dead URL the next time one changed.
+	#
+	# The second `path` line is the files at the root that are read by machines, and each is at the
+	# root for a reason of its own. `robots.txt` and `sitemap.xml` because their protocols put them
+	# there; `llms.txt` by the same convention. The last one is IndexNow's proof of ownership: a file
+	# named after the key and holding it, which vouches only for URLs under its own directory — so it
+	# has to be at the root to cover both languages. It is not a secret, since its whole purpose is to
+	# be read by anyone, and it changes only if the key is replaced: see `tto-web/public/` and the
+	# IndexNow step in `tto-web/.github/workflows/deploy.yml`.
+	#
+	# Two `path` lines in one block are one matcher, their values OR'ed — Caddy merges repeated
+	# matchers of the same type — which is checked with `caddy adapt`, not assumed.
+	@portal {
+		path / /fr /en /fr/* /en/* /_astro/* /images/* /favicon.ico /favicon.svg
+		path /robots.txt /sitemap.xml /llms.txt /c2b54b8fd3a17ea1b6085e8742453f27.txt
+	}
 
 	# `route` rather than three sibling `handle` blocks. Sibling handlers are ordered by how specific
 	# Caddy judges their matchers to be, which for named matchers is not something this file can
