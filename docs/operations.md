@@ -67,8 +67,10 @@ server.
 | `TTO_BOTS_BAND` | `EXPERT` | how hard they play. An `NpcLevel` name; an unknown one falls back to `EXPERT` |
 | `TTO_BOTS_FORMAT` | `ff14-standard` | which format they grind and shop in |
 | `TTO_BOTS_NAME_PREFIX` | `Duelist` | what they are called, before four random digits |
-| `TTO_BOTS_WAGER` | `false` | whether they may sit down at a table that stakes MGP or cards |
-| `TTO_BOTS_RESERVE` | `5000` | MGP a bot keeps out of the shop. Idle while wagering is off |
+| `TTO_BOTS_WAGER` | `false` | whether they may sit down at a table that stakes **MGP** |
+| `TTO_BOTS_TRADES` | `true` | whether they may sit down at a table with a **trade rule**. Only `false` turns it off |
+| `TTO_BOTS_AUCTIONS` | `true` | whether they list surplus and bid at the auction house. Only `false` turns it off |
+| `TTO_BOTS_RESERVE` | `5000` | MGP a bot keeps out of the shop. A bid at auction may draw on it |
 | `TTO_BOTS_TABLE_WAIT_SECONDS` | `45` | how long a table stands unanswered before a bot takes it |
 | `TTO_BOTS_MOVE_MIN_SECONDS` | `3` | the fastest a bot places a card |
 | `TTO_BOTS_MOVE_SPREAD_SECONDS` | `6` | added to the above, drawn per move |
@@ -125,13 +127,22 @@ What a bot actually does, between matches and in them:
 - **Sells its surplus commons**, which is about the Random rule as much as the money: the collection
   is drawn from *one entry per copy*, so a fourth copy of a one-star is a fourth ticket in a draw
   the bot does not want to win. It never sells a copy a deck is built on, and never above two stars.
-- **Keeps three decks and chooses between them** (`BotDecks`): the strongest legal five, the five
-  most concentrated in one card type, and the five spread over the most types. A table states its
-  rules and an opponent declares theirs, so the choice is made from public terms — the concentrated
-  hand under **Ascension**, where every card of a type on the board raises every card of that type;
-  the spread one under **Descension**, which is the same tally punishing what Ascension rewards.
-  Elemental gets the strongest hand: its modifier belongs to the cell, drawn when the match is
-  dealt, so there is nothing to prepare against.
+  A bot past the auction level keeps one more common back for the auction house.
+- **Uses the auction house a little** (`BotAuctions`), once past `TTO_UNLOCK_AUCTION`. It keeps at
+  most two lots open — one for a spare card of three stars or more, one for a spare common — each
+  asking `CardValue.worthOf`, with the reserve equal to the start price so any bid is a sale. It
+  bids only on a card it does not own that one of its decks would field, bids the least the lot
+  will take, and stops once that passes the card's worth: the most anyone can get from a bot for a
+  card is what the card is worth.
+- **Keeps up to eight decks and chooses between them** (`BotDecks`): the strongest legal five, the
+  five spread over the most types, and up to six typed decks — one per card type the collection can
+  concentrate to three of the five. A table states its rules and an opponent declares theirs, so
+  the choice is made from public terms — a typed hand under **Ascension**, where every card of a
+  type on the board raises every card of that type; the spread one under **Descension**, which is
+  the same tally punishing what Ascension rewards. Among the decks that are best for the rule, it
+  draws one at random from those within 90% of the strongest one's printed power, so a bot does not
+  play every match with the same five. Elemental is treated as a plain match: its modifier belongs
+  to the cell, drawn when the match is dealt, so there is nothing to prepare against.
 
 It does **not** read the opponent's cards to counter-pick, though `npcs.json` would let it. That is
 a different game from the one a person is playing, and these accounts exist to measure the one that
@@ -151,10 +162,12 @@ Four things are worth deciding deliberately rather than inheriting:
    enabling this are bots playing solo matches; the lobby fills once they have climbed. That is the
    feature working, not a fault — but it means turning this on the evening you need a busy lobby
    does not produce one.
-3. **`TTO_BOTS_WAGER` moves real value.** With it off a bot only sits down at a table that risks
-   nothing at all — no MGP and no trade rule. With it on, a card won from a bot is a card the world
-   gained and one lost to a bot is a card that left it. The economy is the reason to hold this until
-   the metrics below say what it would cost.
+3. **`TTO_BOTS_WAGER` and `TTO_BOTS_TRADES` move real value.** With the first off — the default — a
+   bot never sits down at a table that stakes MGP. The second is **on** by default: a bot takes a
+   table whose only stake is a trade rule, so a card won from a bot is a card the world gained and
+   one lost to a bot is a card that left it. That is bounded by the five cards each side brings; set
+   `TTO_BOTS_TRADES=false` if the metrics below say it costs more than it gives. A table staking
+   both MGP and cards needs both switches.
 4. **`TTO_BOTS_COUNT` is CPU.** Every placement at `EXPERT` is a depth-five alpha-beta search with a
    node budget of 400 000, on the process that serves requests. Ten bots at one placement every
    three to nine seconds is small; a hundred has not been measured.

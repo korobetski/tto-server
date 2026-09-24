@@ -12,6 +12,7 @@ import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchAiOptions
 import com.tripletriad.model.MatchSearch
 import com.tripletriad.model.Npc
+import com.tripletriad.model.TradeRule
 import com.tripletriad.protocol.PvpStakePolicy
 import kotlin.random.Random
 
@@ -114,18 +115,25 @@ object BotBrain {
      * orderings are load-bearing: a pack's commons are in the bag until step 2, and a deck built
      * around a card sold in step 3 would be unaffordable the moment it was written.
      *
+     * @param auctioning whether this bot may use the auction house now — see [selling], which
+     *   holds a low card back for it when it may.
      * @return the changed profile, or null when this bot had nothing to do.
      */
+    // LongParameterList: six, and each is a separate fact the director owns — the profile, the
+    // format, the catalogue, the policy's reserve, the generator, and the auction gate. Bundling
+    // them would be a type that exists only to be unpacked on the next line.
+    @Suppress("LongParameterList")
     fun developing(
         save: GameSave,
         format: Format,
         cards: CardCatalog,
         reserve: Int,
         random: Random,
+        auctioning: Boolean = false,
     ): GameSave? {
         val shopped = shopping(save, format, cards, reserve, random)
         val emptied = emptying(shopped ?: save, random)
-        val sold = selling(emptied ?: shopped ?: save, cards)
+        val sold = selling(emptied ?: shopped ?: save, cards, auctioning)
         val built = BotDecks.decking(sold ?: emptied ?: shopped ?: save, format, cards)
         return built ?: sold ?: emptied ?: shopped
     }
@@ -235,16 +243,27 @@ object BotBrain {
      * than the sum. Selling below that leaves a deck `Deck.isAffordable` refuses, which the player
      * — here, the bot — would meet as a match that will not deal.
      *
-     * **Anything above [SELLABLE_RARITY].** A spare four-star is a card to build a second deck
-     * around, not stock to clear. And one spare of everything is kept ([KEPT_SPARES]), because the
+     * **Anything above [SELLABLE_RARITY].** A spare three-star or better is worth more to a person
+     * than to the counter, so it is offered to them — `BotAuctions.listing` — rather than melted
+     * here. And one spare of everything is kept ([KEPT_SPARES]), because the
      * copy that lets a deck exist at all is the one after the copy a deck already names.
+     *
+     * **One more low copy, when [auctioning].** A low card goes to the auction house too, on a
+     * lot of its own, and it only can if the counter leaves one behind: this runs in the same
+     * step that takes the card out of the bag, so a counter that melted every spare would melt it
+     * before `BotAuctions.listing` ever saw it. So a bot that may use the auction house keeps
+     * [AUCTIONED_SPARES] more low copy than one that may not, and sells the rest. That is one
+     * more ticket per card in the Random draw, which is the price of the counter's forty percent
+     * becoming whatever a person will pay; a bot below the auction level keeps nothing extra,
+     * since it would be holding a copy for a house it cannot enter.
      *
      * The price is `CardValue.resaleOf`, the same number `POST /me/cards/sell` pays a person.
      */
-    fun selling(save: GameSave, cards: CardCatalog): GameSave? {
+    fun selling(save: GameSave, cards: CardCatalog, auctioning: Boolean = false): GameSave? {
+        val kept = KEPT_SPARES + if (auctioning) AUCTIONED_SPARES else 0
         val surplus = save.cards.keys.mapNotNull { id ->
             val card = cards.byId[id] ?: return@mapNotNull null
-            val spare = save.spareCopiesOf(id) - KEPT_SPARES
+            val spare = save.spareCopiesOf(id) - kept
             if (card.rarity > SELLABLE_RARITY || spare <= 0) null else id to spare
         }
         if (surplus.isEmpty()) return null
@@ -272,14 +291,23 @@ object BotBrain {
      * refused join is a wasted pass and a table left standing, where declining to try leaves the
      * table for somebody who can take it.
      *
-     * The **wager** refusal is not a duplicate of anything. With [wagers] false a bot only sits
-     * down at a table that risks nothing at all — `PvpStake.isFree`, so neither MGP nor a trade
-     * rule — because a bot that stakes moves real value into and out of the players' economy, and
-     * that is a decision to be taken deliberately rather than inherited from a lobby listing.
+     * The **stake** refusals are not duplicates of anything. The two halves of a stake are two
+     * decisions, and each has its own switch:
+     *
+     * - **MGP** only with [wagers]. A bot that bets its purse moves money into and out of the
+     *   players' economy by the thousand, and that is a decision to be taken with the numbers in
+     *   front of you rather than inherited from a lobby listing.
+     * - **A trade rule** only with [trades]. What changes hands is the five cards each side
+     *   brings, which a bot is as able to lose as to win: it plays the trade the way a person
+     *   does, and `BotDirector.claimed` names its picks when it wins. Bounded per match by the
+     *   hand, which is what made it the one to open first.
+     *
+     * A table that states both needs both. The ceiling and the purse are checked whenever MGP is
+     * on the table, exactly as the referee will.
      */
-    // Six parameters, and each is a fact this cannot look up: the lobby, who is asking, what they
-    // are holding, the deployment's ceiling, its wager policy, and the clock. A holder would name
-    // the same six one indirection away.
+    // Seven parameters, and each is a fact this cannot look up: the lobby, who is asking, what they
+    // are holding, the deployment's ceiling, its two stake switches, and the clock. A holder would
+    // name the same seven one indirection away.
     @Suppress("LongParameterList")
     fun joinable(
         tables: List<PvpTableRow>,
@@ -287,12 +315,15 @@ object BotBrain {
         save: GameSave,
         stakes: PvpStakePolicy,
         wagers: Boolean,
+        trades: Boolean,
         staleBefore: Long,
     ): PvpTableRow? = tables.firstOrNull { table ->
         table.hostAccount != botId &&
             table.matchId == null &&
             table.openedAt <= staleBefore &&
-            (if (wagers) affordable(table, save, stakes) else table.stake.isFree)
+            (table.stake.mgp == 0 || wagers) &&
+            (table.stake.trade == TradeRule.NONE || trades) &&
+            affordable(table, save, stakes)
     }
 
     private fun affordable(table: PvpTableRow, save: GameSave, stakes: PvpStakePolicy): Boolean =
@@ -309,13 +340,24 @@ object BotBrain {
     /**
      * The rank at and below which a spare copy is stock to clear rather than a card to keep.
      *
-     * Two stars. A spare three-star is the beginning of a second deck; a fourth one-star is
-     * four tickets in the Random draw — see [selling].
+     * Two stars. A fourth one-star is four tickets in the Random draw — see [selling] — and the
+     * counter pays what an auction's floor would anyway. A spare three-star and up is worth more to
+     * a person than to the shop, so it goes to the auction house instead: see
+     * `BotAuctions.listing`, which is the other side of this line.
      */
-    private const val SELLABLE_RARITY = 2
+    internal const val SELLABLE_RARITY = 2
 
-    /** One spare of everything survives, because the copy after a deck's copy is the useful one. */
-    private const val KEPT_SPARES = 1
+    /**
+     * One spare of everything survives, because the copy after a deck's copy is the useful one.
+     * Shared with `BotAuctions.listing`, which keeps the same spare for the same reason.
+     */
+    internal const val KEPT_SPARES = 1
+
+    /**
+     * The low copies [selling] leaves for `BotAuctions.listing`, over [KEPT_SPARES]. One: the
+     * bot keeps one low lot open at a time, so a second held copy would only wait for the first.
+     */
+    private const val AUCTIONED_SPARES = 1
 
     /**
      * A ceiling on one bag-emptying pass.

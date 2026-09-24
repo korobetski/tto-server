@@ -228,6 +228,26 @@ class BotBrainTest {
         )
     }
 
+    /**
+     * A bot that may use the auction house keeps one more common for it, and sells the rest.
+     *
+     * The counter runs in the same step that takes cards out of the bag, so without this the
+     * common would be melted before `BotAuctions.listing` could ever put it up.
+     */
+    @Test
+    fun anAuctioningBotHoldsOneMoreCommonBack() {
+        val common = assertNotNull(cards.all.firstOrNull { it.rarity == 1 })
+        val save = GameSave.new("lister", createdAt = NOW).withCard(common.id, HOARD)
+
+        val sold = assertNotNull(BotBrain.selling(save, cards, auctioning = true))
+
+        assertEquals(PAIR_OF_COPIES, sold.copiesOf(common.id), "the kept spare and the one to list")
+        assertNull(
+            BotBrain.selling(save.withoutCard(common.id, HOARD - PAIR_OF_COPIES), cards, true),
+            "two spares is exactly what an auctioning bot keeps",
+        )
+    }
+
     /** A spare four-star is the start of a second deck, not stock to clear. */
     @Test
     fun aSpareHighCardIsKept() {
@@ -261,19 +281,56 @@ class BotBrainTest {
     }
 
     /**
-     * **A bot risks nothing while the deployment has not said it may.**
+     * **A bot risks no MGP while the deployment has not said it may.**
      *
-     * Both halves of a wager are refused, and the second is the one worth writing down: a table
-     * staking no MGP at all still moves a *card* under a trade rule, and a bot that read only the
-     * purse would be quietly feeding cards into — or out of — the players' economy.
+     * Refused with the trade switch on as well: the two switches are separate on purpose, and a
+     * table's purse is the one that moves money into and out of the players' economy.
      */
     @Test
-    fun aBotWillNotSitDownForAWager() {
-        val money = table(openedAt = NOW - WAIT, stake = PvpStake(mgp = 100))
-        val cardsAtStake = table(openedAt = NOW - WAIT, stake = PvpStake(trade = TradeRule.ONE))
+    fun aBotWillNotSitDownForAnMgpWager() {
+        val money = table(openedAt = NOW - WAIT, stake = PvpStake(mgp = SMALL_STAKE))
+        val rich = GameSave.new("bot", createdAt = NOW).copy(mgp = RICH, level = 2)
 
-        assertNull(joinable(listOf(money), staleBefore = NOW - WAIT))
-        assertNull(joinable(listOf(cardsAtStake), staleBefore = NOW - WAIT))
+        assertNull(joinable(listOf(money), staleBefore = NOW - WAIT, save = rich, trades = true))
+    }
+
+    /**
+     * A card trade is joined with the trade switch on and refused with it off.
+     *
+     * One test rather than two, because the claim is that the switch is what decides: the table,
+     * the bot and the clock are the same on both lines.
+     */
+    @Test
+    fun aCardTradeIsJoinedOnlyWhileTradesAreOn() {
+        val traded = table(openedAt = NOW - WAIT, stake = PvpStake(trade = TradeRule.ONE))
+
+        assertEquals(
+            traded.id,
+            joinable(listOf(traded), staleBefore = NOW - WAIT, trades = true)?.id,
+        )
+        assertNull(joinable(listOf(traded), staleBefore = NOW - WAIT, trades = false))
+    }
+
+    /** A table staking MGP and cards needs both switches, not just the one for cards. */
+    @Test
+    fun aTradeWithMoneyOnItNeedsWagersToo() {
+        val both = table(
+            openedAt = NOW - WAIT,
+            stake = PvpStake(mgp = SMALL_STAKE, trade = TradeRule.ONE),
+        )
+        val rich = GameSave.new("bot", createdAt = NOW).copy(mgp = RICH, level = 2)
+
+        assertNull(joinable(listOf(both), staleBefore = NOW - WAIT, save = rich, trades = true))
+        assertEquals(
+            both.id,
+            joinable(
+                listOf(both),
+                staleBefore = NOW - WAIT,
+                save = rich,
+                wagers = true,
+                trades = true,
+            )?.id,
+        )
     }
 
     /** With wagering on, the ceiling and the purse decide — and they are the referee's numbers. */
@@ -337,12 +394,14 @@ class BotBrainTest {
         staleBefore: Long,
         save: GameSave = GameSave.new("bot", createdAt = NOW),
         wagers: Boolean = false,
+        trades: Boolean = false,
     ) = BotBrain.joinable(
         tables = tables,
         botId = BOT,
         save = save,
         stakes = PvpStakePolicy(),
         wagers = wagers,
+        trades = trades,
         staleBefore = staleBefore,
     )
 

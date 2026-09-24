@@ -422,13 +422,20 @@ data class MailConfig(
  *   five, a solved endgame from six free cells, and no blunder at all. It is the band the roster is
  *   created at; an operator splitting the roster across bands does it with an UPDATE, which is what
  *   the column in `bots` is for.
- * @property wagers whether a bot may sit down at a table that risks something — MGP or a trade
- *   rule. **False**, and the default is the whole of the current position on it: a bot that stakes
- *   moves real value into and out of the players' economy, and a card won from one is a card the
- *   world gained. Turning it on is a decision to be taken with the numbers in front of you, which
- *   is what the metrics are for.
- * @property reserve MGP a bot keeps back from the shop. Idle while [wagers] is false, and the
- *   thing that stops a bot arriving at a table it cannot cover once it is not.
+ * @property wagers whether a bot may sit down at a table that stakes **MGP**. **False**, and the
+ *   default is the whole of the current position on it: a bot that bets its purse moves money into
+ *   and out of the players' economy by the thousand. Turning it on is a decision to be taken with
+ *   the numbers in front of you, which is what the metrics are for.
+ * @property trades whether a bot may sit down at a table with a **trade rule**. True: what changes
+ *   hands is bounded by the five cards each side brings, and a bot is as able to lose them as to
+ *   win them — see `BotBrain.joinable`. `TTO_BOTS_TRADES=false` is the switch if the numbers say
+ *   otherwise. A table staking MGP *and* cards needs [wagers] as well.
+ * @property auctions whether a bot lists its surplus at the auction house and bids on cards its
+ *   decks want. True, and bounded by `BotAuctions` to a card's worth either way. Also gated on
+ *   `Unlocks.allowsAuction`, the deployment's own level, exactly as a person is.
+ * @property reserve MGP a bot keeps back from the shop — so that a purse reaches a table it can
+ *   cover once [wagers] is on, and so that a card one of its decks wants at auction is not
+ *   outbid by a pack it bought on the previous pass.
  */
 data class BotPolicy(
     val enabled: Boolean = false,
@@ -437,6 +444,8 @@ data class BotPolicy(
     val formatId: String = DEFAULT_FORMAT,
     val namePrefix: String = DEFAULT_NAME_PREFIX,
     val wagers: Boolean = false,
+    val trades: Boolean = true,
+    val auctions: Boolean = true,
     val reserve: Int = DEFAULT_RESERVE,
     val tableWaitMillis: Long = DEFAULT_TABLE_WAIT_SECONDS * MILLIS,
     val moveMinMillis: Long = DEFAULT_MOVE_MIN_SECONDS * MILLIS,
@@ -465,6 +474,11 @@ data class BotPolicy(
                 namePrefix = lookup("TTO_BOTS_NAME_PREFIX")?.takeIf { it.isNotBlank() }
                     ?: defaults.namePrefix,
                 wagers = lookup("TTO_BOTS_WAGER").toBoolean(),
+                // Defaulted **on**, so unlike the two switches above an absent or garbled value
+                // must not read as false: only an explicit `false` turns either of them off.
+                trades = lookup("TTO_BOTS_TRADES")?.toBooleanStrictOrNull() ?: defaults.trades,
+                auctions = lookup("TTO_BOTS_AUCTIONS")?.toBooleanStrictOrNull()
+                    ?: defaults.auctions,
                 reserve = lookup("TTO_BOTS_RESERVE")?.toIntOrNull() ?: defaults.reserve,
                 tableWaitMillis = seconds(lookup("TTO_BOTS_TABLE_WAIT_SECONDS"))
                     ?: defaults.tableWaitMillis,
@@ -538,9 +552,10 @@ data class BotPolicy(
         /**
          * Five thousand MGP kept out of the shop.
          *
-         * Idle while [wagers] is false. It is roughly the ceiling a level-25 account may wager
-         * under the default `PvpStakePolicy`, so a bot that has climbed that far can cover a table
-         * at its own limit without having to stop buying packs first.
+         * Roughly the ceiling a level-25 account may wager under the default `PvpStakePolicy`, so
+         * a bot that has climbed that far can cover a table at its own limit without having to
+         * stop buying packs first — and, while [wagers] is off, the money a bid at the auction
+         * house is paid from, since the most a bot ever bids is one card's worth.
          */
         private const val DEFAULT_RESERVE = 5_000
     }

@@ -220,6 +220,30 @@ class ServerConfigTest {
     }
 
     /**
+     * Card trades and the auction house are on once bots are, and only an explicit `false` turns
+     * either off — a garbled value keeps the default rather than reading as a refusal.
+     */
+    @Test
+    fun tradesAndAuctionsAreOnUnlessTurnedOff() {
+        val defaults = BotPolicy.from(mapOf("TTO_BOTS_ENABLED" to "true")::get)
+        assertTrue(defaults.trades)
+        assertTrue(defaults.auctions)
+        assertFalse(defaults.wagers, "a trade switch is not an MGP switch")
+
+        val off = BotPolicy.from(
+            mapOf("TTO_BOTS_TRADES" to "false", "TTO_BOTS_AUCTIONS" to "false")::get,
+        )
+        assertFalse(off.trades)
+        assertFalse(off.auctions)
+
+        val garbled = BotPolicy.from(
+            mapOf("TTO_BOTS_TRADES" to "no", "TTO_BOTS_AUCTIONS" to "0")::get,
+        )
+        assertTrue(garbled.trades)
+        assertTrue(garbled.auctions)
+    }
+
+    /**
      * A dial that will not parse costs the dial, not the boot.
      *
      * The same judgement `unlocksFrom` makes one test up, and the reason is sharper here: none of

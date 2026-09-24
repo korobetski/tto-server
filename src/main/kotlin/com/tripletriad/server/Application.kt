@@ -171,7 +171,18 @@ fun Application.module(
     sweepAbandonedMatches(pvpReferee, accounts, codes, auctions, admins)
 
     // The accounts this server plays itself. Inert unless the deployment asked for them.
-    playBots(BotStore(dataSource), accounts, pve, pvp, pvpReferee, registry, bots, unlocks, stakes)
+    playBots(
+        BotStore(dataSource),
+        accounts,
+        pve,
+        pvp,
+        auctions,
+        pvpReferee,
+        registry,
+        bots,
+        unlocks,
+        stakes,
+    )
 
     routing {
         healthRoutes(dataSource)
@@ -330,7 +341,7 @@ private fun Application.sweepAbandonedMatches(
  * `claimTableAndOpen`, a second deal by `pve_matches_live_idx`, a second settlement by `finish`.
  * The bot would move sooner than its cadence intended, which is the whole of the harm.
  */
-// Nine, and every one of them is something the director cannot look up for itself. Extracted from
+// Ten, and every one of them is something the director cannot look up for itself. Extracted from
 // `module` rather than inlined there because that function is a list of what this application is,
 // and this is one line of it.
 @Suppress("LongParameterList")
@@ -339,6 +350,7 @@ private fun Application.playBots(
     accounts: AccountStore,
     pve: PveStore,
     pvp: PvpStore,
+    auctions: AuctionStore,
     pvpReferee: PvpReferee,
     registry: PrometheusMeterRegistry,
     policy: BotPolicy,
@@ -356,6 +368,8 @@ private fun Application.playBots(
         bots = bots,
         pve = pve,
         pvp = pvp,
+        // The routes' own store, so the bots' lots obey the deployment's `AuctionPolicy` too.
+        auctions = auctions,
         // Its own referee rather than a shared one: `pveRoutes` builds one for the routes and this
         // is the same class with the same collaborators, holding no state either way.
         pveReferee = PveReferee(Catalogs.cards, Catalogs.npcs, Catalogs.formats, accounts, pve),

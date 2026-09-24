@@ -1,11 +1,17 @@
 package com.tripletriad.server
 
+import com.tripletriad.data.AuctionRules
+import com.tripletriad.data.CardValue
 import com.tripletriad.data.StarterPack
+import com.tripletriad.model.Card
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.NpcLevel
 import com.tripletriad.model.TradeRule
+import com.tripletriad.protocol.AuctionDuration
+import com.tripletriad.protocol.AuctionOutcome
+import com.tripletriad.protocol.ListCardRequest
 import com.tripletriad.protocol.PvpStake
 import com.tripletriad.protocol.PvpTableRequest
 import com.tripletriad.protocol.Unlocks
@@ -61,6 +67,7 @@ class BotDirectorTest {
     private val bots = BotStore(Postgres.dataSource)
     private val pve = PveStore(Postgres.dataSource)
     private val pvp = PvpStore(Postgres.dataSource)
+    private val auctions = AuctionStore(Postgres.dataSource, accounts, Catalogs.cards.byId) { now }
 
     private val pvpReferee = PvpReferee(
         cards = Catalogs.cards,
@@ -267,31 +274,66 @@ class BotDirectorTest {
     }
 
     /**
-     * A bot does not sit down for a wager while the deployment has not said it may.
+     * A bot sits down for a card trade when the deployment lets it, and not when it does not.
      *
-     * The table stakes no MGP at all and is still refused, because a trade rule moves a **card** —
-     * and a card taken from a bot is a card the world gained. Left standing rather than joined,
-     * which is the honest outcome: the host is waiting for somebody who is playing for something.
+     * The table stakes no MGP, only a trade rule, so the one thing deciding is
+     * `BotPolicy.trades`. Asserted in one test for the reason
+     * [aTableNobodyTookIsJoinedAndAFreshOneIsNot] gives: the claim is the difference, and two
+     * tests could each pass with a bot that joined everything or nothing.
      */
     @Test
-    fun aBotWillNotSitDownForAWager() {
+    fun aBotTakesACardTradeOnlyWhileTradesAreOn() {
         clearBots()
-        val director = director(policy(count = 1))
-        director.ensureRoster()
+        val refusing = director(policy(count = 1, trades = false))
+        refusing.ensureRoster()
         val bot = assertNotNull(bots.due(now).firstOrNull())
         levelUp(bot.accountId)
 
-        val host = person("staked")
-        assertNotNull(open(host, PvpStake(trade = TradeRule.ONE)), "the fixture needs a table")
+        val host = person("traded")
+        val table = assertNotNull(
+            open(host, PvpStake(trade = TradeRule.ONE)),
+            "the fixture needs a table",
+        )
 
-        now += WAIT + BLINK
-        director.tick()
-
-        assertNull(pvp.liveMatchFor(bot.accountId), "a bot must not wager while wagers are off")
+        now += WAIT + GRACE
+        refusing.tick()
+        assertFalse(playing(bot.accountId, host), "a bot must not trade while trades are off")
         assertTrue(
             pvp.openTables(now).any { it.hostAccount == host },
             "the table should still be there",
         )
+
+        // The same bot under a policy that allows trades: `ensureRoster` finds it already enrolled.
+        now += PASS_MILLIS
+        director(policy(count = 1, trades = true)).tick()
+        assertTrue(playing(bot.accountId, host), "a trade table nobody took should be answered")
+
+        withdraw(table.table.id, host)
+    }
+
+    /**
+     * A bot does not sit down for an MGP wager, whatever the trade switch says.
+     *
+     * `BotPolicy.wagers` is off by default and stays the only thing that lets MGP change hands
+     * across a board: the trade switch moves cards, never the purse.
+     */
+    @Test
+    fun aBotWillNotSitDownForAnMgpWager() {
+        clearBots()
+        val director = director(policy(count = 1, trades = true))
+        director.ensureRoster()
+        val bot = assertNotNull(bots.due(now).firstOrNull())
+        levelUp(bot.accountId, mgp = WAGER * 2)
+
+        val host = person("wager", mgp = WAGER * 2)
+        val table = assertNotNull(open(host, PvpStake(mgp = WAGER)), "the fixture needs a table")
+
+        now += WAIT + GRACE
+        director.tick()
+
+        assertFalse(playing(bot.accountId, host), "a bot must not wager while wagers are off")
+
+        withdraw(table.table.id, host)
     }
 
     /** A bot below the multiplayer level stays in the solo game, exactly as a player would. */
@@ -313,16 +355,106 @@ class BotDirectorTest {
         withdraw(table.table.id, host)
     }
 
+    // ---- The auction house -----------------------------------------------
+
+    /**
+     * A bot with spare copies of a three-star puts one up, at what the card is worth.
+     *
+     * The start price and the reserve are asserted equal because that is what keeps a bot's lot
+     * from ever waiting on a seller's decision — see `BotAuctions`.
+     */
+    @Test
+    fun aBotPutsASpareCardUpForWhatItIsWorth() {
+        clearBots()
+        val director = director(policy(count = 1, wait = NEVER))
+        director.ensureRoster()
+        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val save = assertNotNull(accounts.saveFor(bot.accountId))
+        val format = assertNotNull(Catalogs.formats[FORMAT])
+
+        val spare = Catalogs.cards.cards.first { card ->
+            card.rarity > BotBrain.SELLABLE_RARITY &&
+                format.admitsCard(card.id) &&
+                save.copiesOf(card.id) == 0
+        }
+        val stocked = (1..SPARE_COPIES)
+            .fold(save) { profile, _ -> profile.withCard(spare.id) }
+            .copy(level = UNLOCKED, mgp = PURSE)
+        assertTrue(accounts.replaceSave(bot.accountId, stocked))
+
+        director.tick()
+
+        val lot = assertNotNull(
+            auctions.mine(bot.accountId).lots.firstOrNull { it.yours && it.cardId == spare.id },
+            "a bot with spares to clear should have opened a lot",
+        )
+        assertEquals(CardValue.worthOf(spare), lot.startPrice, "a bot asks what the card is worth")
+        assertEquals(lot.startPrice, lot.reservePrice, "and any bid at all is a sale")
+        assertEquals(
+            SPARE_COPIES - 1,
+            assertNotNull(accounts.saveFor(bot.accountId)).copiesOf(spare.id),
+            "the listed copy is held by the lot, not the collection",
+        )
+    }
+
+    /**
+     * A bot bids on a card one of its decks would field, and bids the least the lot will take.
+     *
+     * The card is the strongest the format admits that the bot does not own: whatever else the bot
+     * holds, the strongest-five hand takes it first, so the bot needs it by `BotDecks`' own
+     * measure. Other test classes only ever leave one-star lots standing, which rank below it.
+     */
+    @Test
+    fun aBotBidsOnACardItsDecksWouldField() {
+        clearBots()
+        val director = director(policy(count = 1, wait = NEVER))
+        director.ensureRoster()
+        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val save = assertNotNull(accounts.saveFor(bot.accountId))
+        val format = assertNotNull(Catalogs.formats[FORMAT])
+
+        val wanted = Catalogs.cards.cards
+            .filter { format.admitsCard(it.id) && save.copiesOf(it.id) == 0 }
+            .maxWith(compareBy<Card> { it.total }.thenByDescending { it.id })
+        val price = AuctionRules.floorPriceOf(wanted.id, Catalogs.cards.byId)
+        val seller = seller(wanted.id)
+        val listed = ApiJson.decodeFromString<AuctionOutcome>(
+            assertNotNull(
+                auctions.list(
+                    seller,
+                    ListCardRequest(wanted.id, price, price, AuctionDuration.SHORT, "bot-$seller"),
+                ),
+            ),
+        )
+        val lot = assertNotNull(listed.lot, "the fixture's listing was refused: ${listed.refusal}")
+        assertTrue(accounts.replaceSave(bot.accountId, save.copy(level = UNLOCKED, mgp = PURSE)))
+
+        director.tick()
+
+        val bid = assertNotNull(
+            auctions.mine(bot.accountId).lots.firstOrNull { it.id == lot.id },
+            "a bot should bid on a card its strongest hand would take",
+        )
+        assertTrue(bid.youLead, "the bot's bid should be the one standing")
+        assertEquals(price, bid.topBid, "a bot bids the least the lot will take")
+        assertEquals(
+            PURSE - AuctionRules.totalDue(price),
+            assertNotNull(accounts.saveFor(bot.accountId)).mgp,
+            "the bid and the buyer's fee are held from the purse",
+        )
+    }
+
     // ---- Fixtures ---------------------------------------------------------
 
-    private fun policy(count: Int) = BotPolicy(
+    private fun policy(count: Int, trades: Boolean = true, wait: Long = WAIT) = BotPolicy(
         enabled = true,
         count = count,
         band = NpcLevel.EXPERT,
         formatId = FORMAT,
         namePrefix = Postgres.freshAccount("bot"),
         wagers = false,
-        tableWaitMillis = WAIT,
+        trades = trades,
+        tableWaitMillis = wait,
     )
 
     private fun director(policy: BotPolicy) = BotDirector(
@@ -334,6 +466,7 @@ class BotDirectorTest {
         bots = bots,
         pve = pve,
         pvp = pvp,
+        auctions = auctions,
         pveReferee = pveReferee,
         pvpReferee = pvpReferee,
         policy = policy,
@@ -343,7 +476,7 @@ class BotDirectorTest {
     )
 
     /** A person with a starter box and a complete deck, so they can host a table. */
-    private fun person(prefix: String): Long {
+    private fun person(prefix: String, mgp: Int = 0): Long {
         val name = Postgres.freshAccount(prefix)
         val save = StarterPack.grantedTo(
             GameSave.new(name, createdAt = now),
@@ -351,7 +484,7 @@ class BotDirectorTest {
             Catalogs.cards.byId,
             GENERATOR,
             null,
-        )
+        ).copy(mgp = mgp)
         return assertNotNull(accounts.register(name, "hash-$name", save, "$name@example.test"))
     }
 
@@ -387,10 +520,20 @@ class BotDirectorTest {
         pvp.dropTable(tableId, host)
     }
 
+    /** A person past the auction level holding one copy of [cardId], to sell it to a bot. */
+    private fun seller(cardId: Int): Long {
+        val name = Postgres.freshAccount("bot-seller")
+        val save = GameSave.new(name, createdAt = now)
+            .withCard(cardId)
+            .copy(level = UNLOCKED, mgp = PURSE)
+        return assertNotNull(accounts.register(name, "hash-$name", save))
+    }
+
     /** Puts a bot past `Unlocks.multiplayer`, which is otherwise an evening of solo matches. */
-    private fun levelUp(accountId: Long) {
+    private fun levelUp(accountId: Long, mgp: Int? = null) {
         val save = assertNotNull(accounts.saveFor(accountId))
-        assertTrue(accounts.replaceSave(accountId, save.copy(level = UNLOCKED)))
+        val leveled = save.copy(level = UNLOCKED, mgp = mgp ?: save.mgp)
+        assertTrue(accounts.replaceSave(accountId, leveled))
     }
 
     /** See the class KDoc: this is the one place in the suite that clears rather than isolates. */
@@ -423,6 +566,24 @@ class BotDirectorTest {
 
         /** Past `Unlocks.DEFAULT_MULTIPLAYER`, without being near a stake ceiling worth having. */
         const val UNLOCKED = 6
+
+        /** Inside a level-one host's stake ceiling, `PvpStakePolicy.DEFAULT_PER_LEVEL`. */
+        const val WAGER = 100
+
+        /**
+         * A table wait no table in the shared lobby can have outlasted.
+         *
+         * For the auction tests, whose bots are past the multiplayer level too: a table some other
+         * test class left standing would otherwise be the bot's first business, and the pass would
+         * end at the join rather than at the auction house.
+         */
+        const val NEVER = 3_650L * 24 * 60 * 60 * 1_000
+
+        /** Two past the one spare a bot keeps, so exactly one is up for sale. */
+        const val SPARE_COPIES = 3
+
+        /** More than any bid costs, so the purse is never the reason a bid is not made. */
+        const val PURSE = 100_000
 
         /**
          * **A seed no other test class in this suite uses.**

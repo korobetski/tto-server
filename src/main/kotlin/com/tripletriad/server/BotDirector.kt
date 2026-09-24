@@ -9,6 +9,10 @@ import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchAiOptions
 import com.tripletriad.protocol.ANY_DECK
+import com.tripletriad.protocol.AuctionDuration
+import com.tripletriad.protocol.AuctionOutcome
+import com.tripletriad.protocol.BidRequest
+import com.tripletriad.protocol.ListCardRequest
 import com.tripletriad.protocol.PveMatchRequest
 import com.tripletriad.protocol.PveMove
 import com.tripletriad.protocol.PvpClaim
@@ -18,6 +22,7 @@ import com.tripletriad.protocol.Unlocks
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.random.Random
 
 private val logger = LoggerFactory.getLogger("com.tripletriad.server.BotDirector")
@@ -55,7 +60,8 @@ private val logger = LoggerFactory.getLogger("com.tripletriad.server.BotDirector
  *   cannot reach.
  * - the **level gate** is checked before a bot sits down at a table — [Unlocks.allowsMultiplayer],
  *   the deployment's own number, so raising `TTO_UNLOCK_MULTIPLAYER` holds bots back exactly as it
- *   holds players back.
+ *   holds players back. The auction house's is [Unlocks.allowsAuction], checked here and again by
+ *   [AuctionStore] itself.
  *
  * The address gate `PvpUnlock` also applies is deliberately not simulated. It exists to make a
  * *farm* of accounts cost an inbox each, and a bot enrolled by the server it runs on is not a
@@ -68,7 +74,7 @@ private val logger = LoggerFactory.getLogger("com.tripletriad.server.BotDirector
  * on the next one. The only clock a bot has to beat is a live PvP turn deadline, which is two and
  * a half minutes — see `PvpMatchRow.DEADLINE_MILLIS` — and the loop runs every couple of seconds.
  */
-// Fourteen collaborators and they are one decision: everything an account that plays itself needs.
+// Sixteen collaborators and they are one decision: everything an account that plays itself needs.
 // Three catalogues and a starter table to deal from, stores and referees to act through, the
 // deployment's two policies, and a clock and a generator so tests control both. Grouping any of
 // them behind a holder would put an indirection between `Application.module` and the thing it
@@ -83,6 +89,7 @@ class BotDirector(
     private val bots: BotStore,
     private val pve: PveStore,
     private val pvp: PvpStore,
+    private val auctions: AuctionStore,
     private val pveReferee: PveReferee,
     private val pvpReferee: PvpReferee,
     private val policy: BotPolicy,
@@ -143,8 +150,11 @@ class BotDirector(
      *    on purpose: a solo match has no deadline at all — "a program is never waiting", as
      *    `PveMatchStatus` puts it — so making a person wait for one would be choosing the only
      *    party that does not mind waiting.
-     * 4. **A live PvE turn**, then **spending**, then **a new PvE match**. The grind, which is what
-     *    turns a fresh account into one that has a collection and a level to wager with.
+     * 4. **A live PvE turn.** The bot's own match, which nothing else should interrupt.
+     * 5. **The auction house**, ahead of the shop: a card one of its decks wants, on offer now, is
+     *    a better use of the purse than a random pack, and a lot does not wait.
+     * 6. **Spending**, then **a new PvE match**. The grind, which is what turns a fresh account
+     *    into one that has a collection and a level to wager with.
      */
     private fun act(bot: Bot): Boolean {
         val save = accounts.saveFor(bot.accountId) ?: return false
@@ -152,6 +162,7 @@ class BotDirector(
             playedPvp(bot) ||
             joined(bot, save) ||
             playedPve(bot) ||
+            auctioned(bot, save) ||
             developed(bot, save) ||
             opened(bot, save)
     }
@@ -233,15 +244,16 @@ class BotDirector(
             save = save,
             stakes = stakes,
             wagers = policy.wagers,
+            trades = policy.trades,
             staleBefore = now - policy.tableWaitMillis,
         ) ?: return false
 
         // The terms are public and the deck is chosen from them, exactly as a person reading the
-        // lobby would: the table states its rules, and `deckFor` answers which of the bot's three
-        // decks those rules want. A roulette table draws further rules when the match opens, so
-        // what is read here is the declared half — which is also all the joiner is shown.
+        // lobby would: the table states its rules, and `deckFor` draws among the bot's decks those
+        // rules want. A roulette table draws further rules when the match opens, so what is read
+        // here is the declared half — which is also all the joiner is shown.
         val deck = formats[table.formatId]
-            ?.let { BotDecks.deckFor(save, it, cards, table.rules) }
+            ?.let { BotDecks.deckFor(save, it, cards, table.rules, random()) }
             ?: ANY_DECK
 
         val joined = pvpReferee.joinTable(table.id, bot.accountId, deck)
@@ -268,6 +280,7 @@ class BotDirector(
     private fun playedPve(bot: Bot): Boolean {
         val row = pve.activeFor(bot.accountId) ?: return false
         val at = row.position(cards) ?: return false
+
         // Blue is the player's colour in a refereed solo match — `PveReferee.opponentMove` is the
         // red half of this same call.
         val move = BotBrain.placement(at, CardColor.BLUE, optionsFor(bot), random()) ?: return false
@@ -278,6 +291,62 @@ class BotDirector(
             PveMove(move.handIndex, move.position),
         ) is Moved.Accepted
     }
+
+    // ---- The auction house -------------------------------------------------
+
+    /**
+     * Opens a lot for a spare card, or bids on a card a deck wants — one of the two, once.
+     *
+     * Listing comes first because it is the one that frees something: a card nobody plays turned
+     * into MGP a bid can then use. `BotAuctions` chooses both, and says why each stays small.
+     *
+     * ### Through the store, like a person's request, minus the route
+     *
+     * [AuctionStore.list] and [AuctionStore.bid] are what `POST /auctions` and `/auctions/bid`
+     * call, and they re-check the level, the floor, the ceiling, the purse and the lot count
+     * inside their own transaction. What the route adds and this does not is the version gate,
+     * the rate limit and the confirmed address — see the class KDoc for why each is either
+     * simulated here or deliberately not.
+     *
+     * Each call is given a fresh operation id: the idempotency the key buys is against a person
+     * pressing twice, and a bot that wants to bid again on a later pass is placing a new bid.
+     */
+    private fun auctioned(bot: Bot, save: GameSave): Boolean {
+        val format = formatFor()?.takeIf { auctioning(save) } ?: return false
+        val own = auctions.mine(bot.accountId).lots
+        val listing = BotAuctions.listing(save, cards, own)
+
+        val response = if (listing != null) {
+            val request = ListCardRequest(
+                cardId = listing.cardId,
+                startPrice = listing.price,
+                reservePrice = listing.price,
+                duration = AuctionDuration.MEDIUM,
+                operationId = operationId(),
+            )
+            auctions.list(bot.accountId, request)
+        } else {
+            BotAuctions.bidding(
+                save = save,
+                format = format,
+                cards = cards,
+                lots = auctions.browse(bot.accountId).lots,
+                own = own,
+            )?.let { bid ->
+                auctions.bid(bot.accountId, BidRequest(bid.lotId, bid.amount, operationId()))
+            }
+        }
+        return accepted(response)
+    }
+
+    /** Whether this bot may use the auction house: the deployment's switch, then the level. */
+    private fun auctioning(save: GameSave): Boolean = policy.auctions && unlocks.allowsAuction(save)
+
+    /** Whether the auction house did what it was asked, rather than answering with a refusal. */
+    private fun accepted(response: String?): Boolean =
+        response?.let { ApiJson.decodeFromString<AuctionOutcome>(it).refusal == null } == true
+
+    // ---- Developing -------------------------------------------------------
 
     /**
      * Spends what the match paid, takes what is in the bag, clears the surplus, and rebuilds.
@@ -297,10 +366,25 @@ class BotDirector(
      */
     private fun developed(bot: Bot, save: GameSave): Boolean {
         val format = formatFor() ?: return false
-        if (BotBrain.developing(save, format, cards, policy.reserve, random()) == null) return false
+        val planned = BotBrain.developing(
+            save,
+            format,
+            cards,
+            policy.reserve,
+            random(),
+            auctioning(save),
+        )
+        if (planned == null) return false
 
         val outcome = accounts.mutate(bot.accountId) { stored ->
-            val changed = BotBrain.developing(stored, format, cards, policy.reserve, random())
+            val changed = BotBrain.developing(
+                stored,
+                format,
+                cards,
+                policy.reserve,
+                random(),
+                auctioning(stored),
+            )
             Outcome(
                 changed?.copy(lastSave = clock(), saveNumber = stored.saveNumber + 1) ?: stored,
                 changed != null,
@@ -329,7 +413,7 @@ class BotDirector(
             PveMatchRequest(
                 opponentIconId = npc.iconId,
                 formatId = format.id,
-                deck = BotDecks.deckFor(save, format, cards, npc.gameRules()),
+                deck = BotDecks.deckFor(save, format, cards, npc.gameRules(), random()),
             ),
         )
         return dealt is Dealt.Playing
@@ -361,9 +445,8 @@ class BotDirector(
      * field a deck or be dealt a hand. `POST /me/starter` is where a player fixes that; a bot has
      * no client to call it, so the box is opened here — with this server's generator, from this
      * server's catalogue, exactly as that route does. The **authored** deck the box comes with is
-     * kept rather than rebuilt: [BotBrain.rebuilt] ranks by rarity alone and would replace a hand
-     * somebody designed with one nine cards can barely differ from. It takes over later, once the
-     * collection is wide enough for the ranking to mean something.
+     * left as it is here; [BotDecks.decking] rebuilds the bot's decks on its first developing pass,
+     * from whatever the collection holds by then.
      */
     // ReturnCount: a name that collided, a registration that collided, and an enrolment that lost
     // a race — each is a distinct way for a pass to create nothing, and each is worth its own line.
@@ -421,6 +504,12 @@ class BotDirector(
     private fun hourOf(at: Long): Int = Instant.ofEpochMilli(at).atZone(ZoneOffset.UTC).hour
 
     /** A human-ish pause, drawn fresh so a roster does not move in lockstep. */
+    /**
+     * A key nobody else will have minted. A UUID rather than [random], because a test fixing the
+     * generator must not make two bots' operations collide in `applied_operations`.
+     */
+    private fun operationId(): String = UUID.randomUUID().toString()
+
     private fun moveDelay(): Long =
         policy.moveMinMillis + random().nextLong(policy.moveSpreadMillis + 1)
 
