@@ -129,10 +129,22 @@ internal fun MatchPosition.boardFor(random: Random): MatchPosition? = when {
  * then for the placements would replay the match twice — and, worse, could be handed two answers
  * from different points in it if the row changed in between.
  *
+ * @property start the position the walk began from — the opening deal, with the hands as they were
+ *   dealt, which is the one position no placement leaves behind.
  * @property plays one entry per stored placement, in order, each as the engine resolved it: who
  *   moved, which card, onto which cell, and every cell it flipped with the rule that did it.
+ * @property positions one entry per placement, parallel to [plays]: the position the placement
+ *   left behind, *before* any rematch is dealt. The console's board replay steps through these,
+ *   and they cost nothing extra to keep — the walk builds every one of them anyway and used to
+ *   drop all but the last. A finished board is kept as it finished, which is what a reader
+ *   stepping through a Sudden Death draw wants to see before the regrouped hands appear.
  */
-data class Replay(val end: MatchPosition, val plays: List<PlayResult>)
+data class Replay(
+    val start: MatchPosition,
+    val end: MatchPosition,
+    val plays: List<PlayResult>,
+    val positions: List<MatchPosition>,
+)
 
 /**
  * Applies [moves] in order from this position, starting a new board wherever one ended.
@@ -164,6 +176,7 @@ data class Replay(val end: MatchPosition, val plays: List<PlayResult>)
 internal fun MatchPosition.replaying(moves: List<Pair<Int, Int>>, random: Random): Replay? {
     var at = this
     val plays = ArrayList<PlayResult>(moves.size)
+    val positions = ArrayList<MatchPosition>(moves.size)
     for ((handIndex, position) in moves) {
         // Two failures, one refusal. A placement the rules refuse is a corrupt row; a placement
         // that lands without `lastPlay` behind it would be `MatchState.play` failing to record what
@@ -173,7 +186,13 @@ internal fun MatchPosition.replaying(moves: List<Pair<Int, Int>>, random: Random
         val play = next?.state?.lastPlay ?: return null
         at = next
         plays.add(play)
+        positions.add(next)
     }
     // Null means the match is genuinely over, and the finished board is the answer.
-    return Replay(end = at.boardFor(random) ?: at, plays = plays)
+    return Replay(
+        start = this,
+        end = at.boardFor(random) ?: at,
+        plays = plays,
+        positions = positions,
+    )
 }

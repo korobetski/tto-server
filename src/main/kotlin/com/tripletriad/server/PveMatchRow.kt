@@ -7,7 +7,6 @@ import com.tripletriad.model.MatchPreparation
 import com.tripletriad.model.MatchResult
 import com.tripletriad.model.MatchState
 import com.tripletriad.model.MatchView
-import com.tripletriad.model.PlayResult
 import com.tripletriad.protocol.Placement
 import com.tripletriad.protocol.PveMatchStatus
 import com.tripletriad.protocol.PveMatchView
@@ -117,17 +116,18 @@ data class PveMatchRow(
     fun position(cards: CardCatalog): MatchPosition? = replayFrom(cards)?.end
 
     /**
-     * Every placement, as the engine resolved it — the match inspector's payload.
+     * The whole walk — opening, every placement, every position in between: the match inspector's
+     * payload.
      *
-     * The console shows a move list rather than a board (`web-platform.md` argues why), and a move
-     * list is not something the row stores: `moves` holds two numbers per placement, and which
-     * cells flipped and under which rule are facts about the *board* the placement landed on. So
-     * they come out of the replay, which is the only place they can come from without a second
-     * implementation of the rules.
+     * None of it is something the row stores: `moves` holds two numbers per placement, and which
+     * cells flipped, under which rule, and what the board looked like afterwards are facts about
+     * the *board* the placement landed on. So they come out of the replay, which is the only place
+     * they can come from without a second implementation of the rules. [position] is this,
+     * narrowed to its end.
      *
      * Null on a row that cannot be replayed, as [position] is, and for the same reason.
      */
-    fun timeline(cards: CardCatalog): List<PlayResult>? = replayFrom(cards)?.plays
+    fun replayed(cards: CardCatalog): Replay? = replayFrom(cards)
 
     /** The opening deal walked through [moves] — see [MatchPosition.replaying]. */
     private fun replayFrom(cards: CardCatalog): Replay? {

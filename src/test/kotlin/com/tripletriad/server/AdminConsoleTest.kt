@@ -1,25 +1,16 @@
 package com.tripletriad.server
 
 import com.tripletriad.model.CardColor
-import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
 import com.tripletriad.protocol.PveMatchStatus
-import com.tripletriad.protocol.PveMove
-import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.testing.ApplicationTestBuilder
-import io.ktor.server.testing.testApplication
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
@@ -61,7 +52,7 @@ class AdminConsoleTest {
     /**
      * Every route answers 401 to a caller with no cookie, and the console reads that as "sign in".
      *
-     * The one property worth testing across all seven at once: `failureFor` maps a 401 to
+     * The one property worth testing across all of them at once: `failureFor` maps a 401 to
      * `unauthenticated` and every page treats it as a navigation to the sign-in screen, so a route
      * that answered 404 or 500 to an expired session would leave the operator on a broken page
      * rather than at a form. It is also the only thing standing between the internet and the credit
@@ -71,11 +62,15 @@ class AdminConsoleTest {
     fun everyRouteRefusesACallerWithNoSession() = console {
         val routes = listOf(
             "/admin/stats/overview",
+            "/admin/stats/npcs",
+            "/admin/stats/bots",
             "/admin/players?q=someone",
+            "/admin/players/list",
             "/admin/players/1",
             "/admin/matches/pve/whatever",
             "/admin/auctions",
             "/admin/audit",
+            "/admin/catalog",
         )
         for (path in routes) {
             val response = client.get(path)
@@ -87,6 +82,15 @@ class AdminConsoleTest {
             setBody("""{"operationId":"op","amount":10,"reason":"why"}""")
         }
         assertEquals(HttpStatusCode.Unauthorized, credit.status, credit.bodyAsText())
+
+        val inventory = client.post("/admin/players/1/inventory") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                """{"operationId":"op","reason":"why",""" +
+                    """"changes":[{"kind":"CARD","cardId":1,"delta":1}]}""",
+            )
+        }
+        assertEquals(HttpStatusCode.Unauthorized, inventory.status, inventory.bodyAsText())
     }
 
     /**
@@ -310,11 +314,9 @@ class AdminConsoleTest {
     /**
      * The match inspector lists the placements the engine made, in order, with what they flipped.
      *
-     * A move list rather than a board, because step 3 brings the game's own renderer and a second
-     * one written now is one thrown away. What matters here is that the list comes from a
-     * **replay** — `MatchPosition.replaying`, the one walk both match tables share — so the cells
-     * and captures are the referee's own account and not a transcription of what the row happens
-     * to store.
+     * What matters here is that the list comes from a **replay** — `MatchPosition.replaying`, the
+     * one walk both match tables share — so the cells and captures are the referee's own account
+     * and not a transcription of what the row happens to store.
      *
      * The NPC side has no account, which the console renders as plain text rather than as a link to
      * a player page that does not exist.
@@ -345,6 +347,46 @@ class AdminConsoleTest {
         assertEquals(1, moves[1].jsonObject["cell"]!!.jsonPrimitive.int)
         // Named, from the catalog the engine dealt from — the inspector is read by a person.
         assertTrue(moves[0].jsonObject["cardName"]!!.jsonPrimitive.content.isNotEmpty())
+    }
+
+    /**
+     * Each move carries the board it left behind, and the detail carries the hands as dealt.
+     *
+     * The board replay draws from these alone, so what is pinned is that they are the *replay's*:
+     * after the first placement one cell is filled and blue holds four cards, after the second two
+     * cells are, each owned by whoever the engine says owns it now. Empty cells arrive as `null`
+     * rather than absent, because the console indexes the list by cell and a shorter list would
+     * shift every card after the gap.
+     */
+    @Test
+    fun eachMoveCarriesTheBoardItLeftBehind() = console {
+        val session = signedIn()
+        val matchId = openPveMatch(register(Postgres.freshAccount("board")))
+        val body = client.get("/admin/matches/pve/$matchId") { cookie(session) }.expectOk()
+
+        val dealt = body["hands"]!!.jsonObject
+        assertEquals(HAND, dealt["blue"]!!.jsonArray.size)
+        assertEquals(HAND, dealt["red"]!!.jsonArray.size)
+
+        val moves = body["moves"]!!.jsonArray.map { it.jsonObject }
+        val first = moves[0]
+        val board = first["board"]!!.jsonArray
+        assertEquals(9, board.size, "nine cells, empty ones included")
+        assertEquals(JsonNull, board[8], "an empty cell is null, not absent")
+        val placed = board[0].jsonObject
+        assertEquals(
+            first["cardId"]!!.jsonPrimitive.int,
+            placed["face"]!!.jsonObject["cardId"]!!.jsonPrimitive.int,
+        )
+        assertEquals(CardColor.BLUE.name, placed["owner"]!!.jsonPrimitive.content)
+        assertEquals(HAND - 1, first["hands"]!!.jsonObject["blue"]!!.jsonArray.size)
+        assertEquals(0, first["round"]!!.jsonPrimitive.int)
+        assertEquals(9, first["elements"]!!.jsonArray.size)
+        val score = first["score"]!!.jsonObject
+        assertEquals(10, score["blue"]!!.jsonPrimitive.int + score["red"]!!.jsonPrimitive.int)
+
+        val second = moves[1]["board"]!!.jsonArray
+        assertEquals(2, second.count { it != JsonNull })
     }
 
     /**
@@ -462,178 +504,5 @@ class AdminConsoleTest {
                 "account $party stands behind the lot and must see it",
             )
         }
-    }
-
-    /* -- the harness ------------------------------------------------------------------------- */
-
-    private fun console(block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
-        application { module(Postgres.dataSource, prometheusRegistry()) }
-        block()
-    }
-
-    /**
-     * An enrolled administrator with a live session, built through the store.
-     *
-     * Past the routes on purpose: `AdminConsoleAccessTest` owns the flow that opens a session over
-     * HTTP, and every test here would otherwise depend on a TOTP code being generated inside the
-     * same thirty-second step it is verified in.
-     */
-    private fun signedIn(): String {
-        val admins = AdminStore(Postgres.dataSource)
-        val name = Postgres.freshAccount("console")
-        val adminId = assertNotNull(admins.create(name, PasswordHasher.hash(TEST_PASSWORD)))
-        val secret = Totp.issueSecret()
-        assertTrue(admins.beginEnrolment(adminId, secret))
-        val token = Tokens.issue()
-        assertTrue(
-            admins.enrol(
-                adminId = adminId,
-                step = Totp.stepAt(System.currentTimeMillis()),
-                tokenHash = Tokens.fingerprint(token),
-                expiresAt = System.currentTimeMillis() + ADMIN_SESSION_MILLIS,
-            ),
-        )
-        return token
-    }
-
-    /** An account with a starter profile, which is what every player page is read against. */
-    private fun register(name: String): Long {
-        val accounts = AccountStore(Postgres.dataSource)
-        return assertNotNull(
-            accounts.register(
-                name,
-                "hash-$name",
-                GameSave.new(name, createdAt = 0L),
-                address(name),
-            ),
-        )
-    }
-
-    /** Two placements on a live board, which is the smallest thing the inspector can replay. */
-    private fun openPveMatch(accountId: Long): String {
-        val hand = Catalogs.cards.all.take(HAND * 2)
-        val id = "inspect-${Postgres.freshAccount("match")}"
-        val row = PveMatchRow(
-            id = id,
-            accountId = accountId,
-            formatId = "any",
-            opponentIconId = OPPONENT,
-            // Plain rules: the replay under test is the walk, not the rules engine, and Sudden
-            // Death or an elemental board would make the two placements below depend on the seed.
-            rules = GameRules(),
-            seed = SEED,
-            blueHand = hand.take(HAND).map { it.id },
-            redHand = hand.drop(HAND).map { it.id },
-            first = CardColor.BLUE,
-            moves = listOf(
-                PveMove(handIndex = 0, position = 0),
-                PveMove(handIndex = 0, position = 1),
-            ),
-            status = PveMatchStatus.PLAYING,
-        )
-        assertNotNull(PveStore(Postgres.dataSource).open(row), "the fixture row has to be storable")
-        return id
-    }
-
-    /**
-     * An open lot with a standing bid, written directly.
-     *
-     * Through SQL rather than through `AuctionStore`, because what is under test is a *read* and
-     * the shortest path to the row it reads is the row. Going through the house would mean giving
-     * the seller the card, the bidder the money and both of them the unlock level, none of which
-     * this screen is about.
-     */
-    private fun openLot(seller: Long, bidder: Long): String {
-        val id = "lot-${Postgres.freshAccount("auction")}"
-        Postgres.dataSource.connection.use { db ->
-            db.prepareStatement(
-                """
-                INSERT INTO auction_lots
-                    (id, seller_account, card_id, start_price, reserve_price, listing_fee,
-                     status, ends_at, top_bid, top_bidder, bid_count)
-                VALUES (?, ?, ?, 10, 20, 1, 'OPEN', now() + interval '1 hour', 15, ?, 1)
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, id)
-                statement.setLong(2, seller)
-                statement.setInt(3, CARD_ID)
-                statement.setLong(4, bidder)
-                assertEquals(1, statement.executeUpdate())
-            }
-            db.commit()
-        }
-        return id
-    }
-
-    /** A submitted match, as `matches` records one: a score and a digest, and no transcript. */
-    private fun creditMatch(accountId: Long): Long = Postgres.dataSource.connection.use { db ->
-        val id = db.prepareStatement(
-            """
-            INSERT INTO matches
-                (account_id, opponent_icon_id, format, seed, blue, red, result, mgp,
-                 transcript_hash)
-            VALUES (?, ?, ?, ?, 6, 4, 'WIN', 25, ?)
-            RETURNING id
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setLong(1, accountId)
-            statement.setString(2, OPPONENT)
-            statement.setString(3, FORMAT)
-            statement.setInt(4, SEED)
-            statement.setString(5, DIGEST)
-            statement.executeQuery().use { rows ->
-                assertTrue(rows.next())
-                rows.getLong(1)
-            }
-        }
-        db.commit()
-        id
-    }
-
-    private suspend fun ApplicationTestBuilder.credit(
-        session: String,
-        accountId: Long,
-        operationId: String,
-        amount: Int,
-        reason: String,
-    ): HttpResponse = client.post("/admin/players/$accountId/credit") {
-        cookie(session)
-        contentType(ContentType.Application.Json)
-        setBody("""{"operationId":"$operationId","amount":$amount,"reason":"$reason"}""")
-    }
-
-    /** The purse as the console would read it, which is the only figure a credit has to move. */
-    private suspend fun ApplicationTestBuilder.purse(session: String, accountId: Long): Int =
-        client.get("/admin/players/$accountId") { cookie(session) }
-            .expectOk()["mgp"]!!.jsonPrimitive.int
-
-    private fun HttpRequestBuilder.cookie(token: String) =
-        header(HttpHeaders.Cookie, "$ADMIN_COOKIE=$token")
-
-    private suspend fun HttpResponse.expectOk(): JsonObject {
-        assertEquals(HttpStatusCode.OK, status, bodyAsText())
-        return body()
-    }
-
-    private suspend fun HttpResponse.expectOkArray(): JsonArray {
-        assertEquals(HttpStatusCode.OK, status, bodyAsText())
-        return json.decodeFromString<JsonArray>(bodyAsText())
-    }
-
-    private suspend fun HttpResponse.body(): JsonObject =
-        json.decodeFromString<JsonObject>(bodyAsText())
-
-    private suspend fun HttpResponse.failure(): String =
-        json.decodeFromString<ErrorResponse>(bodyAsText()).error
-
-    private val json = Json { ignoreUnknownKeys = true }
-
-    private companion object {
-        const val OPPONENT = "an-opponent"
-        const val HAND = 5
-        const val SEED = 4242
-        const val CARD_ID = 1
-        const val FORMAT = "ff14"
-        const val DIGEST = "0123456789abcdef"
     }
 }

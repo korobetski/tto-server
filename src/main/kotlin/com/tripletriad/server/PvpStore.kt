@@ -394,6 +394,38 @@ class PvpStore(
     fun matchById(id: String): PvpMatchRow? = transaction { db -> readMatch(db, id) }
 
     /**
+     * The newest settled matches with a bot on at least one side, for the console's bot statistics.
+     *
+     * Settled means a verdict exists: `FINISHED`, `FORFEITED`, or `AWAITING_CLAIM` — the board is
+     * decided and only the card wager is outstanding. `ABANDONED` is left out because it has no
+     * verdict, and `PLAYING` because it has none yet.
+     *
+     * @param since epoch millis, or null for all time. Compared with when the match ended, or began
+     *   for one that is still awaiting its claim.
+     */
+    fun settledWithBots(since: Long?, limit: Int): List<PvpMatchRow> = transaction { db ->
+        db.prepareStatement(
+            """
+            SELECT m.* FROM pvp_matches m
+            WHERE m.status IN ('FINISHED', 'FORFEITED', 'AWAITING_CLAIM')
+              AND (EXISTS (SELECT 1 FROM bots b WHERE b.account_id = m.blue_account)
+                   OR EXISTS (SELECT 1 FROM bots b WHERE b.account_id = m.red_account))
+              AND (?::timestamptz IS NULL OR coalesce(m.finished_at, m.created_at) > ?::timestamptz)
+            ORDER BY coalesce(m.finished_at, m.created_at) DESC
+            LIMIT ?
+            """.trimIndent(),
+        ).use { statement ->
+            val from = since?.let(::Timestamp)
+            statement.setTimestamp(1, from)
+            statement.setTimestamp(2, from)
+            statement.setInt(3, limit)
+            statement.executeQuery().use { rows ->
+                buildList { while (rows.next()) add(rows.toMatch()) }
+            }
+        }
+    }
+
+    /**
      * Appends [move] and sets the next deadline, refusing if the match moved on underneath.
      *
      * The refusal is what makes a double tap harmless: the expected move count is checked in the

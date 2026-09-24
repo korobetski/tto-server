@@ -8,9 +8,11 @@
 package com.tripletriad.server
 
 import com.tripletriad.data.CardCatalog
+import com.tripletriad.data.NpcCatalog
 import com.tripletriad.model.CaptureKind
+import com.tripletriad.model.Card
 import com.tripletriad.model.CardColor
-import com.tripletriad.model.PlayResult
+import com.tripletriad.model.MatchState
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -59,20 +61,27 @@ import kotlinx.serialization.json.Json
  * read-only role; v1 has one, and `Failure.forbidden` in the console is reserved for the day there
  * are two.
  *
- * ### Reads go straight to [AdminStore]; the write goes through [AccountStore]
+ * ### Reads go straight to [AdminStore]; the writes go through [AccountStore]
  *
  * That is `web-platform.md`'s rule and it is the load-bearing one: **`AdminStore` never writes a
  * player's profile.** The credit below calls [AccountStore.applyOnceAcross], which is the same
  * idempotency machinery every purchase in the game already goes through, and the `admin_audit` row
  * is appended on that transaction's own connection — so the record and the effect commit together
- * or not at all. See [creditPlayer], which is where both halves of that are visible at once.
+ * or not at all. See [creditPlayer], which is where both halves of that are visible at once, and
+ * `AdminInventory.kt`, which is the second write and follows it line for line.
+ *
+ * The aggregate reads — the roster, the NPC and bot statistics — are [AdminInsightStore]'s, in
+ * `AdminInsights.kt`, beside the shapes they answer with.
  */
+@Suppress("LongParameterList")
 fun Route.adminRoutes(
     admins: AdminStore,
+    insights: AdminInsightStore,
     accounts: AccountStore,
     pve: PveStore,
     pvp: PvpStore,
     cards: CardCatalog = Catalogs.cards,
+    npcs: NpcCatalog = Catalogs.npcs,
 ) {
     route("/admin") {
         // Not under a rate limit. The two unauthenticated routes in `AdminAuthentication` are, for
@@ -80,9 +89,16 @@ fun Route.adminRoutes(
         // second factor, and a budget on them would only ever be spent by the operator who is
         // clicking through a support case.
         get("/stats/overview") { overview(admins) }
+        get("/stats/npcs") { npcStats(admins, insights, npcs) }
+        get("/stats/bots") { botStats(admins, insights, pvp, cards) }
         get("/players") { searchPlayers(admins) }
+        // A constant segment outranks `{id}` in Ktor's routing, so "list" is never read as an id —
+        // and it could not be one anyway, since an id that is not a number is already a 404.
+        get("/players/list") { listPlayers(admins, insights) }
         get("/players/{id}") { playerDetail(admins) }
         post("/players/{id}/credit") { creditPlayer(admins, accounts) }
+        post("/players/{id}/inventory") { editInventory(admins, accounts, cards) }
+        get("/catalog") { catalog(admins, cards) }
         get("/matches/{kind}/{id}") { matchDetail(admins, pve, pvp, cards) }
         get("/auctions") { auctions(admins) }
         get("/audit") { auditTrail(admins) }
@@ -269,7 +285,8 @@ private fun pveDetail(
 ): AdminMatchDetail? {
     val row = pve.matchForInspection(id) ?: return null
     val context = admins.matchContext(KIND_PVE, id) ?: return null
-    val position = row.position(cards)
+    val replay = row.replayed(cards)
+    val position = replay?.end
     return AdminMatchDetail(
         id = row.id,
         kind = KIND_PVE,
@@ -283,7 +300,8 @@ private fun pveDetail(
         startedAt = context.startedAt,
         finishedAt = context.finishedAt,
         payout = AdminPayout(blue = row.reward?.mgp ?: 0, red = 0),
-        moves = row.timeline(cards).orEmpty().toMoves(),
+        hands = replay?.start?.state?.toHands(),
+        moves = replay?.toMoves().orEmpty(),
         // PvE sessions are refereed here, move by move, so there is nothing to digest: the server
         // saw every placement as it happened. The hash belongs to `matches`, which is the table for
         // transcripts a client submitted after the fact.
@@ -304,7 +322,8 @@ private fun pvpDetail(
     // player — it is this file and `matchContext` disagreeing about which query ran. Answering 404
     // rather than inventing an empty name keeps that a missing match instead of a nameless one.
     val red = context.red ?: return null
-    val position = row.position(cards)
+    val replay = row.replayed(cards)
+    val position = replay?.end
     return AdminMatchDetail(
         id = row.id,
         kind = KIND_PVP,
@@ -320,27 +339,44 @@ private fun pvpDetail(
             blue = row.payout[CardColor.BLUE]?.mgp ?: 0,
             red = row.payout[CardColor.RED]?.mgp ?: 0,
         ),
-        moves = row.timeline(cards).orEmpty().toMoves(),
+        hands = replay?.start?.state?.toHands(),
+        moves = replay?.toMoves().orEmpty(),
         transcriptHash = null,
     )
 }
 
 /**
- * The engine's own account of each placement, as the inspector lists it.
+ * The engine's own account of each placement, and the board it left behind.
  *
- * ### Why this is a list and not a board
+ * ### A list *and* a board
  *
- * Because a second board renderer written now is one thrown away in six months: step 3 puts the
- * game's own renderer on the web, and the console can reuse it then. A list of "who put what where
- * and what flipped" answers the question a dispute actually asks, which is why the flip happened.
+ * This used to be a list alone, on the argument that a second board renderer written before the
+ * web client existed would be thrown away. The web client exists now, and what the inspector was
+ * missing turned out not to be a renderer but the *positions*: which card sat where after move
+ * six, and what the hands still held. So each move carries the board as it stood once the move
+ * resolved — nine cells, the elements, the score, what each hand still holds — and the console
+ * draws it from these facts alone. A board built from the replay rather than re-derived in the
+ * browser is the only one that can be trusted to show what the referee saw.
  *
- * [Move.rule] carries the **first non-basic** kind among the captures, because that is the one that
- * explains the move: a `SAME` that cascades produces `SAME` and then a wave of `COMBO`s, and naming
- * the cascade rather than its cause would put `COMBO` beside a move nobody disputes. A plain
- * comparison is null rather than `BASIC` — the console shows the column only when a rule did
+ * Nine cells and ten cards per move is a few kilobytes for a whole match, which is a price worth
+ * paying for a screen opened a handful of times a week.
+ *
+ * ### Which rule explains the move
+ *
+ * [AdminMove.rule] carries the **first non-basic** kind among the captures, because that is the
+ * one that explains the move: a `SAME` that cascades produces `SAME` and then a wave of `COMBO`s,
+ * and naming the cascade rather than its cause would put `COMBO` beside a move nobody disputes. A
+ * plain comparison is null rather than `BASIC` — the console shows the column only when a rule did
  * something, and "BASIC" in every other row is noise in the one place noise is expensive.
+ *
+ * ### The board is the one *before* any rematch
+ *
+ * [Replay.positions] keeps each position as the placement left it, so the ninth move of a drawn
+ * Sudden Death board shows that board full, not the regrouped one that follows. [AdminMove.round]
+ * is how the console tells the boards apart.
  */
-private fun List<PlayResult>.toMoves(): List<AdminMove> = mapIndexed { at, play ->
+private fun Replay.toMoves(): List<AdminMove> = plays.mapIndexed { at, play ->
+    val after = positions[at].state
     AdminMove(
         index = at + 1,
         side = play.player.name,
@@ -351,8 +387,40 @@ private fun List<PlayResult>.toMoves(): List<AdminMove> = mapIndexed { at, play 
         cell = play.position,
         captured = play.captures.map { it.position },
         rule = play.captures.firstOrNull { it.kind != CaptureKind.BASIC }?.kind?.name,
+        round = positions[at].rematch,
+        board = after.board.cells.map { placed ->
+            placed?.let { AdminCell(face = it.card.face(), owner = it.owner.name) }
+        },
+        elements = after.board.elements.map { it?.name },
+        score = AdminScore(blue = after.score.blue, red = after.score.red),
+        hands = after.toHands(),
     )
 }
+
+/** What each side holds in hand, in hand order, face up — the console is nobody's opponent. */
+private fun MatchState.toHands() = AdminHands(
+    blue = hands[CardColor.BLUE].orEmpty().map { it.face() },
+    red = hands[CardColor.RED].orEmpty().map { it.face() },
+)
+
+/**
+ * A card as the board draws it: the four printed values, and nothing the rules did to them.
+ *
+ * Ascension, Descension and the elements move a card's *effective* values during a match, and the
+ * engine applies them at comparison time rather than by rewriting the card. The console shows the
+ * printed values and the cell's element beside them, which is what a player looking at the same
+ * board saw — the modifiers were a badge on the card, not a different number.
+ */
+internal fun Card.face() = AdminCardFace(
+    cardId = id,
+    name = name,
+    top = top,
+    right = right,
+    bottom = bottom,
+    left = left,
+    rarity = rarity,
+    type = type?.name,
+)
 
 /**
  * [AdminParty] with the score filled in, which is the only part that comes from the board.
@@ -372,7 +440,7 @@ private fun AdminParty.scored(score: Int) = AdminMatchSide(accountId, name, scor
  * `failureFor` reads the status for a 404 and never opens the body, but the two agree here so that
  * a route answering 404 from somewhere else still says the same thing.
  */
-private suspend fun ApplicationCall.notFound() =
+internal suspend fun ApplicationCall.notFound() =
     respond(HttpStatusCode.NotFound, ErrorResponse(error = "NOT_FOUND"))
 
 /**
@@ -390,16 +458,19 @@ private suspend fun ApplicationCall.notFound() =
  * `scripts/audit.ts` hides its button on `cursor === undefined`. That pairing is why no other
  * property in this file may carry a default — a default value would silently vanish from the wire.
  */
-private val ConsoleJson = Json {
+internal val ConsoleJson = Json {
     explicitNulls = true
     encodeDefaults = false
 }
 
-private suspend inline fun <reified T> ApplicationCall.respondConsole(body: T) =
+internal suspend inline fun <reified T> ApplicationCall.respondConsole(body: T) =
     respondText(ConsoleJson.encodeToString(body), ContentType.Application.Json)
 
 /** `admin_audit.action` for a balance correction. The set lives beside the routes that write it. */
 const val CREDITED = "CREDIT"
+
+/** `admin_audit.action` for a change to a collection or a bag. See `AdminInventory.kt`. */
+const val INVENTORY_EDITED = "INVENTORY"
 
 /**
  * The three kinds, as the console reads them back in a body.
@@ -465,6 +536,8 @@ data class AdminPlayerSummary(
     val createdAt: String,
     val seenAt: String?,
     val mgp: Int,
+    /** Out of the save document, as the purse is. Zero for an account with no profile yet. */
+    val level: Int,
     /** True when the account is one of the lobby-filling bots. Shown, never hidden. */
     val bot: Boolean,
 )
@@ -472,11 +545,11 @@ data class AdminPlayerSummary(
 /**
  * Everything one screen needs about one player.
  *
- * ### Flat, and the eight repeated properties are the price of that
+ * ### Flat, and the nine repeated properties are the price of that
  *
  * The console's type is `PlayerDetail extends PlayerSummary`, so on the wire the summary's fields
  * sit beside the detail's rather than under a `summary` key. `@Serializable` has no way to inline a
- * nested object into its parent, so the choice is between repeating eight properties here and
+ * nested object into its parent, so the choice is between repeating nine properties here and
  * asking the console to read a shape it does not describe.
  *
  * Repeating them is the lesser cost, and it is bounded: [AdminStore.player] builds this from the
@@ -493,9 +566,9 @@ data class AdminPlayerDetail(
     val createdAt: String,
     val seenAt: String?,
     val mgp: Int,
-    val bot: Boolean,
     /** Level and experience, out of the save document rather than out of a column. */
     val level: Int,
+    val bot: Boolean,
     val xp: Long,
     /** How many cards the collection holds, and how many distinct ones. */
     val cards: Int,
@@ -507,6 +580,16 @@ data class AdminPlayerDetail(
     val lots: List<AdminAuctionLot>,
     /** Administrative actions already taken on this account, newest first. */
     val audit: List<AdminAuditEntry>,
+    /** Every card held, one entry per id with its count, in id order. */
+    val collection: List<AdminOwnedCard>,
+    /** The bag, in the order the game's inventory screen sorts it. */
+    val bag: List<AdminBagItem>,
+    /**
+     * The saved decks, so the console can warn before taking away a card one of them fields.
+     * Not editable here: a deck is something the player built, and `GameSave.withoutCard` argues
+     * why even the game itself never rewrites one.
+     */
+    val decks: List<AdminDeck>,
 )
 
 @Serializable
@@ -552,6 +635,7 @@ data class AdminCreditReceipt(val mgpBefore: Int, val mgpAfter: Int, val applied
 @Serializable
 data class AdminBalance(val mgp: Int)
 
+@Suppress("LongParameterList")
 @Serializable
 data class AdminMove(
     /** 1-based, in the order the engine applied them. */
@@ -563,7 +647,41 @@ data class AdminMove(
     val cell: Int,
     val captured: List<Int>,
     val rule: String?,
+    /** Which board this was played on: 0 for the first, one more per Sudden Death rematch. */
+    val round: Int,
+    /** The nine cells once this move resolved, null where nothing has been placed. */
+    val board: List<AdminCell?>,
+    /** The Elemental rule's element per cell, by `CardType` name, null for none. */
+    val elements: List<String?>,
+    val score: AdminScore,
+    /** What each side still held once this move resolved. */
+    val hands: AdminHands,
 )
+
+/** A card's printed face. See [face] for why the rules' modifiers are not folded in. */
+@Suppress("LongParameterList")
+@Serializable
+data class AdminCardFace(
+    val cardId: Int,
+    val name: String,
+    val top: Int,
+    val right: Int,
+    val bottom: Int,
+    val left: Int,
+    val rarity: Int,
+    /** `CardType` name, or null for a card with no type. */
+    val type: String?,
+)
+
+/** A placed card and the colour it belongs to *now* — after whatever flipped it. */
+@Serializable
+data class AdminCell(val face: AdminCardFace, val owner: String)
+
+@Serializable
+data class AdminScore(val blue: Int, val red: Int)
+
+@Serializable
+data class AdminHands(val blue: List<AdminCardFace>, val red: List<AdminCardFace>)
 
 /** One side of a match: an account and a name, or a name alone when there is no account. */
 @Serializable
@@ -596,6 +714,8 @@ data class AdminMatchDetail(
     val startedAt: String,
     val finishedAt: String?,
     val payout: AdminPayout,
+    /** The hands as dealt, after any swap. Null for a credited match, whose deal is not kept. */
+    val hands: AdminHands?,
     val moves: List<AdminMove>,
     val transcriptHash: String?,
 )

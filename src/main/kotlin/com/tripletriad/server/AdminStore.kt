@@ -466,8 +466,8 @@ class AdminStore(
             createdAt = summary.createdAt,
             seenAt = summary.seenAt,
             mgp = summary.mgp,
+            level = summary.level,
             bot = summary.bot,
-            level = save?.level ?: 0,
             xp = save?.xp ?: 0L,
             cards = save?.cards?.values?.sum() ?: 0,
             distinctCards = save?.cards?.size ?: 0,
@@ -479,6 +479,17 @@ class AdminStore(
             recentMatches = readMatches(db, accountId),
             lots = readLots(db, party = accountId),
             audit = readAudit(db, subject = accountId, before = null, limit = RECENT_LIMIT).entries,
+            collection = save?.cards.orEmpty().entries.sortedBy { it.key }.map { (id, copies) ->
+                val card = cards.byId[id]
+                AdminOwnedCard(
+                    cardId = id,
+                    name = card?.name ?: UNKNOWN_CARD,
+                    rarity = card?.rarity ?: 0,
+                    copies = copies,
+                )
+            },
+            bag = save?.bag.orEmpty().map { it.toBagItem(cards) },
+            decks = save?.decks.orEmpty().map { AdminDeck(name = it.name, cards = it.cards) },
         )
     }
 
@@ -793,6 +804,7 @@ class AdminStore(
         createdAt = getTimestamp("created_at").instant(),
         seenAt = getTimestamp("seen_at")?.instant(),
         mgp = getInt("mgp"),
+        level = getInt("level"),
         bot = getBoolean("bot"),
     )
 
@@ -830,6 +842,7 @@ class AdminStore(
         startedAt = getTimestamp("played_at").instant(),
         finishedAt = getTimestamp("played_at").instant(),
         payout = AdminPayout(blue = getInt("mgp"), red = 0),
+        hands = null,
         moves = emptyList(),
         transcriptHash = getString("transcript_hash"),
     )
@@ -970,8 +983,8 @@ class AdminStore(
         }
     }
 
-    private companion object {
-        const val UNIQUE_VIOLATION = "23505"
+    internal companion object {
+        private const val UNIQUE_VIOLATION = "23505"
 
         /** `java.sql.Types.BIGINT`, named so the import is not one more line for one constant. */
         const val BIGINT = java.sql.Types.BIGINT
@@ -985,8 +998,8 @@ class AdminStore(
         const val MAX_ADMIN_SESSIONS = 5
 
         /**
-         * What a player row is made of, written once because the search and the detail page ask
-         * for the same eight things about one account and differ only in their `WHERE`.
+         * What a player row is made of, written once because the search, the roster and the
+         * detail page ask for the same nine things about one account and differ in their `WHERE`.
          *
          * The purse comes out of the save document rather than a column, because `characters.save`
          * is one document by V1's decision and nothing in this server reads a profile by column.
@@ -994,10 +1007,13 @@ class AdminStore(
          * so the outer join produces NULL and a missing purse is genuinely no MGP rather than
          * unknown MGP. `bots` is joined for the label — never to filter.
          */
-        val PLAYER_COLUMNS =
+        // Internal rather than private: `AdminInsightStore.players` pages through the same nine
+        // columns, and a second copy would be a second place to add the tenth.
+        internal val PLAYER_COLUMNS =
             """
             a.id, a.username, a.email, a.email_verified_at, a.created_at, a.seen_at,
             coalesce((c.save ->> 'MGP')::int, 0) AS mgp,
+            coalesce((c.save ->> 'LEVEL')::int, 0) AS level,
             (b.account_id IS NOT NULL) AS bot
             """.trimIndent()
 

@@ -9,7 +9,6 @@ import com.tripletriad.model.MatchResult
 import com.tripletriad.model.MatchScore
 import com.tripletriad.model.MatchState
 import com.tripletriad.model.MatchView
-import com.tripletriad.model.PlayResult
 import com.tripletriad.model.TOTAL_CARDS
 import com.tripletriad.model.TradeRule
 import com.tripletriad.model.TradeRules
@@ -138,13 +137,14 @@ data class PvpMatchRow(
     fun position(cards: CardCatalog): MatchPosition? = replayFrom(cards)?.end
 
     /**
-     * Every placement, as the engine resolved it — the match inspector's payload.
+     * The whole walk — opening, every placement, every position in between: the match inspector's
+     * payload.
      *
-     * `PveMatchRow.timeline`'s twin, and its KDoc is the argument: which cells a placement flipped,
-     * and under which rule, are facts about the board rather than about the two numbers stored per
-     * move, so they can only come out of the replay.
+     * `PveMatchRow.replayed`'s twin, and its KDoc is the argument: which cells a placement flipped,
+     * and what the board looked like afterwards, are facts about the board rather than about the
+     * two numbers stored per move, so they can only come out of the replay.
      */
-    fun timeline(cards: CardCatalog): List<PlayResult>? = replayFrom(cards)?.plays
+    fun replayed(cards: CardCatalog): Replay? = replayFrom(cards)
 
     /** The opening deal walked through [moves] — see [MatchPosition.replaying]. */
     private fun replayFrom(cards: CardCatalog): Replay? {
@@ -387,6 +387,21 @@ data class PvpMatchRow(
     private fun turnRandom(): Random = Random(seed * TURN_MIX + moves.size)
 
     /** [side]'s result: a forfeit decides it outright, otherwise the board does. */
+    /**
+     * How the match ended for [side], or null while it is still being played or cannot be replayed.
+     *
+     * [outcomeFor] without the spoils: the console's bot statistics want the verdict of hundreds of
+     * matches, and neither the claim nor the payout is part of a verdict. The forfeit rule is the
+     * same one — it is the same private function underneath.
+     *
+     * An `ABANDONED` match is null too: it never reached a verdict, and reading one off a
+     * half-filled board would call a match nobody finished a win.
+     */
+    fun resultFor(side: CardColor, cards: CardCatalog): MatchResult? {
+        if (status == PvpMatchStatus.PLAYING || status == PvpMatchStatus.ABANDONED) return null
+        return resultFor(side, replay(cards)?.score ?: return null)
+    }
+
     private fun resultFor(side: CardColor, score: MatchScore): MatchResult = when {
         forfeitedBy == side -> MatchResult.LOSE
         forfeitedBy != null -> MatchResult.WIN
