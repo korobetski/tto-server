@@ -277,9 +277,24 @@ class BotDirector(
      * made: the point of the cadence is that a bot takes a human amount of time over a board, and
      * playing a whole match inside one pass would undo it.
      */
+    // ReturnCount: an owed opening is an action of its own, like attending in `playedPvp`, and
+    // the three ways to have nothing to place are three different facts.
+    @Suppress("ReturnCount")
     private fun playedPve(bot: Bot): Boolean {
         val row = pve.activeFor(bot.accountId) ?: return false
         val at = row.position(cards) ?: return false
+
+        // **Reading the board is what starts a match the opponent won the toss for.**
+        //
+        // `PveReferee.open` deals the board untouched, and the opponent's opening move is owed
+        // until the match is read through `PveReferee.view` — which a client's board does once its
+        // announcements are over. A bot reads its match straight out of the store, so nothing
+        // would ever pay it: with no card of its own to place, the pass fell through to [opened],
+        // and dealing a new match abandoned this one. That was every other solo match a bot sat
+        // down to. Reading it counts as this pass's action, exactly as attending does in PvP.
+        if (at.state.currentPlayer == CardColor.RED) {
+            return pveReferee.view(row.id, bot.accountId) != null
+        }
 
         // Blue is the player's colour in a refereed solo match — `PveReferee.opponentMove` is the
         // red half of this same call.

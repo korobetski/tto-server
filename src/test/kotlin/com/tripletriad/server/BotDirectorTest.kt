@@ -12,6 +12,7 @@ import com.tripletriad.model.TradeRule
 import com.tripletriad.protocol.AuctionDuration
 import com.tripletriad.protocol.AuctionOutcome
 import com.tripletriad.protocol.ListCardRequest
+import com.tripletriad.protocol.PveMatchStatus
 import com.tripletriad.protocol.PvpStake
 import com.tripletriad.protocol.PvpTableRequest
 import com.tripletriad.protocol.Unlocks
@@ -197,6 +198,43 @@ class BotDirectorTest {
         val after = assertNotNull(accounts.saveFor(bot.accountId))
         assertTrue(after.pveMatches > before.pveMatches, "a bot should finish what it starts")
         assertTrue(after.xp > before.xp, "a settled match pays")
+    }
+
+    /**
+     * **A match the opponent opens is played, not walked away from.**
+     *
+     * The toss gives the opponent the first move half the time, and `PveReferee.open` deals the
+     * board untouched: that move is *owed* until something reads the match through
+     * `PveReferee.view`, which is what a client's board does. A bot that read its match straight
+     * out of the store found no card of its own to place, fell through to opening a new match,
+     * and `PveStore.abandonLive` closed the one it was in — half the solo matches the roster sat
+     * down to ended `ABANDONED` with nothing on the board.
+     *
+     * [aBotPlaysASoloMatchThrough] could not see it: forty passes always reach a deal the bot
+     * opens, and that one is played through.
+     */
+    @Test
+    fun aMatchTheOpponentOpensIsPlayedNotAbandoned() {
+        clearBots()
+        val director = director(policy(count = 1))
+        director.ensureRoster()
+        val bot = assertNotNull(bots.due(now).firstOrNull())
+
+        val owed = assertNotNull(
+            (1..PASSES).firstNotNullOfOrNull {
+                director.tick()
+                now += PASS_MILLIS
+                pve.activeFor(bot.accountId)
+                    ?.takeIf { it.first == CardColor.RED && it.moves.isEmpty() }
+            },
+            "no deal in $PASSES passes gave the opponent the opening move",
+        )
+
+        director.tick()
+
+        val after = assertNotNull(pve.matchById(owed.id, bot.accountId))
+        assertEquals(PveMatchStatus.PLAYING, after.status, "the bot walked away from its match")
+        assertTrue(after.moves.isNotEmpty(), "the opponent's opening move is still owed")
     }
 
     // ---- Sitting down with a person ---------------------------------------
