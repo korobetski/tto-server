@@ -139,11 +139,10 @@ private fun Route.tableRoutes(
     /** Every table still open, the caller's own included — they need to see it to withdraw it. */
     get("/tables") {
         if (!requireCompatibleClient()) return@get
-        val accountId = authenticate(accounts) ?: return@get
-        // The one place presence is recorded. Every client that has this screen open polls it once
-        // a second, and no other route is reached that reliably — a player deep in a match against
-        // a program is silent here for minutes, which is why the window forgives two of them.
-        accounts.touch(accountId)
+        // Presence is recorded by `authenticate` itself, on this route as on every signed-in one —
+        // see `AccountStore.accountForToken`. It used to be recorded here alone, which made a
+        // player who never opened the lobby invisible to the console's "last seen".
+        authenticate(accounts) ?: return@get
         call.respond(HttpStatusCode.OK, pvp.openTables(clock()).map { it.toWire() })
     }
 

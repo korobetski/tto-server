@@ -247,9 +247,10 @@ class AdminStore(
      * ### It writes on every read, and that is affordable here
      *
      * An idle clock that is not moved forward is a fixed expiry with extra steps, so the write is
-     * the feature. `AccountStore.touch` throttles its equivalent because it runs once per player
-     * per second across the whole lobby; this runs a handful of times a minute for the one or two
-     * people who have a console, and a throttle would only blur the number it exists to keep.
+     * the feature. `AccountStore.accountForToken` throttles its equivalent because it runs on every
+     * signed-in request of every player, the lobby's once-a-second poll included; this runs a
+     * handful of times a minute for the one or two people who have a console, and a throttle would
+     * only blur the number it exists to keep.
      */
     fun session(tokenHash: String, idleMillis: Long): SignedInAdmin? = transaction { db ->
         db.prepareStatement(
@@ -442,9 +443,11 @@ class AdminStore(
      * have supplied reads as zero, which is what it holds.
      */
     fun player(accountId: Long): AdminPlayerDetail? = transaction { db ->
-        val summary = db.prepareStatement(
+        // The personality rides on the summary's row: the join to `bots` is already there for the
+        // `bot` flag, and it is a column of the same row rather than a list of its own.
+        val (summary, personality) = db.prepareStatement(
             """
-            SELECT $PLAYER_COLUMNS
+            SELECT $PLAYER_COLUMNS, b.personality::text AS personality
             FROM accounts a
             LEFT JOIN characters c ON c.account_id = a.id
             LEFT JOIN bots b ON b.account_id = a.id
@@ -453,7 +456,11 @@ class AdminStore(
         ).use { statement ->
             statement.setLong(1, accountId)
             statement.executeQuery().use { rows ->
-                if (rows.next()) rows.toPlayerSummary() else null
+                if (rows.next()) {
+                    rows.toPlayerSummary() to personalityOf(rows.getString("personality"))
+                } else {
+                    null
+                }
             }
         } ?: return@transaction null
 
@@ -468,6 +475,7 @@ class AdminStore(
             mgp = summary.mgp,
             level = summary.level,
             bot = summary.bot,
+            personality = personality,
             xp = save?.xp ?: 0L,
             cards = save?.cards?.values?.sum() ?: 0,
             distinctCards = save?.cards?.size ?: 0,
@@ -585,6 +593,50 @@ class AdminStore(
         transaction { db -> readLots(db, status = status, limit = limit) }
 
     /**
+     * `GET /admin/auctions/{lotId}/bids` — every offer made on one lot, newest first.
+     *
+     * The lot row says who leads and by how much; it cannot say who pushed the price there, and
+     * that is the question a lot that sold for four times its start raises. Every bid is a row in
+     * `auction_bids` the server never deletes — an outbid one is stamped `refunded_at`, a winning
+     * one `settled_at` — so the whole contest is already on disk and this only reads it.
+     *
+     * **All of them, unpaged.** Each bid has to beat the last by `AuctionRules.MIN_INCREMENT_RATE`,
+     * so the count is bounded by the logarithm of how far the price climbed, not by how busy
+     * the lot was: under a hundred rows for a price that climbed a hundredfold. A history cut at a
+     * page boundary would hide exactly the early bids that set the pace.
+     *
+     * **Bots flagged per bid.** A price run up by the lobby-filling machinery and one run up by
+     * two people are very different findings, and the operator should not have to open every
+     * bidder's page to tell which this is. A bidder whose account is gone is `bot = false` with
+     * the placeholder name: the bot row went with the account, so there is nothing left to say
+     * either way, and claiming "person" is the lesser error than inventing a name.
+     *
+     * @return null when there is no such lot — which the route answers 404, where an empty list
+     *   would read as "a lot nobody bid on".
+     */
+    fun bids(lotId: String): List<AdminAuctionBid>? = transaction { db ->
+        val exists = db.prepareStatement("SELECT 1 FROM auction_lots WHERE id = ?").use {
+            it.setString(1, lotId)
+            it.executeQuery().use { rows -> rows.next() }
+        }
+        if (!exists) return@transaction null
+        db.prepareStatement(
+            """
+            SELECT ab.id, ab.bidder_account, a.username, b.account_id IS NOT NULL AS bot,
+                   ab.amount, ab.fee, ab.placed_at, ab.refunded_at, ab.settled_at
+            FROM auction_bids ab
+            LEFT JOIN accounts a ON a.id = ab.bidder_account
+            LEFT JOIN bots b ON b.account_id = ab.bidder_account
+            WHERE ab.lot_id = ?
+            ORDER BY ab.placed_at DESC, ab.id DESC
+            """.trimIndent(),
+        ).use { statement ->
+            statement.setString(1, lotId)
+            statement.executeQuery().use { rows -> rows.collect { it.toBid() } }
+        }
+    }
+
+    /**
      * `GET /admin/audit` — the whole trail, or one account's.
      *
      * Keyset paging on `id`, not `OFFSET`. The table only ever grows at the head, so an offset page
@@ -625,6 +677,19 @@ class AdminStore(
      * `V18__stats_views.sql` counts all three separately for exactly this reason, and a history
      * that showed one of them would be a history that disagreed with the dashboard above it.
      *
+     * ### A refereed match is listed once, as `PVE`
+     *
+     * `creditRefereedMatch` settles a refereed session by writing a `matches` row too, keyed by the
+     * session's id in `transcript_hash` — so the first branch leaves out every row that is the
+     * settlement of one of this player's sessions, and the session is listed alone. This page used
+     * to show each refereed game twice, one line per table, which is the same double count
+     * `V21__refereed_matches_counted_once.sql` removed from the dashboard, and the predicate here
+     * is the one written there.
+     *
+     * The session is the line that stays, and not the settlement, because it is the one that also
+     * covers the games nobody finished and the one the match inspector can replay: it holds the
+     * hands and the moves, where `matches` holds a score.
+     *
      * ### What `result` carries, which is not the same thing per kind
      *
      * `matches.result` is a real outcome — `WIN`, `LOSE`, `DRAW`. The other two have a *status*:
@@ -632,6 +697,11 @@ class AdminStore(
      * vocabulary, because reconciling them would mean deciding that an abandoned match was a loss —
      * a judgement the schema deliberately does not make, and one an operator arbitrating a dispute
      * must not have made for them.
+     *
+     * The one exception is a refereed session that was **paid**: its line carries the outcome its
+     * settlement recorded rather than `FINISHED`. That is not a judgement — the server played the
+     * match and wrote the outcome down — and it is what the second line used to say before there
+     * was only one. A session with no settlement keeps its status, `ABANDONED` included.
      *
      * The `UNION ALL` orders and limits **after** the union, so the newest twenty across all three
      * are the newest twenty and not seven from each.
@@ -649,10 +719,17 @@ class AdminStore(
                m.format AS format, m.mgp AS mgp, m.opponent_icon_id AS opponent
         FROM matches m
         WHERE m.account_id = ?
+          AND NOT EXISTS (
+              SELECT 1 FROM pve_matches s
+              WHERE s.id = m.transcript_hash AND s.account_id = m.account_id
+          )
         UNION ALL
-        SELECT '$KIND_PVE', p.id, coalesce(p.finished_at, p.created_at), p.status, p.format_id,
+        SELECT '$KIND_PVE', p.id, coalesce(p.finished_at, p.created_at),
+               coalesce(settled.result, p.status), p.format_id,
                coalesce((p.reward ->> 'mgp')::int, 0), p.opponent_icon
         FROM pve_matches p
+        LEFT JOIN matches settled
+               ON settled.account_id = p.account_id AND settled.transcript_hash = p.id
         WHERE p.account_id = ?
         UNION ALL
         SELECT '$KIND_PVP', v.id, coalesce(v.finished_at, v.created_at), v.status, v.format,
@@ -697,7 +774,18 @@ class AdminStore(
      * player page's heading suggests and deliberately so: somebody writing in about the auction
      * house does not distinguish, and a screen that showed only their listings would hide the money
      * they have committed.
+     *
+     * ### "Bidding on" means *has ever bid on*, not *is the top bidder*
+     *
+     * This used to match `l.top_bidder` alone, which is too narrow: a player outbid on a lot had
+     * placed money on it, had it refunded, and could not see it on their own page — which is
+     * exactly the lot somebody writes in about ("I bid and it vanished"). So a bid row of theirs
+     * in `auction_bids` is enough, refunded or not; bids are indexed by lot and by bidder, so that
+     * is a probe and not a scan. `top_bidder` stays in the predicate beside it, because it is the
+     * lot's own record of who leads and costs nothing to keep. [bids] lists the offers themselves.
      */
+    // Every index is a JDBC position, and the account id is bound four times: `IS NULL`, seller,
+    // top bidder, and any bid.
     @Suppress("MagicNumber")
     private fun readLots(
         db: Connection,
@@ -712,18 +800,24 @@ class AdminStore(
         FROM auction_lots l
         LEFT JOIN accounts sa ON sa.id = l.seller_account
         LEFT JOIN accounts ta ON ta.id = l.top_bidder
-        WHERE (?::bigint IS NULL OR l.seller_account = ?::bigint OR l.top_bidder = ?::bigint)
+        WHERE (?::bigint IS NULL
+               OR l.seller_account = ?::bigint
+               OR l.top_bidder = ?::bigint
+               OR EXISTS (
+                   SELECT 1 FROM auction_bids ab
+                   WHERE ab.lot_id = l.id AND ab.bidder_account = ?::bigint
+               ))
           AND (?::text IS NULL OR l.status = ?::text)
         ORDER BY l.created_at DESC
         LIMIT ?
         """.trimIndent(),
     ).use { statement ->
-        for (position in 1..3) {
+        for (position in 1..4) {
             party?.let { statement.setLong(position, it) } ?: statement.setNull(position, BIGINT)
         }
-        statement.setString(4, status)
         statement.setString(5, status)
-        statement.setInt(6, limit)
+        statement.setString(6, status)
+        statement.setInt(7, limit)
         statement.executeQuery().use { rows -> rows.collect { it.toLot() } }
     }
 
@@ -886,6 +980,20 @@ class AdminStore(
             createdAt = getTimestamp("created_at").instant(),
             endsAt = getTimestamp("ends_at").instant(),
             soldFor = soldFor,
+        )
+    }
+
+    private fun ResultSet.toBid(): AdminAuctionBid {
+        val bidderId = getLong("bidder_account").takeUnless { wasNull() }
+        return AdminAuctionBid(
+            id = getLong("id"),
+            bidder = AdminParty(bidderId, getString("username") ?: GONE),
+            bot = getBoolean("bot"),
+            amount = getInt("amount"),
+            fee = getInt("fee"),
+            placedAt = getTimestamp("placed_at").instant(),
+            refundedAt = getTimestamp("refunded_at")?.instant(),
+            settledAt = getTimestamp("settled_at")?.instant(),
         )
     }
 

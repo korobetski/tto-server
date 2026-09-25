@@ -25,6 +25,13 @@ import kotlin.test.assertEquals
  * test's accounts and matches are in these figures too. Reading the view before and after this
  * test's fixtures measures exactly what this test inserted and nothing else — where an absolute
  * count would be a number that changes whenever a test is added elsewhere.
+ *
+ * ### One refereed match is one match
+ *
+ * The seller also plays a refereed session that was paid, which leaves a row in *two* tables —
+ * `pve_matches` for the session, `matches` for its settlement. V18 counted both, so every refereed
+ * game was a `PVE` and a `CREDITED` and `today` counted it twice; `V21` keeps the settlement out
+ * of `CREDITED`. The deltas below are written for the fixed view, so this test fails on V18.
  */
 class StatsViewsTest {
 
@@ -42,6 +49,9 @@ class StatsViewsTest {
             // `matches`, and it is not somebody playing the game.
             credited(db, seller)
             credited(db, bot)
+
+            // A refereed session and the `matches` row that paid it: one game, counted as `PVE`.
+            refereed(db, "stats-pve-$seller", seller)
 
             // A person against a bot is a match a person played; two bots against each other is
             // the lobby-filling machinery talking to itself.
@@ -63,16 +73,21 @@ class StatsViewsTest {
             after.activeToday - before.activeToday,
             "an account that has never been seen was counted as active",
         )
-        assertEquals(1L, after.credited - before.credited, "the bot's credited match was counted")
+        assertEquals(
+            1L,
+            after.credited - before.credited,
+            "the bot's credited match was counted, or a refereed settlement was",
+        )
+        assertEquals(1L, after.pve - before.pve, "the refereed session was not counted as PvE")
         assertEquals(
             1L,
             after.pvp - before.pvp,
             "bot against bot was counted, or bot against person was not",
         )
         assertEquals(
-            2L,
+            3L,
             after.matchesToday - before.matchesToday,
-            "today is not the three kinds added up",
+            "today is not the three kinds added up, each game once",
         )
         assertEquals(
             SELLER_MGP + BIDDER_MGP,
@@ -108,6 +123,7 @@ class StatsViewsTest {
                     verified = rows.getLong("accounts_verified"),
                     activeToday = rows.getLong("accounts_active_today"),
                     credited = rows.getLong("matches_credited"),
+                    pve = rows.getLong("matches_pve"),
                     pvp = rows.getLong("matches_pvp"),
                     matchesToday = rows.getLong("matches_today"),
                     total = rows.getLong("mgp_total"),
@@ -124,6 +140,7 @@ class StatsViewsTest {
         val verified: Long,
         val activeToday: Long,
         val credited: Long,
+        val pve: Long,
         val pvp: Long,
         val matchesToday: Long,
         val total: Long,
@@ -169,6 +186,24 @@ class StatsViewsTest {
         "INSERT INTO matches (account_id, opponent_icon_id, format, seed, blue, red, result, " +
             "transcript_hash) VALUES ($account, 'npc', 'standard', 1, 6, 4, 'WIN', 'h$account')",
     )
+
+    /**
+     * A refereed session and its settlement, as `creditRefereedMatch` leaves them: the `matches`
+     * row carries the session's id where a submitted match carries its transcript's digest.
+     */
+    private fun refereed(db: Connection, id: String, account: Long) {
+        execute(
+            db,
+            "INSERT INTO pve_matches (id, account_id, format_id, opponent_icon, rules, seed, " +
+                "blue_hand, red_hand, first_player, status, finished_at) VALUES ('$id', " +
+                "$account, 'standard', 'npc', '{}', 1, '[]', '[]', 'BLUE', 'FINISHED', now())",
+        )
+        execute(
+            db,
+            "INSERT INTO matches (account_id, opponent_icon_id, format, seed, blue, red, result, " +
+                "transcript_hash) VALUES ($account, 'npc', 'standard', 1, 6, 4, 'WIN', '$id')",
+        )
+    }
 
     private fun pvp(db: Connection, id: String, blue: Long, red: Long) = execute(
         db,

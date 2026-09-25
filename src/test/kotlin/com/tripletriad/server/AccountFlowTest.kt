@@ -338,6 +338,37 @@ class AccountFlowTest {
         assertEquals(AccountError.UNAUTHENTICATED, response.failure().error)
     }
 
+    /**
+     * **Any signed-in request is a sighting**, and at most one every half minute is written.
+     *
+     * `seen_at` used to be stamped by the PvP lobby's poll alone, so a player who only played NPCs
+     * was reported by the console as last seen days ago. `/me` stands in here for every route that
+     * is not the lobby. The sighting is aged directly, as [anExpiredSessionIsRefused] ages a
+     * session: there is no endpoint that does it and a test that waited thirty seconds would be
+     * the slowest in the suite.
+     */
+    @Test
+    fun anySignedInRequestIsASighting() = testApplication {
+        application { module(Postgres.dataSource, prometheusRegistry()) }
+
+        val name = Postgres.freshAccount("sighted")
+        val session = register(name)
+        assertNotNull(secondsSinceSeen(name), "opening the starter box did not count as a sighting")
+
+        ageSighting(name, "10 seconds")
+        assertEquals(HttpStatusCode.OK, meResponse(session.token).status)
+        assertTrue(secondsSinceSeen(name)!! >= 10, "a sighting inside the floor was written again")
+
+        ageSighting(name, "1 hour")
+        assertEquals(HttpStatusCode.OK, meResponse(session.token).status)
+        assertTrue(secondsSinceSeen(name)!! < 10, "a stale sighting was not moved forward")
+
+        // A token nobody holds is not a sighting of anybody.
+        ageSighting(name, "1 hour")
+        assertEquals(HttpStatusCode.Unauthorized, meResponse("not-a-token").status)
+        assertTrue(secondsSinceSeen(name)!! >= 3_600, "an unknown token moved somebody's sighting")
+    }
+
     /** A signed-out token stops working immediately — that is the whole job of sign-out. */
     @Test
     fun signingOutRevokesTheToken() = testApplication {
@@ -505,6 +536,34 @@ class AccountFlowTest {
             ).use { statement ->
                 statement.setString(1, Tokens.fingerprint(token))
                 assertEquals(1, statement.executeUpdate(), "no session row to expire")
+            }
+            db.commit()
+        }
+    }
+
+    /** Seconds since [name] was last seen, by the database's clock, or null if never. */
+    private fun secondsSinceSeen(name: String): Double? = Postgres.dataSource.connection.use { db ->
+        db.prepareStatement(
+            "SELECT extract(epoch FROM now() - seen_at) FROM accounts " +
+                "WHERE username_key = lower(?)",
+        ).use { statement ->
+            statement.setString(1, name)
+            statement.executeQuery().use { rows ->
+                assertTrue(rows.next(), "no account named $name")
+                rows.getDouble(1).takeUnless { rows.wasNull() }
+            }
+        }
+    }
+
+    /** Moves [name]'s last sighting [age] into the past. */
+    private fun ageSighting(name: String, age: String) {
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                "UPDATE accounts SET seen_at = now() - ?::interval WHERE username_key = lower(?)",
+            ).use { statement ->
+                statement.setString(1, age)
+                statement.setString(2, name)
+                assertEquals(1, statement.executeUpdate(), "no account named $name")
             }
             db.commit()
         }

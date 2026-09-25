@@ -4,7 +4,9 @@ import com.tripletriad.model.NpcLevel
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodeURLParameter
+import io.ktor.server.testing.ApplicationTestBuilder
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -143,6 +145,43 @@ class AdminInsightsTest {
             }
         }
     }
+
+    /**
+     * A bot's personality is on the roster and on its player page, and is null until it is drawn.
+     *
+     * Null first, because every bot enrolled before `V20__bot_personality.sql` starts that way and
+     * the console has to render it — and **present** as null, for the reason
+     * `AdminConsoleTest.thePlayerPageIsFlatAndSendsItsNulls` gives about `seenAt`. Then drawn, as
+     * the director would, and read back through both routes: the two read the same column through
+     * the same decoder, and this is what holds them to it.
+     */
+    @Test
+    fun aBotsPersonalityIsOnTheRosterAndItsPage() = console {
+        val session = signedIn()
+        val bot = register(Postgres.freshAccount("temper"))
+        withBot(bot) {
+            assertEquals(JsonNull, rosterRow(session, bot)["personality"])
+            assertEquals(JsonNull, playerPage(session, bot)["personality"])
+
+            BotStore(Postgres.dataSource)
+                .personalize(bot, plainPersonality(BotArchetype.COLLECTOR, FavouriteSet.FF8))
+
+            for (body in listOf(rosterRow(session, bot), playerPage(session, bot))) {
+                val personality = body["personality"]!!.jsonObject
+                assertEquals("COLLECTOR", personality["archetype"]!!.jsonPrimitive.content)
+                assertEquals("FF8", personality["favourite"]!!.jsonPrimitive.content)
+                assertEquals(1.0, personality["thrift"]!!.jsonPrimitive.double)
+            }
+        }
+    }
+
+    private suspend fun ApplicationTestBuilder.rosterRow(session: String, bot: Long) =
+        client.get("/admin/stats/bots") { cookie(session) }.expectOk()["bots"]!!.jsonArray
+            .map { it.jsonObject }
+            .first { it["accountId"]!!.jsonPrimitive.long == bot }
+
+    private suspend fun ApplicationTestBuilder.playerPage(session: String, accountId: Long) =
+        client.get("/admin/players/$accountId") { cookie(session) }.expectOk()
 
     /**
      * An inventory edit applies once, audits once, floors removals, and a retry changes nothing.

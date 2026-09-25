@@ -152,28 +152,8 @@ class BotStore(
         accountId = getLong("account_id"),
         band = bandOf(getString("band")),
         nextActionAt = getTimestamp("next_action_at").time,
-        personality = personalityOf(getString("personality")),
+        personality = personalityOf(getString("personality"), json),
     )
-
-    /**
-     * The stored personality, or null when there is none or this build cannot read it.
-     *
-     * Null in both cases on purpose: either way the director draws one and writes it back — see
-     * [personalize] — so an operator's hand-edit that does not parse is replaced rather than
-     * wedging the bot, the judgement [bandOf] makes about a band. `SELECT personality FROM bots`
-     * shows what replaced it.
-     */
-    // A personality that will not parse is one bot redrawn, which is the right cost; letting it
-    // throw would take every bot behind it in the pass with it. What `toProgress` says, one column
-    // over.
-    @Suppress("SwallowedException", "TooGenericExceptionCaught")
-    private fun personalityOf(stored: String?): BotPersonality? = stored?.let {
-        try {
-            json.decodeFromString<BotPersonality>(it)
-        } catch (failure: Exception) {
-            null
-        }
-    }
 
     // A profile that will not parse is one bot missing from a chart, which is the right cost. The
     // alternative — letting it throw — takes every other bot's numbers with it.
@@ -224,6 +204,30 @@ class BotStore(
          * miss a pass are the most overdue on the next one, which is the order [due] returns.
          */
         const val DUE_LIMIT = 8
+    }
+}
+
+/**
+ * The stored personality, or null when there is none or this build cannot read it.
+ *
+ * Null in both cases on purpose: either way the director draws one and writes it back — see
+ * [BotStore.personalize] — so an operator's hand-edit that does not parse is replaced rather than
+ * wedging the bot, the judgement `BotStore.bandOf` makes about a band. `SELECT personality FROM
+ * bots` shows what replaced it.
+ *
+ * Top-level rather than a member, because the console reads the same column — the roster and a
+ * bot's player page — and a second decoder there would be a second opinion on what a readable
+ * personality is. Null there means "none yet", whichever of the two reasons, and the director
+ * makes it untrue the next time it acts for that bot.
+ */
+// A personality that will not parse is one bot redrawn, which is the right cost; letting it throw
+// would take every bot behind it in the pass with it. What `toProgress` says, one column over.
+@Suppress("SwallowedException", "TooGenericExceptionCaught")
+internal fun personalityOf(stored: String?, json: Json = SaveJson): BotPersonality? = stored?.let {
+    try {
+        json.decodeFromString<BotPersonality>(it)
+    } catch (failure: Exception) {
+        null
     }
 }
 

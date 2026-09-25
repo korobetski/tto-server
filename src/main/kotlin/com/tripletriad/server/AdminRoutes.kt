@@ -101,6 +101,7 @@ fun Route.adminRoutes(
         get("/catalog") { catalog(admins, cards) }
         get("/matches/{kind}/{id}") { matchDetail(admins, pve, pvp, cards) }
         get("/auctions") { auctions(admins) }
+        get("/auctions/{lotId}/bids") { auctionBids(admins) }
         get("/audit") { auditTrail(admins) }
     }
 }
@@ -243,6 +244,14 @@ private suspend fun RoutingContext.matchDetail(
 private suspend fun RoutingContext.auctions(admins: AdminStore) {
     authenticateAdmin(admins) ?: return
     call.respondConsole(admins.auctions(call.request.queryParameters["status"]))
+}
+
+/** `GET /admin/auctions/{lotId}/bids` — who bid what on one lot. See [AdminStore.bids]. */
+private suspend fun RoutingContext.auctionBids(admins: AdminStore) {
+    authenticateAdmin(admins) ?: return
+    val lotId = call.parameters["lotId"].orEmpty()
+    val bids = admins.bids(lotId) ?: return call.notFound()
+    call.respondConsole(bids)
 }
 
 /**
@@ -569,6 +578,12 @@ data class AdminPlayerDetail(
     /** Level and experience, out of the save document rather than out of a column. */
     val level: Int,
     val bot: Boolean,
+    /**
+     * A bot's personality, as `/admin/stats/bots` sends it — see [AdminBotRow.personality]. Null
+     * for every person, and for a bot the director has not drawn one for yet: [bot] is what tells
+     * the two apart.
+     */
+    val personality: BotPersonality?,
     val xp: Long,
     /** How many cards the collection holds, and how many distinct ones. */
     val cards: Int,
@@ -576,7 +591,10 @@ data class AdminPlayerDetail(
     val record: AdminRecord,
     /** Newest first, across all three match tables, capped at a screenful. */
     val recentMatches: List<AdminMatchRow>,
-    /** Lots this player is selling **and** lots they are holding money against. */
+    /**
+     * Lots this player is selling **and** lots they have bid on — leading, outbid and refunded, or
+     * won. [AdminStore.readLots] says why outbid is included.
+     */
     val lots: List<AdminAuctionLot>,
     /** Administrative actions already taken on this account, newest first. */
     val audit: List<AdminAuditEntry>,
@@ -603,6 +621,9 @@ data class AdminRecord(val wins: Int, val losses: Int, val draws: Int)
  * reconciled into one vocabulary, because reconciling them would mean deciding that an abandoned
  * match was a loss, and that is a judgement the schema deliberately does not make and an operator
  * arbitrating a dispute must not have made for them.
+ *
+ * A `PVE` session that was paid is the exception: it carries the outcome its settlement recorded,
+ * because that settlement is no longer a line of its own — see [AdminStore.readMatches].
  */
 @Serializable
 data class AdminMatchRow(
@@ -741,6 +762,30 @@ data class AdminAuctionLot(
     val createdAt: String,
     val endsAt: String,
     val soldFor: Int?,
+)
+
+/**
+ * One offer on one lot, as `auction_bids` holds it.
+ *
+ * [amount] and [fee] separately, because a hold is their sum and a refund returns both: an
+ * operator reconciling a purse needs the two figures that left it, not a total they must split.
+ * [refundedAt] and [settledAt] are both null for the one live hold on an open lot, and at most
+ * one of them is ever set — `auction_bids_one_ending` makes that a constraint rather than a hope.
+ * The console derives "leading / outbid / won" from the pair rather than being sent a label,
+ * so the wire carries the facts and the wording stays the console's.
+ */
+@Suppress("LongParameterList")
+@Serializable
+data class AdminAuctionBid(
+    val id: Long,
+    val bidder: AdminParty,
+    /** True when the bidder is one of the lobby-filling bots. False, too, for a bidder gone. */
+    val bot: Boolean,
+    val amount: Int,
+    val fee: Int,
+    val placedAt: String,
+    val refundedAt: String?,
+    val settledAt: String?,
 )
 
 /**

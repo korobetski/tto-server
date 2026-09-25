@@ -303,13 +303,18 @@ otherwise resolve them differently and silently:
 1. **"A match" is three different numbers.** `matches` is credited PvE history, `pve_matches` is
    server-refereed sessions, `pvp_matches` is player versus player with its own `FORFEITED` and
    `ABANDONED` states. All three are legitimate; a dashboard that does not say which one it shows
-   is showing an accident.
+   is showing an accident. They are not disjoint, either: a refereed session that is paid leaves
+   a `matches` row too, carrying the session's id as its transcript digest. `V18` counted that
+   game twice — as `PVE` and as `CREDITED` — and `V21__refereed_matches_counted_once.sql` keeps
+   the settlement out, so `CREDITED` now means a transcript a client submitted and nothing else.
 2. **The bots inflate everything.** With `TTO_BOTS_ENABLED` set, the server plays itself. Any count
    of players or matches that does not exclude `bots.account_id` measures the lobby-filling
    machinery rather than the game.
 3. **"Registered" is not "verified".** `accounts.email_verified_at` separates them, and
    `accounts.seen_at`, added in `V15__presence.sql`, is what makes daily and weekly actives
-   answerable at all.
+   answerable at all — provided something writes it. Until 2026-09-25 only the lobby's poll did,
+   so a player who went straight to PvE was "active" on no day at all; every signed-in request
+   writes it now, throttled to once every thirty seconds.
 
 ### A read-only role
 

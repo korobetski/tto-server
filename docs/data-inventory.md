@@ -9,7 +9,7 @@ the part a privacy notice cannot do for itself.
 > something to be inferred from a table definition. What follows is the inventory such a policy
 > would have to be true about, and it is written so that a claim contradicting it is visible.
 
-Last derived from the schema on 2026-09-25, at migration `V20`.
+Last derived from the schema on 2026-09-25, at migration `V21`.
 
 > **The two migrations this file used to flag as missing are now in the table.** `V14`'s auction
 > house and `V15`'s `accounts.seen_at` both have rows. `V18` adds no row and that is a finding
@@ -36,7 +36,7 @@ Last derived from the schema on 2026-09-25, at migration `V20`.
 | Applied operations | `applied_operations` | Making a retried purchase happen once | Holds the response that was sent, so it can be replayed |
 | Seed tickets | `match_tickets` | Stopping a client choosing its own deal | Random integers |
 | Lobby tables, invitations, matches | `pvp_*` | Playing another person | Carries both players' account ids |
-| When the player was last seen | `accounts.seen_at` | Filling the lobby with people who are actually there, and answering "how many are playing" | Written by the lobby rather than by signing in, since `V15`. One timestamp, overwritten — not a history of visits |
+| When the player was last seen | `accounts.seen_at` | Filling the lobby with people who are actually there, and answering "how many are playing" | Written by any signed-in request, at most once every thirty seconds (`AccountStore.PRESENCE_FLOOR`). From `V15` until 2026-09-25 only the lobby wrote it, which left a player who never opened the lobby looking absent. One timestamp, overwritten — not a history of visits |
 | What a player sold and bid on | `auction_lots`, `auction_bids` | The auction house, since `V14` | Card ids, amounts and timestamps against an account id. Losing bids are kept on purpose — collusion between two accounts is only visible across a history. Both tables `SET NULL` rather than cascade on deletion, so a finished lot survives its seller leaving and names nobody |
 | An administrator's name and password **digest** | `admins.username`, `admins.password_hash` | Signing in to the administration console | bcrypt, as for a player. A separate identity on purpose: a player's bearer token must never be an administrative credential — see `V19__admin.sql` |
 | An administrator's TOTP secret | `admins.totp_secret` | The second factor, which is not optional | **In the clear**, and it has to be: a one-time code is recomputed rather than verified, so there is no one-way form of it. What it buys is that a stolen password alone is not enough, and a stolen database alone is not either |
@@ -57,7 +57,8 @@ document. It is named here because "no new row" is a claim worth being able to c
 migration that adds a view selecting `accounts.email` would be adding a place personal data is
 read from, and this paragraph is what it would have to contradict. The read-only `tto_stats` role
 the same migration grants to can reach those views and nothing else — not `accounts`, not
-`sessions`, not `account_codes`.
+`sessions`, not `account_codes`. `V21` replaces one of those views with a body selecting the same
+three columns — a kind, an id, a timestamp — and adds no row either.
 
 **IP addresses** are not stored in any table. They appear in the reverse proxy's access log
 (`Caddyfile`, `format json`) and in the rate limiter's in-memory buckets, which are keyed by address

@@ -306,51 +306,58 @@ class AccountStore(
         }
 
     /**
-     * Which account a token belongs to, or null if it is unknown **or expired**.
+     * Which account a token belongs to, or null if it is unknown **or expired** — and the same
+     * statement records that the account has just spoken to us.
      *
      * The expiry is enforced in the `WHERE` clause rather than by comparing in Kotlin, so there is
      * no window in which a row is fetched, judged valid, and used a moment after it stopped being
      * so — and no chance of the server's clock and the database's disagreeing about it.
+     *
+     * ### Presence is stamped here, on every signed-in request
+     *
+     * `seen_at` used to be written by the lobby's table poll alone, on the argument that it was the
+     * one route a client reached reliably. It was reliable only for somebody *in the lobby*: a
+     * player who spent a day on PvE, the shop and the auction house was never seen at all, and the
+     * console reported them as gone for five days on the evening of a day of matches — and
+     * `stats.accounts.active_today` as zero. Resolving a token is the one step every signed-in
+     * request takes, so it is where "this account is here" is actually known.
+     *
+     * The write is a data-modifying CTE rather than a second statement: one round trip, as before,
+     * and it runs whether or not the outer `SELECT` reads it. It is throttled by [PRESENCE_FLOOR]
+     * in its own `WHERE` — not in Kotlin, because two of the player's requests can be in flight at
+     * once and a check-then-write would let both through — so the lobby's once-a-second poll is
+     * still one write per half minute. An unknown or expired token writes nothing: the join on
+     * `session` is empty.
+     *
+     * What it changes for the lobby: `onlineOthers` now counts a player who is in a match against
+     * an NPC or in the shop, which is what "somebody else is awake" was meant to say — the lobby's
+     * own comment used to note that such a player went silent there for minutes at a time.
      */
     fun accountForToken(tokenFingerprint: String): Long? = transaction { db ->
         db.prepareStatement(
-            "SELECT account_id FROM sessions WHERE token_hash = ? AND expires_at > now()",
-        ).use { statement ->
-            statement.setString(1, tokenFingerprint)
-            statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
-        }
-    }
-
-    /**
-     * Records that this account has just spoken to us — at most once every [PRESENCE_FLOOR].
-     *
-     * The floor is in the `WHERE` clause and not in Kotlin, for the same reason the expiry above
-     * is: two of the player's own requests can be in flight at once, and a check-then-write would
-     * let both through. What it buys is the difference between one write per client per second —
-     * the lobby's poll rate — and one per half minute.
-     *
-     * Fire-and-forget by design: presence is a courtesy on the lobby screen, and a failed touch
-     * must never turn a successful read of the tables into an error.
-     */
-    fun touch(accountId: Long) = transaction { db ->
-        db.prepareStatement(
             """
-            UPDATE accounts SET seen_at = now()
-            WHERE id = ? AND (seen_at IS NULL OR seen_at < now() - ?::interval)
+            WITH session AS (
+                SELECT account_id FROM sessions WHERE token_hash = ? AND expires_at > now()
+            ), seen AS (
+                UPDATE accounts a SET seen_at = now()
+                FROM session s
+                WHERE a.id = s.account_id
+                  AND (a.seen_at IS NULL OR a.seen_at < now() - ?::interval)
+            )
+            SELECT account_id FROM session
             """.trimIndent(),
         ).use { statement ->
-            statement.setLong(1, accountId)
+            statement.setString(1, tokenFingerprint)
             statement.setString(2, PRESENCE_FLOOR)
-            statement.executeUpdate()
+            statement.executeQuery().use { rows -> if (rows.next()) rows.getLong(1) else null }
         }
-        Unit
     }
 
     /**
      * How many accounts *other than this one* have been heard from inside [windowMillis].
      *
      * The reader is excluded in SQL rather than by subtracting one, because they may not be in the
-     * count to begin with: `touch` is throttled, so an account thirty seconds into its first
+     * count to begin with: presence is throttled, so an account thirty seconds into its first
      * request has not been written yet, and "1 - 1 = 0" and "0 - 1 = -1" are different bugs.
      */
     fun onlineOthers(accountId: Long, windowMillis: Long): Int = transaction { db ->
@@ -1232,7 +1239,7 @@ class AccountStore(
         const val RECENT_MATCHES = 20
 
         /**
-         * How stale a sighting has to be before [touch] writes a new one.
+         * How stale a sighting has to be before [accountForToken] writes a new one.
          *
          * Half a minute against a two-minute presence window (`PvpPresence.WINDOW_MILLIS`): a
          * client that goes quiet is counted as here for up to thirty seconds longer than it

@@ -13,6 +13,8 @@ import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -69,6 +71,7 @@ class AdminConsoleTest {
             "/admin/players/1",
             "/admin/matches/pve/whatever",
             "/admin/auctions",
+            "/admin/auctions/whatever/bids",
             "/admin/audit",
             "/admin/catalog",
         )
@@ -191,6 +194,7 @@ class AdminConsoleTest {
         assertEquals(JsonNull, body["seenAt"], "a null must arrive as null and not as an absence")
         assertEquals(address(name), body["email"]!!.jsonPrimitive.content)
         assertFalse(body["bot"]!!.jsonPrimitive.content.toBoolean())
+        assertEquals(JsonNull, body["personality"], "a person has no personality, and says so")
 
         for (key in listOf("record", "recentMatches", "lots", "audit")) {
             assertNotNull(body[key], key)
@@ -428,6 +432,30 @@ class AdminConsoleTest {
         assertEquals(FORMAT, row["format"]!!.jsonPrimitive.content)
     }
 
+    /**
+     * A refereed match that was paid is one line of history, not two.
+     *
+     * Settling a refereed session writes a `matches` row keyed by the session's id, so the
+     * history's `UNION ALL` used to list the game twice — once per table. The line that stays is
+     * the session, which the inspector can replay, and it carries the outcome its settlement
+     * recorded rather than `FINISHED`, which is what the second line used to say.
+     */
+    @Test
+    fun aRefereedMatchIsListedOnceWithItsOutcome() = console {
+        val session = signedIn()
+        val accountId = register(Postgres.freshAccount("refereed"))
+        val sessionId = openPveMatch(accountId)
+        settle(accountId, sessionId)
+
+        val history = client.get("/admin/players/$accountId") { cookie(session) }
+            .expectOk()["recentMatches"]!!.jsonArray
+        assertEquals(1, history.size, "the session and its settlement are one match")
+        val row = history[0].jsonObject
+        assertEquals(KIND_PVE, row["kind"]!!.jsonPrimitive.content)
+        assertEquals(sessionId, row["id"]!!.jsonPrimitive.content)
+        assertEquals("LOSE", row["result"]!!.jsonPrimitive.content)
+    }
+
     /** A kind the server does not have, and an id it does not hold, are both plain 404s. */
     @Test
     fun anUnknownMatchIsNotFound() = console {
@@ -505,4 +533,105 @@ class AdminConsoleTest {
             )
         }
     }
+
+    /**
+     * A player outbid on a lot still finds it on their page, and the lot's bids say who drove it.
+     *
+     * The outbid bidder is the case the player page used to miss: their money went onto the lot
+     * and came back, `top_bidder` no longer names them, and it was the one lot they would ask
+     * about. The bid history then answers the other question an operator has about a lot that
+     * climbed — who pushed it — with the bots flagged, newest first, and each hold's ending.
+     */
+    @Test
+    fun anOutbidPlayerSeesTheLotAndTheBidsSayWhoRaisedIt() = console {
+        val session = signedIn()
+        val seller = register(Postgres.freshAccount("seller"))
+        val outbid = register(Postgres.freshAccount("outbid"))
+        val leader = register(Postgres.freshAccount("leader"))
+        val lot = openLot(seller, leader)
+        bid(lot, outbid, amount = 12, refunded = true, secondsAgo = 60)
+        bid(lot, leader, amount = 15, refunded = false, secondsAgo = 0)
+
+        val lots = client.get("/admin/players/$outbid") { cookie(session) }
+            .expectOk()["lots"]!!.jsonArray
+        assertTrue(
+            lots.any { it.jsonObject["id"]!!.jsonPrimitive.content == lot },
+            "an outbid player put money on the lot and must see it",
+        )
+
+        withBot(leader) {
+            val bids = client.get("/admin/auctions/$lot/bids") { cookie(session) }.expectOkArray()
+            assertEquals(2, bids.size)
+            val (newest, oldest) = bids.map { it.jsonObject }
+            assertEquals(leader, newest["bidder"]!!.jsonObject["accountId"]!!.jsonPrimitive.long)
+            assertTrue(newest["bot"]!!.jsonPrimitive.boolean, "the leading bidder is a bot")
+            assertEquals(15, newest["amount"]!!.jsonPrimitive.int)
+            assertEquals(JsonNull, newest["refundedAt"], "the live hold was refunded")
+            assertEquals(JsonNull, newest["settledAt"])
+
+            assertEquals(outbid, oldest["bidder"]!!.jsonObject["accountId"]!!.jsonPrimitive.long)
+            assertFalse(oldest["bot"]!!.jsonPrimitive.boolean)
+            assertEquals(12, oldest["amount"]!!.jsonPrimitive.int)
+            assertNotNull(
+                oldest["refundedAt"]!!.jsonPrimitive.contentOrNull,
+                "an outbid hold was not refunded",
+            )
+        }
+
+        val missing = client.get("/admin/auctions/no-such-lot/bids") { cookie(session) }
+        assertEquals(HttpStatusCode.NotFound, missing.status)
+        assertEquals("NOT_FOUND", missing.failure())
+    }
+
+    /** One `auction_bids` row, as the house writes it: a hold, or a hold already refunded. */
+    private fun bid(lot: String, bidder: Long, amount: Int, refunded: Boolean, secondsAgo: Int) =
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                """
+                INSERT INTO auction_bids
+                    (lot_id, bidder_account, amount, fee, placed_at, refunded_at)
+                VALUES (?, ?, ?, 1, now() - ? * interval '1 second', CASE WHEN ? THEN now() END)
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, lot)
+                statement.setLong(2, bidder)
+                statement.setInt(3, amount)
+                statement.setInt(4, secondsAgo)
+                statement.setBoolean(5, refunded)
+                assertEquals(1, statement.executeUpdate())
+            }
+            db.commit()
+        }
+
+    /**
+     * [sessionId] finished and paid, as `creditRefereedMatch` leaves it: the session marked
+     * `FINISHED`, and a `matches` row whose `transcript_hash` is the session's id.
+     *
+     * A loss rather than a win, so that the outcome on the history line cannot be mistaken for a
+     * default: nothing in the session row says `LOSE`.
+     */
+    private fun settle(accountId: Long, sessionId: String) =
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                "UPDATE pve_matches SET status = 'FINISHED', finished_at = now() WHERE id = ?",
+            ).use { statement ->
+                statement.setString(1, sessionId)
+                assertEquals(1, statement.executeUpdate())
+            }
+            db.prepareStatement(
+                """
+                INSERT INTO matches
+                    (account_id, opponent_icon_id, format, seed, blue, red, result, transcript_hash)
+                VALUES (?, ?, ?, ?, 4, 6, 'LOSE', ?)
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setLong(1, accountId)
+                statement.setString(2, OPPONENT)
+                statement.setString(3, FORMAT)
+                statement.setInt(4, SEED)
+                statement.setString(5, sessionId)
+                assertEquals(1, statement.executeUpdate())
+            }
+            db.commit()
+        }
 }

@@ -122,24 +122,23 @@ class PvpFlowTest {
      * A test asserting "one person is online" would be a test that passes alone and fails in a
      * suite, which is worse than no test at all.
      *
-     * Two claims: reading the lobby is what makes an account present, and the reader is never in
-     * their own count — otherwise a player alone on the server is shown a permanent "1 online"
-     * and told there is somebody to play.
+     * Two claims: any signed-in request makes an account present — Bob never reads the lobby
+     * here, as a player busy with NPCs or the shop does not — and the reader is never in their own
+     * count, otherwise a player alone on the server is shown a permanent "1 online" and told there
+     * is somebody to play.
      */
     @Test
     fun presenceCountsEverybodyElseWhoHasBeenSeen() = server {
         val alice = register(Postgres.freshAccount("seen-a"))
-        val bob = register(Postgres.freshAccount("seen-b"))
-
-        // Registering is not being seen: presence is stamped by reading the lobby, which is the
-        // one route a client with this screen open polls.
         val before = presence(alice.token).others
 
         tables(alice.token)
         assertEquals(before, presence(alice.token).others, "Alice counted herself")
 
-        tables(bob.token)
-        assertEquals(before + 1, presence(alice.token).others, "Bob was not seen reading the lobby")
+        // Registering ends in opening the starter box, which is a signed-in request like any
+        // other — and the only one Bob makes.
+        register(Postgres.freshAccount("seen-b"))
+        assertEquals(before + 1, presence(alice.token).others, "Bob was not seen")
     }
 
     /** And how many tables on offer are somebody else's, which is all a player can join. */

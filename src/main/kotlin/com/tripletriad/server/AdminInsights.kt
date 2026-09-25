@@ -185,7 +185,7 @@ class AdminInsightStore(private val dataSource: DataSource) {
         db.prepareStatement(
             """
             SELECT b.account_id, a.username, b.band, b.next_action_at, b.created_at, a.seen_at,
-                   c.save::text AS save
+                   b.personality::text AS personality, c.save::text AS save
             FROM bots b
             JOIN accounts a ON a.id = b.account_id
             LEFT JOIN characters c ON c.account_id = b.account_id
@@ -202,6 +202,7 @@ class AdminInsightStore(private val dataSource: DataSource) {
                         nextActionAt = it.getTimestamp("next_action_at").iso(),
                         createdAt = it.getTimestamp("created_at").iso(),
                         seenAt = it.getTimestamp("seen_at")?.iso(),
+                        personality = personalityOf(it.getString("personality")),
                         save = it.getString("save")?.let { save ->
                             SaveJson.decodeFromString(GameSave.serializer(), save)
                         },
@@ -333,6 +334,8 @@ data class BotRosterEntry(
     val nextActionAt: String,
     val createdAt: String,
     val seenAt: String?,
+    /** Null until the director has drawn one, or when this build cannot read it. */
+    val personality: BotPersonality?,
     /**
      * Null for a bot whose starter was never claimed, which `BotDirector` would be mid-way through.
      */
@@ -491,6 +494,7 @@ private fun BotRosterEntry.toRow(pvp: AdminRecord) = AdminBotRow(
     createdAt = createdAt,
     seenAt = seenAt,
     nextActionAt = nextActionAt,
+    personality = personality,
     record = AdminRecord(
         wins = save?.stats?.wins ?: 0,
         losses = save?.stats?.defeats ?: 0,
@@ -676,6 +680,18 @@ data class AdminBotRow(
     val createdAt: String,
     val seenAt: String?,
     val nextActionAt: String,
+    /**
+     * Who the bot is — archetype, favourite set and every trait — exactly as `bots.personality`
+     * stores it. Null for a bot the director has not acted for since `V20__bot_personality.sql`.
+     *
+     * The stored shape rather than a console-only copy of it. [BotPersonality] is already the
+     * document a hand-edit of the column has to match, so an operator comparing the screen with
+     * `SELECT personality FROM bots` sees the same keys, and a trait added to the model reaches the
+     * console without a second type to keep in step. The cost is that renaming a trait is a
+     * console change too — and renaming one already costs more than that: every stored document
+     * stops parsing, and the director redraws every bot's personality.
+     */
+    val personality: BotPersonality?,
     /** Lifetime, out of the save. */
     val record: AdminRecord,
     /** In the window, against NPCs. */
