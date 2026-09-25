@@ -364,6 +364,7 @@ private fun Application.playBots(
         npcs = Catalogs.npcs,
         formats = Catalogs.formats,
         starters = Catalogs.starters,
+        campaigns = Catalogs.campaigns,
         accounts = accounts,
         bots = bots,
         pve = pve,
@@ -381,8 +382,10 @@ private fun Application.playBots(
     registerBotMetrics(registry, bots)
 
     launch {
+        // The format is where a bot falls back to, not where every bot plays: each one plays the
+        // set its personality collects. See `BotDirector.formatOf`.
         logger.info(
-            "Playing {} bots at band {} in {}",
+            "Playing {} bots at band {}, falling back to {}",
             policy.count,
             policy.band,
             policy.formatId,

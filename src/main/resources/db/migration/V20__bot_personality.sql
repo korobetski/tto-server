@@ -1,0 +1,40 @@
+-- Who each bot is: the collection it is after, and the temper it goes after it with.
+--
+-- ### Why a column, and why on `bots`
+--
+-- A roster of accounts that all want the same cards, buy the same pack and queue against the same
+-- five opponents is a lobby of copies, and a statistic about one player sampled ten times. So each
+-- bot is drawn a personality once — an archetype (collector, competitor, duelist, merchant), a
+-- favourite set, and a handful of traits drawn inside that archetype's ranges — and keeps it.
+--
+-- *Keeps* is the reason it is stored at all. Drawn afresh on every pass, a bot would save for a
+-- card on one pass and blow the money on packs on the next, which is noise rather than a
+-- character. Derived from the account id instead, it would be stable but not editable, and the
+-- first thing anybody watching the roster wants to do is turn one bot into a merchant and see what
+-- the auction house does. A column makes that an UPDATE.
+--
+-- It belongs here rather than in `characters.save` for the reason `V17__bots.sql` gives about the
+-- band: a personality is a fact about *being a bot*, and the profile is the one document a bot
+-- shares, field for field, with every player. Nothing that reads a profile should find a trait in
+-- it that no person has.
+--
+-- ### JSONB, not a column per trait
+--
+-- The traits are read by one caller, `BotStore.due`, and decoded into `BotPersonality` — the
+-- shape lives in Kotlin, beside the code that gives each trait its meaning. A column per trait
+-- would be a migration every time one is added or retired, for a table no query ever filters on a
+-- trait of. The cost is that the database does not check the shape, and `BotStore` answers that
+-- the way it answers an unknown band: a document this build cannot read is drawn again rather than
+-- wedging the director.
+--
+-- ### Nullable, and filled in lazily
+--
+-- Every bot enrolled before this migration has no personality, and there is no SQL that could draw
+-- one — the ranges and the generator are the director's. So the column is nullable, a new bot is
+-- enrolled with one, and the director draws one for an existing bot the first time it acts for it.
+-- An existing bot keeps the set it has been collecting (`TTO_BOTS_FORMAT`'s), so nobody's
+-- collection is stranded in a format the bot has stopped playing.
+--
+-- Additive, as every change to a live table here is: a build that predates it never names the
+-- column, and a deploy is not atomic with its migration.
+ALTER TABLE bots ADD COLUMN personality JSONB;

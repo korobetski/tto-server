@@ -1,13 +1,20 @@
 package com.tripletriad.server
 
+import com.tripletriad.data.Campaign
+import com.tripletriad.data.CampaignCatalog
+import com.tripletriad.data.CampaignEntry
+import com.tripletriad.data.CampaignRewards
 import com.tripletriad.data.CardCatalog
+import com.tripletriad.data.Format
 import com.tripletriad.data.FormatCatalog
 import com.tripletriad.data.NpcCatalog
+import com.tripletriad.data.PveMatches
 import com.tripletriad.data.StarterCatalog
 import com.tripletriad.data.StarterPack
 import com.tripletriad.model.CardColor
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.MatchAiOptions
+import com.tripletriad.model.questDayOf
 import com.tripletriad.protocol.ANY_DECK
 import com.tripletriad.protocol.AuctionDuration
 import com.tripletriad.protocol.AuctionOutcome
@@ -68,14 +75,23 @@ private val logger = LoggerFactory.getLogger("com.tripletriad.server.BotDirector
  * stranger creating accounts. Simulating it would mean writing a confirmation timestamp for an
  * address that does not exist, which is worse than not simulating it.
  *
+ * ### Every bot is somebody
+ *
+ * A [BotPersonality] is drawn for each bot once and kept — `V20__bot_personality.sql` — and every
+ * choice below that has more than one good answer goes through it: the set it collects and so the
+ * format it plays, how much it keeps back, what it saves for, which opponent it sits down against,
+ * which pack it buys, what it bids and asks, whether it goes in for today's tournament, and how
+ * long it takes about all of it. The deployment's [BotPolicy] is the frame: a personality can make
+ * a bot slower, more patient or more careful than the policy asks, never less.
+ *
  * ### Nothing here is a deadline
  *
  * A pass that does no work costs two indexed queries. A bot that misses a pass is the most overdue
  * on the next one. The only clock a bot has to beat is a live PvP turn deadline, which is two and
  * a half minutes — see `PvpMatchRow.DEADLINE_MILLIS` — and the loop runs every couple of seconds.
  */
-// Sixteen collaborators and they are one decision: everything an account that plays itself needs.
-// Three catalogues and a starter table to deal from, stores and referees to act through, the
+// Seventeen collaborators and they are one decision: everything an account that plays itself
+// needs. Four catalogues and a starter table to deal from, stores and referees to act through, the
 // deployment's two policies, and a clock and a generator so tests control both. Grouping any of
 // them behind a holder would put an indirection between `Application.module` and the thing it
 // configures, which is the argument `pveRoutes` and `pvpRoutes` make above their own suppressions.
@@ -85,6 +101,7 @@ class BotDirector(
     private val npcs: NpcCatalog,
     private val formats: FormatCatalog,
     private val starters: StarterCatalog,
+    private val campaigns: CampaignCatalog,
     private val accounts: AccountStore,
     private val bots: BotStore,
     private val pve: PveStore,
@@ -120,20 +137,27 @@ class BotDirector(
      *
      * Every bot is rescheduled whether or not it acted — a bot that found nothing to do waits
      * [BotPolicy.idleMillis], one that played waits a move's worth — so a bot can never be picked
-     * up twice in a row without the clock having moved.
+     * up twice in a row without the clock having moved. Both waits are stretched by the bot's own
+     * `BotPersonality.pace`, which is never below one: some bots take their time, none is quicker
+     * than the policy.
+     *
+     * A bot with no personality — enrolled before there were any — is drawn one first.
      */
     fun tick(): Int = bots.due(clock()).count { bot ->
+        val personality = bot.personality ?: personalized(bot)
         // One bad row must not stop the pass: a bot whose profile will not parse, or whose match
         // cannot be replayed, would otherwise take every bot behind it down with it. The same
         // judgement `Application.sweepAbandonedMatches` makes about the sweep, one level in.
+
         @Suppress("TooGenericExceptionCaught")
         val acted = try {
-            act(bot)
+            act(bot, personality)
         } catch (failure: Exception) {
             logger.warn("Bot {} could not act", bot.accountId, failure)
             false
         }
-        bots.schedule(bot.accountId, clock() + if (acted) moveDelay() else policy.idleMillis)
+        val pause = if (acted) moveDelay() else policy.idleMillis
+        bots.schedule(bot.accountId, clock() + personality.paced(pause))
         acted
     }
 
@@ -151,20 +175,27 @@ class BotDirector(
      *    `PveMatchStatus` puts it — so making a person wait for one would be choosing the only
      *    party that does not mind waiting.
      * 4. **A live PvE turn.** The bot's own match, which nothing else should interrupt.
-     * 5. **The auction house**, ahead of the shop: a card one of its decks wants, on offer now, is
-     *    a better use of the purse than a random pack, and a lot does not wait.
-     * 6. **Spending**, then **a new PvE match**. The grind, which is what turns a fresh account
-     *    into one that has a collection and a level to wager with.
+     * 5. **The auction house**, ahead of the shop: a card it needs, on offer now, is a better use
+     *    of the purse than a pack, and a lot does not wait.
+     * 6. **Spending** — a card it has saved for, or a pack — and looking after the collection.
+     * 7. **The next rung** of a tournament it is in, ahead of anything new: the fee is paid, and
+     *    the run is what it paid for.
+     * 8. **Entering a tournament**, when it has the achievement, the fee over its reserve, and the
+     *    ambition today.
+     * 9. **A new PvE match.** The grind, which is what turns a fresh account into one that has a
+     *    collection and a level to wager with.
      */
-    private fun act(bot: Bot): Boolean {
+    private fun act(bot: Bot, personality: BotPersonality): Boolean {
         val save = accounts.saveFor(bot.accountId) ?: return false
         return claimed(bot) ||
             playedPvp(bot) ||
-            joined(bot, save) ||
+            joined(bot, save, personality) ||
             playedPve(bot) ||
-            auctioned(bot, save) ||
-            developed(bot, save) ||
-            opened(bot, save)
+            auctioned(bot, save, personality) ||
+            developed(bot, save, personality) ||
+            climbed(bot, save) ||
+            entered(bot, save, personality) ||
+            opened(bot, save, personality)
     }
 
     // ---- Player versus player ---------------------------------------------
@@ -229,23 +260,29 @@ class BotDirector(
      *
      * The level gate is checked here rather than left to the referee because the referee does not
      * check it — `authenticateUnlocked` does, and that is in the routes. See the class KDoc.
+     *
+     * Only a table in a format one of its decks would be dealt in: a bot collecting one set has
+     * nothing to bring to a table of the other, and sitting down with nothing to bring is taking a
+     * person's match to lose it. And only once the table has stood for the bot's own wait —
+     * `BotPersonality.waited`, never shorter than the policy's — so the roster does not pounce on
+     * a table as one.
      */
     // ReturnCount: three refusals before the join, and they are three different reasons a bot is
     // not this table's business. Naming each where it is decided is the point of them.
     @Suppress("ReturnCount")
-    private fun joined(bot: Bot, save: GameSave): Boolean {
+    private fun joined(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
         if (!unlocks.allowsMultiplayer(save)) return false
         if (pvp.liveMatchFor(bot.accountId) != null) return false
 
         val now = clock()
         val table = BotBrain.joinable(
-            tables = pvp.openTables(now),
+            tables = pvp.openTables(now).filter { fieldable(save, it.formatId) != null },
             botId = bot.accountId,
             save = save,
             stakes = stakes,
             wagers = policy.wagers,
             trades = policy.trades,
-            staleBefore = now - policy.tableWaitMillis,
+            staleBefore = now - personality.waited(policy.tableWaitMillis),
         ) ?: return false
 
         // The terms are public and the deck is chosen from them, exactly as a person reading the
@@ -310,7 +347,7 @@ class BotDirector(
     // ---- The auction house -------------------------------------------------
 
     /**
-     * Opens a lot for a spare card, or bids on a card a deck wants — one of the two, once.
+     * Opens a lot for a spare card, or bids on a card it needs — one of the two, once.
      *
      * Listing comes first because it is the one that frees something: a card nobody plays turned
      * into MGP a bid can then use. `BotAuctions` chooses both, and says why each stays small.
@@ -326,10 +363,10 @@ class BotDirector(
      * Each call is given a fresh operation id: the idempotency the key buys is against a person
      * pressing twice, and a bot that wants to bid again on a later pass is placing a new bid.
      */
-    private fun auctioned(bot: Bot, save: GameSave): Boolean {
-        val format = formatFor()?.takeIf { auctioning(save) } ?: return false
+    private fun auctioned(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
+        val format = formatOf(personality)?.takeIf { auctioning(save) } ?: return false
         val own = auctions.mine(bot.accountId).lots
-        val listing = BotAuctions.listing(save, cards, own)
+        val listing = BotAuctions.listing(save, cards, own, personality)
 
         val response = if (listing != null) {
             val request = ListCardRequest(
@@ -347,6 +384,7 @@ class BotDirector(
                 cards = cards,
                 lots = auctions.browse(bot.accountId).lots,
                 own = own,
+                personality = personality,
             )?.let { bid ->
                 auctions.bid(bot.accountId, BidRequest(bid.lotId, bid.amount, operationId()))
             }
@@ -366,6 +404,11 @@ class BotDirector(
     /**
      * Spends what the match paid, takes what is in the bag, clears the surplus, and rebuilds.
      *
+     * Spending is out of what lies above the bot's own reserve — `BotPersonality.reserveOver` the
+     * policy's — and above what it is saving for: a card's price, and the fee of the tournament it
+     * means to enter today ([fancied]). Without that last one, a bot would spend every match's pay
+     * on packs a step before [entered] could see it, and never have the fee. See [BotShopping].
+     *
      * ### The decision is made twice, and that is not a duplicate
      *
      * Once on the profile [act] already read — which costs nothing and answers "is there anything
@@ -379,27 +422,24 @@ class BotDirector(
      * a profile written underneath a live match is the sort of thing that is fine until the day
      * the deal is re-read, and there is nothing to gain from it.
      */
-    private fun developed(bot: Bot, save: GameSave): Boolean {
-        val format = formatFor() ?: return false
-        val planned = BotBrain.developing(
-            save,
-            format,
-            cards,
-            policy.reserve,
-            random(),
-            auctioning(save),
+    private fun developed(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
+        val format = formatOf(personality) ?: return false
+        val reserve = personality.reserveOver(policy.reserve)
+        val day = questDayOf(clock())
+        fun plan(profile: GameSave) = BotBrain.developing(
+            save = profile,
+            format = format,
+            cards = cards,
+            personality = personality,
+            reserve = reserve,
+            random = random(),
+            auctioning = auctioning(profile),
+            earmarked = fancied(profile, personality, day)?.fee ?: 0,
         )
-        if (planned == null) return false
+        if (plan(save) == null) return false
 
         val outcome = accounts.mutate(bot.accountId) { stored ->
-            val changed = BotBrain.developing(
-                stored,
-                format,
-                cards,
-                policy.reserve,
-                random(),
-                auctioning(stored),
-            )
+            val changed = plan(stored)
             Outcome(
                 changed?.copy(lastSave = clock(), saveNumber = stored.saveNumber + 1) ?: stored,
                 changed != null,
@@ -408,9 +448,76 @@ class BotDirector(
         return outcome?.detail == true
     }
 
-    /** Sits down against an opponent, which is what a bot does when it has nothing else to do. */
-    private fun opened(bot: Bot, save: GameSave): Boolean {
-        val format = formatFor() ?: return false
+    // ---- Tournaments -------------------------------------------------------
+
+    /**
+     * Sits down against the next rung of the tournament this bot is in, if it is in one.
+     *
+     * Through [PveReferee.open] like any other match, naming the ladder — which is what makes the
+     * referee check that the opponent asked for is the one on the run's current rung, and credit
+     * the match to the run. The deck is chosen against the rung's declared rules, which a ladder
+     * states on its entry screen.
+     *
+     * A run whose rung cannot be dealt — the ladder gone from the catalogue, or no deck of the
+     * bot's admitted by its format any more — is left as it is, and the bot plays an ordinary match
+     * instead. It is not abandoned, because a person cannot abandon one either: a run ends by
+     * being lost or by being won.
+     */
+    private fun climbed(bot: Bot, save: GameSave): Boolean {
+        val run = save.campaignRun ?: return false
+        val ladder = campaigns.byKey(run.campaignKey) ?: return false
+        val rung = ladder.stepAt(run.step) ?: return false
+        val format = fieldable(save, ladder.format) ?: return false
+
+        val dealt = pveReferee.open(
+            bot.accountId,
+            PveMatchRequest(
+                opponentIconId = rung.npc.iconId,
+                formatId = format.id,
+                deck = BotDecks.deckFor(save, format, cards, rung.npc.gameRules(), random()),
+                campaignKey = ladder.key,
+            ),
+        )
+        return dealt is Dealt.Playing
+    }
+
+    /**
+     * Pays to enter a tournament, when this bot fancies one today. See [BotBrain.tournament].
+     *
+     * The same arithmetic `POST /me/campaign/enter` runs — `CampaignRewards.enter`, on today's
+     * UTC day — and the same shape [developed] has: decided once on the profile already read, and
+     * again against the profile about to be written, so a pass with nothing to enter takes no lock.
+     */
+    private fun entered(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
+        val now = clock()
+        val day = questDayOf(now)
+        val reserve = personality.reserveOver(policy.reserve)
+        BotBrain.tournament(save, ladders(save), day, personality, reserve) ?: return false
+
+        val outcome = accounts.mutate(bot.accountId) { stored ->
+            val entry = BotBrain.tournament(stored, ladders(stored), day, personality, reserve)
+                ?.let { CampaignRewards.enter(stored, it, day, now) }
+            val entered = (entry as? CampaignEntry.Entered)?.save
+            Outcome(
+                entered?.copy(lastSave = now, saveNumber = stored.saveNumber + 1) ?: stored,
+                entered?.campaignRun?.campaignKey,
+            )
+        }
+        val key = outcome?.detail
+        key?.let { logger.info("Bot {} entered tournament {}", bot.accountId, it) }
+        return key != null
+    }
+
+    // ---- Free play --------------------------------------------------------
+
+    /**
+     * Sits down against an opponent, which is what a bot does when it has nothing else to do.
+     *
+     * In the format of the set it collects, against an opponent drawn by its own tastes — see
+     * [BotBrain.opponent].
+     */
+    private fun opened(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
+        val format = formatOf(personality) ?: return false
         val available = npcs.available(
             formatId = format.id,
             hour = hourOf(clock()),
@@ -418,7 +525,7 @@ class BotDirector(
             earned = save.achievements.keys,
         ).filter { it.isUnlockedFor(save) }
 
-        val npc = BotBrain.opponent(available, random()) ?: return false
+        val npc = BotBrain.opponent(available, save, format, personality, random()) ?: return false
         // An opponent's *declared* rules, which is what the selection screen shows a player before
         // they pick a deck. An opponent that declares the roulette has the rest of its rules drawn
         // when the match is dealt — `PveMatches.rulesFor` — and nobody, bot or person, can choose
@@ -462,6 +569,12 @@ class BotDirector(
      * server's catalogue, exactly as that route does. The **authored** deck the box comes with is
      * left as it is here; [BotDecks.decking] rebuilds the bot's decks on its first developing pass,
      * from whatever the collection holds by then.
+     *
+     * The box is one of its favourite set's — `StarterCatalog.forBlock`, for a block its format
+     * admits, drawn when there is more than one — which is the choice a player makes on the starter
+     * screen. A bot collecting FF8 that opened FF14's box would own nothing its format deals, and
+     * would spend its first weeks unable to sit down anywhere. Null, when the format has no box of
+     * its own, is `StarterPack`'s default: the first one.
      */
     // ReturnCount: a name that collided, a registration that collided, and an enrolment that lost
     // a race — each is a distinct way for a pass to create nothing, and each is worth its own line.
@@ -471,12 +584,16 @@ class BotDirector(
         val name = nameFor(generator)
         if (accounts.usernameTaken(name)) return null
 
+        val personality = BotPersonality.draw(generator)
+        val starter = formatOf(personality)?.blocks
+            ?.mapNotNull(starters::forBlock)
+            ?.randomOrNull(generator)
         val save = StarterPack.grantedTo(
             GameSave.new(username = name, createdAt = clock()),
             starters,
             cards.byId,
             generator,
-            null,
+            starter,
         )
         val accountId = accounts.register(
             username = name,
@@ -485,8 +602,14 @@ class BotDirector(
             email = null,
         ) ?: return null
 
-        if (!bots.enrol(accountId, policy.band, clock())) return null
-        logger.info("Enrolled bot account {} at band {}", accountId, policy.band)
+        if (!bots.enrol(accountId, policy.band, clock(), personality)) return null
+        logger.info(
+            "Enrolled bot account {} at band {}, a {} collecting {}",
+            accountId,
+            policy.band,
+            personality.archetype,
+            personality.favourite,
+        )
         return accountId
     }
 
@@ -503,11 +626,63 @@ class BotDirector(
 
     // ---- Small answers ----------------------------------------------------
 
-    /** How hard this bot plays. The row's band, which `V16__bots.sql` says why it stores. */
+    /** How hard this bot plays. The row's band, which `V17__bots.sql` says why it stores. */
     private fun optionsFor(bot: Bot): MatchAiOptions = MatchAiOptions.forLevel(bot.band)
 
-    /** The format bots play in, or null when this deployment does not have it. */
-    private fun formatFor() = formats[policy.formatId]
+    /**
+     * The format this bot plays in: the one its favourite set is spelled as, or `TTO_BOTS_FORMAT`
+     * when this deployment does not ship that one. Null when it has neither.
+     *
+     * The fallback rather than a bot that does nothing: a personality is stored, and a deployment
+     * that drops a format should not strand every bot drawn to collect it.
+     */
+    private fun formatOf(personality: BotPersonality): Format? =
+        formats[personality.favourite.formatId] ?: formats[policy.formatId]
+
+    /**
+     * [formatId]'s format, when this bot holds a deck that format would deal it — null otherwise.
+     *
+     * The same question `PveReferee.open` answers with a refusal, asked first so that a bot does
+     * not sit down at a table or pay a tournament's fee it has nothing to bring to.
+     */
+    private fun fieldable(save: GameSave, formatId: String): Format? =
+        formats[formatId]?.takeIf { PveMatches.playableDecks(save, cards, it).isNotEmpty() }
+
+    /**
+     * The tournaments this bot could play: those whose format one of its decks would field.
+     *
+     * Asked once per format rather than once per ladder — there are two formats and a couple of
+     * dozen ladders, and this runs on every pass that reaches the shop.
+     */
+    private fun ladders(save: GameSave): List<Campaign> {
+        val fielded = campaigns.all.map { it.format }.distinct()
+            .filter { fieldable(save, it) != null }
+            .toSet()
+        return campaigns.all.filter { it.format in fielded }
+    }
+
+    /** The tournament this bot means to enter on [day], paid for or not. See [BotBrain.fancied]. */
+    private fun fancied(save: GameSave, personality: BotPersonality, day: String): Campaign? =
+        BotBrain.fancied(save, ladders(save), day, personality)
+
+    /**
+     * Draws a personality for a bot that has none, and keeps it.
+     *
+     * Only a bot enrolled before `V20__bot_personality.sql` gets here. It keeps the set it has been
+     * collecting — `TTO_BOTS_FORMAT`'s, or FF14's when that is not one of the sets — so a
+     * collection built over weeks is not stranded in a format the bot has stopped playing.
+     * Everything else is drawn as for a new bot.
+     */
+    private fun personalized(bot: Bot): BotPersonality =
+        BotPersonality.draw(random(), FavouriteSet.of(policy.formatId) ?: FavouriteSet.FF14).also {
+            bots.personalize(bot.accountId, it)
+            logger.info(
+                "Bot {} is a {} collecting {}",
+                bot.accountId,
+                it.archetype,
+                it.favourite,
+            )
+        }
 
     /**
      * The wall-clock hour `NpcCatalog.available` filters on, in UTC.
@@ -518,13 +693,13 @@ class BotDirector(
      */
     private fun hourOf(at: Long): Int = Instant.ofEpochMilli(at).atZone(ZoneOffset.UTC).hour
 
-    /** A human-ish pause, drawn fresh so a roster does not move in lockstep. */
     /**
      * A key nobody else will have minted. A UUID rather than [random], because a test fixing the
      * generator must not make two bots' operations collide in `applied_operations`.
      */
     private fun operationId(): String = UUID.randomUUID().toString()
 
+    /** A human-ish pause, drawn fresh so a roster does not move in lockstep. */
     private fun moveDelay(): Long =
         policy.moveMinMillis + random().nextLong(policy.moveSpreadMillis + 1)
 

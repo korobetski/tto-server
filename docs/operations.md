@@ -65,16 +65,16 @@ server.
 | `TTO_BOTS_ENABLED` | `false` | **off everywhere until set.** Whether this server plays accounts of its own — see below |
 | `TTO_BOTS_COUNT` | `10` | how many |
 | `TTO_BOTS_BAND` | `EXPERT` | how hard they play. An `NpcLevel` name; an unknown one falls back to `EXPERT` |
-| `TTO_BOTS_FORMAT` | `ff14-standard` | which format they grind and shop in |
+| `TTO_BOTS_FORMAT` | `ff14-standard` | the **fallback** format: a bot plays the format of the set it collects, and this one only when the deployment does not ship that. Bots enrolled before `V20` keep collecting this format's set |
 | `TTO_BOTS_NAME_PREFIX` | `Duelist` | what they are called, before four random digits |
 | `TTO_BOTS_WAGER` | `false` | whether they may sit down at a table that stakes **MGP** |
 | `TTO_BOTS_TRADES` | `true` | whether they may sit down at a table with a **trade rule**. Only `false` turns it off |
 | `TTO_BOTS_AUCTIONS` | `true` | whether they list surplus and bid at the auction house. Only `false` turns it off |
-| `TTO_BOTS_RESERVE` | `5000` | MGP a bot keeps out of the shop. A bid at auction may draw on it |
-| `TTO_BOTS_TABLE_WAIT_SECONDS` | `45` | how long a table stands unanswered before a bot takes it |
+| `TTO_BOTS_RESERVE` | `5000` | the **least** MGP a bot keeps out of the shop; its personality keeps between one and three and a half times this. A bid at auction may draw on it |
+| `TTO_BOTS_TABLE_WAIT_SECONDS` | `45` | the **least** time a table stands unanswered before a bot takes it; its personality waits up to three times this |
 | `TTO_BOTS_MOVE_MIN_SECONDS` | `3` | the fastest a bot places a card |
 | `TTO_BOTS_MOVE_SPREAD_SECONDS` | `6` | added to the above, drawn per move |
-| `TTO_BOTS_IDLE_SECONDS` | `20` | how long a bot with nothing to do waits |
+| `TTO_BOTS_IDLE_SECONDS` | `20` | how long a bot with nothing to do waits, at the least — its personality stretches this by up to a half and never shortens it. The two move timings above are stretched the same way |
 | `TTO_BOTS_TICK_SECONDS` | `2` | how often the director looks at all |
 
 ### Mail, and why the server refuses to start without a provider
@@ -113,7 +113,7 @@ cannot work, a wrong threshold costs a door being open too early.
 
 `TTO_BOTS_ENABLED` makes this server play accounts of its own: ordinary `accounts` rows with
 ordinary profiles, driven in-process by `BotDirector`, which opens matches through the same
-referees a client reaches over HTTP. See `BotDirector` for the design and `V16__bots.sql` for the
+referees a client reaches over HTTP. See `BotDirector` for the design and `V17__bots.sql` for the
 one table it adds.
 
 What a bot actually does, between matches and in them:
@@ -123,17 +123,30 @@ What a bot actually does, between matches and in them:
 - **Takes what it wins.** An opened pack and an opponent's drops arrive as *bag items*, not as
   cards; `BotBrain.emptying` uses them, which is also how the XP and MGP potions get spent — a boon
   is a count of boosted matches, so using one is what makes the next win pay more.
-- **Buys packs** with what it earns, keeping `TTO_BOTS_RESERVE` back.
+- **Saves, and buys varied packs** with what lies above its own reserve (see *Personalities*
+  below). A bot with a horizon saves for one single from the shop that it is missing, and buys no
+  pack until it has it; one that means to enter a tournament today keeps the fee back as well. The
+  pack it does buy is drawn, weighed by how much of the pack is new to it and by its own whim, so
+  two bots with the same collection do not buy the same one — and a pack holding nothing new is
+  never bought.
+- **Faces varied opponents.** Every opponent its profile has unlocked is in the draw, weighed by
+  the challenge (to the taste of a daring bot), by the missing cards it drops (to the taste of a
+  greedy one), by whether it is still unbeaten — beating a place's every opponent is what opens its
+  tournament — and by the bot's own whim.
+- **Enters tournaments**, on the days its ambition says so, when it has earned the achievement a
+  ladder asks for, can field a deck in the ladder's format and can pay the fee over its reserve.
 - **Sells its surplus commons**, which is about the Random rule as much as the money: the collection
   is drawn from *one entry per copy*, so a fourth copy of a one-star is a fourth ticket in a draw
   the bot does not want to win. It never sells a copy a deck is built on, and never above two stars.
   A bot past the auction level keeps one more common back for the auction house.
-- **Uses the auction house a little** (`BotAuctions`), once past `TTO_UNLOCK_AUCTION`. It keeps at
-  most two lots open — one for a spare card of three stars or more, one for a spare common — each
-  asking `CardValue.worthOf`, with the reserve equal to the start price so any bid is a sale. It
-  bids only on a card it does not own that one of its decks would field, bids the least the lot
-  will take, and stops once that passes the card's worth: the most anyone can get from a bot for a
-  card is what the card is worth.
+- **Uses the auction house** (`BotAuctions`), once past `TTO_UNLOCK_AUCTION`. It keeps one lot open
+  per tier — one for a spare card of three stars or more, one for a spare common; two each for a
+  merchant — each asking `CardValue.worthOf` times its markup (never under what the counter would
+  pay), with the reserve equal to the start price so any bid is a sale. A collector or a merchant
+  bids on any card of its set it does not own; the others only on one a deck would field. It bids
+  the least the lot will take, and stops once that passes its ceiling: its appetite times the
+  card's worth, which is never over worth except for a collector, whose premium takes it up to
+  **125 %** of worth — the one case where a bot pays over the odds, and only for its own set.
 - **Keeps up to eight decks and chooses between them** (`BotDecks`): the strongest legal five, the
   five spread over the most types, and up to six typed decks — one per card type the collection can
   concentrate to three of the five. A table states its rules and an opponent declares theirs, so
@@ -147,6 +160,31 @@ What a bot actually does, between matches and in them:
 It does **not** read the opponent's cards to counter-pick, though `npcs.json` would let it. That is
 a different game from the one a person is playing, and these accounts exist to measure the one that
 is played.
+
+#### Personalities
+
+Each bot is drawn a personality once, when it is enrolled, and keeps it in `bots.personality`
+(`V20__bot_personality.sql`); `BotPersonality` holds the ranges and the reasoning. It has three
+parts:
+
+- **A set it collects**, which decides the format it plays, the starter box it opens and the
+  cards it wants: FF14 (`ff14-standard`), FF8 (`ff8-standard`) or both (`free-play`), a third each.
+  A bot collecting both rarely enters a tournament: every ladder belongs to one of the two standard
+  formats, and a deck from both sets seldom fits either.
+- **An archetype**, a quarter each. A **collector** farms drops, saves long for singles and bids
+  readily, with a premium on its own set. A **competitor** likes hard opponents and tournaments and
+  spends rather than saves. A **duelist** takes a table soonest and plays fastest. A **merchant**
+  keeps the biggest reserve, asks over worth, bids under it, keeps two lots per tier and is in no
+  hurry to sit down.
+- **A value for every trait, inside its archetype's range**, and a seed for its whims — so two
+  collectors are both collectors and still not the same one.
+
+Every trait that touches an operator's number can only make a bot more careful than the policy —
+a bigger reserve, a slower cadence, a longer wait at a table — never less. A bot enrolled before
+`V20` has no personality; the director draws one on its next pass, keeping `TTO_BOTS_FORMAT`'s set
+so a collection built over weeks is not stranded. A personality is an ordinary JSON document, so
+`UPDATE bots SET personality = ...` changes a bot's, and moving a range in `BotPersonality` changes
+only the bots enrolled after it. The director logs each bot's archetype and set when it draws them.
 
 **It is off by default and stays off on upgrade.** A server that populates its own lobby is a
 different product from one that does not, and nobody should get it by deploying a new tag.

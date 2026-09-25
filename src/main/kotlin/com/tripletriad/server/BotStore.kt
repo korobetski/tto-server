@@ -15,14 +15,16 @@ import javax.sql.DataSource
  *
  * `AccountStore` owns who a player is and what they have, `PvpStore` and `PveStore` own what is
  * happening right now — and this owns *which accounts are not people*. It is a different question
- * from all three, asked by one caller, and answered by one small table. See `V16__bots.sql`.
+ * from all three, asked by one caller, and answered by one small table. See `V17__bots.sql`.
  *
  * It deliberately holds no profile of its own: a bot's cards, purse and level live in `characters`
  * exactly as a player's do, and [progress] reads them from there rather than keeping a second copy
  * that could disagree.
  */
 // `MagicNumber` counts JDBC's positional parameter indices, for the reason `PveStore` gives.
-@Suppress("MagicNumber")
+// `TooManyFunctions` counts queries and the row readers beside them, which is what a data-access
+// class is made of — the argument `AuctionStore` makes above its own suppression.
+@Suppress("MagicNumber", "TooManyFunctions")
 class BotStore(
     private val dataSource: DataSource,
     private val json: Json = SaveJson,
@@ -35,18 +37,41 @@ class BotStore(
      * deployment rolling over, say — must not turn one account into two rows or fail the boot of
      * the second. `ON CONFLICT DO NOTHING` makes the second call a no-op that says so.
      */
-    fun enrol(accountId: Long, band: NpcLevel, dueAt: Long): Boolean = transaction { db ->
+    fun enrol(
+        accountId: Long,
+        band: NpcLevel,
+        dueAt: Long,
+        personality: BotPersonality? = null,
+    ): Boolean = transaction { db ->
         db.prepareStatement(
             """
-            INSERT INTO bots (account_id, band, next_action_at)
-            VALUES (?, ?, ?)
+            INSERT INTO bots (account_id, band, next_action_at, personality)
+            VALUES (?, ?, ?, ?::jsonb)
             ON CONFLICT (account_id) DO NOTHING
             """.trimIndent(),
         ).use { statement ->
             statement.setLong(1, accountId)
             statement.setString(2, band.name)
             statement.setTimestamp(3, Timestamp(dueAt))
+            statement.setString(4, personality?.let { json.encodeToString(it) })
             statement.executeUpdate() == 1
+        }
+    }
+
+    /**
+     * Gives [accountId] the personality it will keep from now on.
+     *
+     * For a bot that has none — enrolled before `V20__bot_personality.sql`, or holding a document
+     * this build cannot read. Unconditional rather than `WHERE personality IS NULL`, because the
+     * second case is not null: a guarded write would leave an unreadable document in place and the
+     * director drawing a different bot out of thin air on every pass, which is exactly the
+     * character-less noise the column exists to prevent.
+     */
+    fun personalize(accountId: Long, personality: BotPersonality) = transaction { db ->
+        db.prepareStatement("UPDATE bots SET personality = ?::jsonb WHERE account_id = ?").use {
+            it.setString(1, json.encodeToString(personality))
+            it.setLong(2, accountId)
+            it.executeUpdate()
         }
     }
 
@@ -61,7 +86,7 @@ class BotStore(
     fun due(now: Long, limit: Int = DUE_LIMIT): List<Bot> = transaction { db ->
         db.prepareStatement(
             """
-            SELECT account_id, band, next_action_at
+            SELECT account_id, band, next_action_at, personality
             FROM bots
             WHERE next_action_at <= ?
             ORDER BY next_action_at
@@ -127,7 +152,28 @@ class BotStore(
         accountId = getLong("account_id"),
         band = bandOf(getString("band")),
         nextActionAt = getTimestamp("next_action_at").time,
+        personality = personalityOf(getString("personality")),
     )
+
+    /**
+     * The stored personality, or null when there is none or this build cannot read it.
+     *
+     * Null in both cases on purpose: either way the director draws one and writes it back — see
+     * [personalize] — so an operator's hand-edit that does not parse is replaced rather than
+     * wedging the bot, the judgement [bandOf] makes about a band. `SELECT personality FROM bots`
+     * shows what replaced it.
+     */
+    // A personality that will not parse is one bot redrawn, which is the right cost; letting it
+    // throw would take every bot behind it in the pass with it. What `toProgress` says, one column
+    // over.
+    @Suppress("SwallowedException", "TooGenericExceptionCaught")
+    private fun personalityOf(stored: String?): BotPersonality? = stored?.let {
+        try {
+            json.decodeFromString<BotPersonality>(it)
+        } catch (failure: Exception) {
+            null
+        }
+    }
 
     // A profile that will not parse is one bot missing from a chart, which is the right cost. The
     // alternative — letting it throw — takes every other bot's numbers with it.
@@ -148,7 +194,7 @@ class BotStore(
     /**
      * The stored band, or [NpcLevel.EXPERT] when this build does not know the name.
      *
-     * The column is free text on purpose — `V16__bots.sql` says why a CHECK constraint would be a
+     * The column is free text on purpose — `V17__bots.sql` says why a CHECK constraint would be a
      * second copy of an enum that lives in `:core`. The cost of that is exactly this function, and
      * the fallback is the strong band rather than the weak one: a bot whose band was written by a
      * newer build should play *well* while the mismatch is noticed, not become a free win.
@@ -181,8 +227,16 @@ class BotStore(
     }
 }
 
-/** One enrolled bot: the account it plays as, how hard it plays, and when it may act. */
-data class Bot(val accountId: Long, val band: NpcLevel, val nextActionAt: Long)
+/**
+ * One enrolled bot: the account it plays as, how hard it plays, when it may act, and who it is —
+ * null until the director has drawn it one. See `V20__bot_personality.sql`.
+ */
+data class Bot(
+    val accountId: Long,
+    val band: NpcLevel,
+    val nextActionAt: Long,
+    val personality: BotPersonality? = null,
+)
 
 /** One bot's profile as it stands, which is what the progression metrics are read from. */
 data class BotProgress(val accountId: Long, val band: NpcLevel, val save: GameSave) {

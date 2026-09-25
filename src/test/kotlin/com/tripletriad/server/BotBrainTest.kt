@@ -1,10 +1,10 @@
 package com.tripletriad.server
 
+import com.tripletriad.data.Campaign
 import com.tripletriad.data.CardValue
-import com.tripletriad.model.BoosterItem
+import com.tripletriad.model.CampaignRun
 import com.tripletriad.model.Card
 import com.tripletriad.model.CardColor
-import com.tripletriad.model.CardItem
 import com.tripletriad.model.Deck
 import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
@@ -13,6 +13,7 @@ import com.tripletriad.model.MatchAiOptions
 import com.tripletriad.model.Npc
 import com.tripletriad.model.NpcLevel
 import com.tripletriad.model.TradeRule
+import com.tripletriad.model.questDayOf
 import com.tripletriad.protocol.ANY_DECK
 import com.tripletriad.protocol.PvpMatchStatus
 import com.tripletriad.protocol.PvpStake
@@ -96,57 +97,166 @@ class BotBrainTest {
     /** With nobody available, a bot picks nobody rather than the first thing it finds. */
     @Test
     fun anEmptyRosterYieldsNoOpponent() {
-        assertNull(BotBrain.opponent(emptyList(), Random(SEED)))
+        assertNull(BotBrain.opponent(emptyList(), bare(), format, PLAIN, Random(SEED)))
     }
 
     /**
-     * The choice comes from the hard end of what is open, and is not always the same one.
+     * **A roster spreads over the whole ladder**, rather than queueing against its top four.
      *
-     * Both halves matter: sampling only the last entry would make the whole roster below it
-     * unmeasured, and sampling the whole list would put the income nowhere near the ceiling.
+     * The complaint this answers: every bot of a level met the same handful of characters. Forty
+     * bots, each drawn as `BotDirector` draws one, choosing once each: they should meet more than
+     * the four the old sample allowed, and not only at the top.
      */
     @Test
-    fun theHardestOpponentsAreTheOnesSampled() {
-        val available = Catalogs.npcs.available(formatId = FORMAT, hour = 12, level = 99)
-        assertTrue(available.size > SAMPLE, "this fixture needs a roster to choose from")
+    fun aRosterSpreadsOverTheWholeLadder() {
+        val available = ladder()
+        assertTrue(available.size > OLD_SAMPLE, "this fixture needs a roster to choose from")
+        val top = available.takeLast(OLD_SAMPLE).map(Npc::iconId).toSet()
 
-        val hardest = available.takeLast(SAMPLE).map(Npc::iconId).toSet()
-        val chosen = (1..DRAWS)
-            .mapNotNull { BotBrain.opponent(available, Random(it))?.iconId }
-            .toSet()
+        val chosen = (1..DRAWS).mapNotNull { draw ->
+            val personality = BotPersonality.draw(Random(draw))
+            BotBrain.opponent(available, bare(), format, personality, Random(draw))?.iconId
+        }.toSet()
 
-        assertTrue(chosen.isNotEmpty(), "something should have been chosen")
-        assertTrue(hardest.containsAll(chosen), "a bot should not drop down the ladder: $chosen")
-        assertTrue(chosen.size > 1, "one opponent for every draw is not a sample")
+        assertTrue(chosen.size > OLD_SAMPLE, "forty bots should not meet four people: $chosen")
+        assertTrue(chosen.any { it !in top }, "somebody should have met the foot of the ladder")
     }
 
-    // ---- Spending ---------------------------------------------------------
-
-    /** A purse at the reserve buys nothing: that money is not the shop's. */
+    /** A daring bot climbs: on the same draws, it meets harder opponents than a timid one. */
     @Test
-    fun aBotKeepsItsReserveOutOfTheShop() {
-        val save = GameSave.new("reserved", createdAt = NOW).copy(mgp = RESERVE)
-        assertNull(BotBrain.shopping(save, format, cards, RESERVE, Random(SEED)))
+    fun aDaringBotSeeksHarderOpponents() {
+        val available = ladder()
+        fun meanDifficulty(daring: Double) = (1..MANY_DRAWS).mapNotNull { draw ->
+            BotBrain.opponent(available, bare(), format, PLAIN.copy(daring = daring), Random(draw))
+        }.map { it.difficulty }.average()
+
+        assertTrue(meanDifficulty(daring = 1.0) > meanDifficulty(daring = 0.0))
     }
 
     /**
-     * A purse that can stand it buys a pack and opens it — into the **bag**.
-     *
-     * Pinned as its own step because the boundary is easy to get wrong in the invisible direction:
-     * `Inventory.use` on a booster yields card *items*, and a bot that stopped here would spend
-     * its money forever and never own anything. [theBagIsWhereTheCollectionComesFrom] is the
-     * other half.
+     * A greedy bot is drawn to whoever drops a card it is missing — and stops being drawn once it
+     * has the card.
      */
     @Test
-    fun aPackBoughtIsAPackOpened() {
-        val save = GameSave.new("rich", createdAt = NOW).copy(mgp = RICH)
-        val shopped = assertNotNull(BotBrain.shopping(save, format, cards, RESERVE, Random(SEED)))
+    fun aMissingDropDrawsAGreedyBot() {
+        val available = ladder()
+        val (dropper, cardId) = available.flatMap { npc ->
+            npc.itemRewards.mapNotNull { reward ->
+                reward.cardId?.takeIf { reward.type == "card" && format.admitsCard(it) }
+                    ?.let { Triple(npc, it, reward.rate) }
+            }
+        }.maxWith(compareBy<Triple<Npc, Int, Double>> { it.third }.thenBy { it.second })
+            .let { (npc, id, _) -> npc to id }
+        val greedy = PLAIN.copy(greed = 1.0)
 
-        assertTrue(shopped.mgp < save.mgp, "a purchase costs something")
-        assertTrue(shopped.mgp >= RESERVE, "the reserve must survive the trip")
-        assertTrue(shopped.bag.any { it is CardItem }, "an opened pack yields card items")
-        assertTrue(shopped.bag.none { it is BoosterItem }, "the pack itself should be gone")
+        fun meetings(save: GameSave) = (1..MANY_DRAWS).count { draw ->
+            BotBrain.opponent(available, save, format, greedy, Random(draw)) == dropper
+        }
+
+        assertTrue(meetings(bare()) > meetings(bare().withCard(cardId)))
     }
+
+    /** An opponent never beaten pulls harder than one already beaten: it is the way forward. */
+    @Test
+    fun anUnbeatenOpponentPullsHarder() {
+        val available = ladder()
+        val first = available.first()
+
+        fun meetings(save: GameSave) = (1..MANY_DRAWS).count { draw ->
+            BotBrain.opponent(available, save, format, PLAIN, Random(draw)) == first
+        }
+        val beaten = bare().copy(npcWins = mapOf(first.iconId to 1))
+
+        assertTrue(meetings(bare()) > meetings(beaten))
+    }
+
+    // ---- Entering a tournament --------------------------------------------
+
+    /** A bot with the ambition, the achievement and the fee over its reserve goes in. */
+    @Test
+    fun anAmbitiousBotEntersALadderItHasEarned() {
+        val ladder = tournament()
+
+        assertEquals(
+            ladder,
+            BotBrain.tournament(earned(ladder, RICH), listOf(ladder), today(), AMBITIOUS, RESERVE),
+        )
+    }
+
+    /** The place's achievement is what opens its ladder, for a bot as for a person. */
+    @Test
+    fun aLadderNotYetEarnedIsNotEntered() {
+        val ladder = tournament()
+        val unearned = bare().copy(mgp = RICH)
+
+        assertNull(BotBrain.tournament(unearned, listOf(ladder), today(), AMBITIOUS, RESERVE))
+    }
+
+    /** The fee comes out of what lies above the reserve, never out of the reserve itself. */
+    @Test
+    fun theFeeMustLeaveTheReserveWhole() {
+        val ladder = tournament()
+        val exact = earned(ladder, RESERVE + ladder.fee)
+        val short = earned(ladder, RESERVE + ladder.fee - 1)
+
+        assertEquals(
+            ladder,
+            BotBrain.tournament(exact, listOf(ladder), today(), AMBITIOUS, RESERVE),
+        )
+        assertNull(BotBrain.tournament(short, listOf(ladder), today(), AMBITIOUS, RESERVE))
+    }
+
+    /**
+     * Wanting a ladder is not affording it: a bot short of the fee still fancies it — which is
+     * what the shop keeps the fee back for, see `BotShopping.shopping` — and enters only once the
+     * fee leaves its reserve whole.
+     */
+    @Test
+    fun aBotFanciesALadderBeforeItCanPayForIt() {
+        val ladder = tournament()
+        val short = earned(ladder, RESERVE)
+
+        assertEquals(ladder, BotBrain.fancied(short, listOf(ladder), today(), AMBITIOUS))
+        assertNull(BotBrain.tournament(short, listOf(ladder), today(), AMBITIOUS, RESERVE))
+        assertNull(BotBrain.fancied(short, listOf(ladder), today(), PLAIN), "no ambition, no wish")
+    }
+
+    /** One entry a day, one run at a time — the rules `CampaignRewards.enter` would refuse on. */
+    @Test
+    fun oneEntryADayAndOneRunAtATime() {
+        val ladder = tournament()
+        val day = today()
+        val entered = earned(ladder, RICH).copy(campaignEntries = mapOf(ladder.key to day))
+        val running = earned(ladder, RICH).copy(campaignRun = CampaignRun(ladder.key))
+
+        assertNull(BotBrain.tournament(entered, listOf(ladder), day, AMBITIOUS, RESERVE))
+        assertNull(BotBrain.tournament(running, listOf(ladder), day, AMBITIOUS, RESERVE))
+    }
+
+    /**
+     * **Ambition is the share of days a bot goes in**, decided once a day.
+     *
+     * No ambition never enters; half an ambition enters on some days and not others; and asked
+     * twice on one day, a bot gives the same answer — a roll on every pass would say yes before
+     * long whatever the odds.
+     */
+    @Test
+    fun ambitionIsTheShareOfDaysABotGoesIn() {
+        val ladder = tournament()
+        val save = earned(ladder, RICH)
+        val days = (0 until DAYS).map { questDayOf(NOW + it * DAY_MILLIS) }
+        fun entries(personality: BotPersonality) = days.map { day ->
+            BotBrain.tournament(save, listOf(ladder), day, personality, RESERVE) != null
+        }
+
+        val halfHearted = PLAIN.copy(ambition = HALF)
+        assertTrue(entries(PLAIN).none { it }, "a bot with no ambition never enters")
+        assertTrue(entries(halfHearted).any { it }, "half an ambition enters on some days")
+        assertTrue(entries(halfHearted).any { !it }, "and stays out on others")
+        assertEquals(entries(halfHearted), entries(halfHearted), "the same day, the same answer")
+    }
+
+    // ---- Developing -------------------------------------------------------
 
     /**
      * **What is in the bag is not owned until it is taken, and a bot takes it.**
@@ -154,13 +264,13 @@ class BotBrainTest {
      * The assertion that catches the failure a bot would hide for months: spending every match's
      * pay on packs, opening every one of them, and fielding the same nine cards it started with
      * because nothing ever moved the drops out of the bag. `Npc.rollRewards` fills it the same way
-     * after every single match.
+     * after every single match. `BotShoppingTest.aPackBoughtIsAPackOpened` is the other half.
      */
     @Test
     fun theBagIsWhereTheCollectionComesFrom() {
         val save = GameSave.new("collector", createdAt = NOW).copy(mgp = RICH)
         val developed = assertNotNull(
-            BotBrain.developing(save, format, cards, RESERVE, Random(SEED)),
+            BotBrain.developing(save, format, cards, PLAIN, RESERVE, Random(SEED)),
         )
 
         assertTrue(developed.mgp < save.mgp, "the money should have gone somewhere")
@@ -181,7 +291,7 @@ class BotBrainTest {
     @Test
     fun aBotWithNothingDevelopsNothing() {
         val bare = GameSave.new("bare", createdAt = NOW).copy(mgp = 0)
-        assertNull(BotBrain.developing(bare, format, cards, RESERVE, Random(SEED)))
+        assertNull(BotBrain.developing(bare, format, cards, PLAIN, RESERVE, Random(SEED)))
     }
 
     // ---- Clearing the surplus ---------------------------------------------
@@ -349,6 +459,28 @@ class BotBrainTest {
 
     // ---- Fixtures ---------------------------------------------------------
 
+    private fun bare(): GameSave = GameSave.new("bot", createdAt = NOW)
+
+    /** Everybody a level-99 profile may face at noon in [FORMAT], easiest first. */
+    private fun ladder(): List<Npc> = Catalogs.npcs.available(
+        formatId = FORMAT,
+        hour = 12,
+        level = 99,
+    )
+
+    /** A ladder of [FORMAT] that asks for an achievement, so earning it is what opens it. */
+    private fun tournament(): Campaign = Catalogs.campaigns.all.first {
+        it.format == FORMAT && it.requiresAchievement != null
+    }
+
+    /** A purse of [mgp] holding [ladder]'s achievement. */
+    private fun earned(ladder: Campaign, mgp: Int): GameSave = bare().copy(
+        mgp = mgp,
+        achievements = mapOf(assertNotNull(ladder.requiresAchievement) to NOW),
+    )
+
+    private fun today(): String = questDayOf(NOW)
+
     /** The ids this format admits, strongest first — what a bot would want to own. */
     private fun playable(): List<Int> = cards.admittedBy(format)
         .sortedWith(compareByDescending<Card> { CardValue.worthOf(it) }.thenBy { it.id })
@@ -415,9 +547,18 @@ class BotBrainTest {
 
         val EXPERT: MatchAiOptions = MatchAiOptions.forLevel(NpcLevel.EXPERT)
 
-        /** Matches `BotBrain.SAMPLED_OPPONENTS`, which is private and is the thing being pinned. */
-        const val SAMPLE = 4
+        /** How many opponents the roster was once sampled from, which it must now exceed. */
+        const val OLD_SAMPLE = 4
         const val DRAWS = 40
+
+        /** Enough draws that a weight's pull shows through a bot's whims. */
+        const val MANY_DRAWS = 400
+
+        val PLAIN = plainPersonality()
+        val AMBITIOUS = PLAIN.copy(ambition = 1.0)
+        const val HALF = 0.5
+        const val DAYS = 30
+        const val DAY_MILLIS = 86_400_000L
 
         const val RESERVE = 5_000
         const val RICH = 200_000

@@ -9,7 +9,7 @@ the part a privacy notice cannot do for itself.
 > something to be inferred from a table definition. What follows is the inventory such a policy
 > would have to be true about, and it is written so that a claim contradicting it is visible.
 
-Last derived from the schema on 2026-09-12, at migration `V19`.
+Last derived from the schema on 2026-09-25, at migration `V20`.
 
 > **The two migrations this file used to flag as missing are now in the table.** `V14`'s auction
 > house and `V15`'s `accounts.seen_at` both have rows. `V18` adds no row and that is a finding
@@ -42,7 +42,7 @@ Last derived from the schema on 2026-09-12, at migration `V19`.
 | An administrator's TOTP secret | `admins.totp_secret` | The second factor, which is not optional | **In the clear**, and it has to be: a one-time code is recomputed rather than verified, so there is no one-way form of it. What it buys is that a stolen password alone is not enough, and a stolen database alone is not either |
 | Administrator sessions, **fingerprinted** | `admin_sessions.token_hash` | Staying signed in for the length of a working session, and no longer | The cookie itself is never stored. Two clocks — idle and absolute — because the threat here is an unattended screen |
 | What an administrator did | `admin_audit` | Making every change to a player's data attributable, with its before and after | Names an administrator always, a player sometimes. Rows about a player are deleted with that player's account; rows about an administrator outlive their access, which is why an administrator is disabled and never deleted |
-| Which accounts are **not people** | `bots` | The server plays accounts of its own — see `operations.md` | Holds no personal data of its own: an account id, a difficulty band and a timestamp. It is listed here because of what it says about the *other* rows — an `accounts` row named here belongs to nobody, and one that is not named belongs to a person |
+| Which accounts are **not people** | `bots` | The server plays accounts of its own — see `operations.md` | Holds no personal data of its own: an account id, a difficulty band, a timestamp and, since `V20`, the bot's drawn personality — a set, an archetype and a few numbers, about a program and nobody else. It is listed here because of what it says about the *other* rows — an `accounts` row named here belongs to nobody, and one that is not named belongs to a person |
 
 **Bot accounts are accounts.** Every row above exists for them too — a username, a password digest,
 a profile, a match history — and none of it is about a person: `BotStore` registered the account,

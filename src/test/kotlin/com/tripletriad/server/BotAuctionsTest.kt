@@ -6,19 +6,26 @@ import com.tripletriad.model.Card
 import com.tripletriad.model.GameSave
 import com.tripletriad.protocol.AuctionLot
 import com.tripletriad.protocol.AuctionStatus
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * What a bot puts up at the auction house and what it bids on, with no database under it.
  *
  * ### The assertion this file exists for
  *
- * [aLotAboveTheCardsWorthIsLeftAlone]. The rest is a bot taking part sensibly; that one is what
- * keeps the roster from being a way to pump MGP out of the accounts the server plays itself — the
- * most a person can get from a bot for a card is what the card is worth.
+ * [aLotAboveTheCardsWorthIsLeftAlone], and its collector's twin
+ * [aCollectorGoesAQuarterOverWorthAndNoFurther]. The rest is a bot taking part sensibly; those two
+ * are what keep the roster from being a way to pump MGP out of the accounts the server plays
+ * itself — the most a person can get from a bot for a card is what the card is worth, and a
+ * quarter more from a collector completing its set.
+ *
+ * Every other test runs under [plainPersonality], so what it asserts is the choosing and not a
+ * drawn temper: a test about one archetype says which.
  *
  * `AuctionStore` re-checks every term inside its own transaction and `AuctionFlowTest` holds it to
  * that. What is asserted here is the choosing, which is this server's and nobody else's.
@@ -33,15 +40,33 @@ class BotAuctionsTest {
 
     // ---- Listing ----------------------------------------------------------
 
-    /** A spare rare card goes up, and at the one price the game already puts on it. */
+    /**
+     * A spare rare card goes up at the bot's own price — and a plain bot's is the one the game
+     * already puts on the card, to the nearest ten.
+     */
     @Test
-    fun aSpareRareCardIsListedAtItsWorth() {
+    fun aSpareRareCardIsListedAtItsOwnPrice() {
         val save = seller().withCard(rare.id, HOARD)
 
-        assertEquals(
-            BotListing(rare.id, CardValue.worthOf(rare)),
-            BotAuctions.listing(save, cards, emptyList()),
+        val listing = assertNotNull(BotAuctions.listing(save, cards, emptyList(), PLAIN))
+
+        assertEquals(BotListing(rare.id, priceOf(rare, PLAIN)), listing)
+        assertTrue(listing.price % PRICE_STEP == 0, "a person prices in tens: ${listing.price}")
+        assertTrue(
+            abs(listing.price - CardValue.worthOf(rare)) <= PRICE_STEP / 2,
+            "a plain bot asks what the card is worth",
         )
+    }
+
+    /** A merchant asks over worth: that is what makes it one. */
+    @Test
+    fun aMerchantAsksMoreThanTheCardIsWorth() {
+        val merchant = plainPersonality(BotArchetype.MERCHANT).copy(markup = MERCHANT_MARKUP)
+        val save = seller().withCard(rare.id, HOARD)
+
+        val listing = assertNotNull(BotAuctions.listing(save, cards, emptyList(), merchant))
+
+        assertTrue(listing.price > CardValue.worthOf(rare), "asked ${listing.price}")
     }
 
     /** The one spare a bot keeps is kept here too: it is the copy that lets a second deck exist. */
@@ -49,7 +74,7 @@ class BotAuctionsTest {
     fun theKeptSpareIsNotListed() {
         val save = seller().withCard(rare.id, BotBrain.KEPT_SPARES)
 
-        assertNull(BotAuctions.listing(save, cards, emptyList()))
+        assertNull(BotAuctions.listing(save, cards, emptyList(), PLAIN))
     }
 
     /** With both tiers free, the rare card is the listing a person is likeliest to want. */
@@ -57,7 +82,7 @@ class BotAuctionsTest {
     fun theRareTierIsAskedFirst() {
         val save = seller().withCard(rare.id, HOARD).withCard(common.id, HOARD)
 
-        assertEquals(rare.id, BotAuctions.listing(save, cards, emptyList())?.cardId)
+        assertEquals(rare.id, BotAuctions.listing(save, cards, emptyList(), PLAIN)?.cardId)
     }
 
     /**
@@ -72,20 +97,30 @@ class BotAuctionsTest {
         val rareLot = lot(rare.id, yours = true)
 
         assertEquals(
-            BotListing(common.id, CardValue.worthOf(common)),
-            BotAuctions.listing(save, cards, listOf(rareLot)),
+            BotListing(common.id, priceOf(common, PLAIN)),
+            BotAuctions.listing(save, cards, listOf(rareLot), PLAIN),
         )
     }
 
     /** One lot per tier: with both open, nothing more goes up however much is spare. */
     @Test
     fun bothTiersBusyListNothing() {
-        val otherRare = admitted().last { it.rarity > BotBrain.SELLABLE_RARITY }
-        val otherCommon = admitted().last { it.rarity <= BotBrain.SELLABLE_RARITY }
         val save = seller().withCard(rare.id, HOARD).withCard(common.id, HOARD)
-        val own = listOf(lot(otherRare.id, yours = true), lot(otherCommon.id, yours = true))
 
-        assertNull(BotAuctions.listing(save, cards, own))
+        assertNull(BotAuctions.listing(save, cards, busyTiers(), PLAIN))
+    }
+
+    /**
+     * A merchant keeps a second lot in each tier, so the same two busy tiers still take one more.
+     *
+     * Which is how a merchant sells at the house what another bot sells at the counter.
+     */
+    @Test
+    fun aMerchantKeepsASecondLotPerTier() {
+        val save = seller().withCard(rare.id, HOARD).withCard(common.id, HOARD)
+        val merchant = plainPersonality(BotArchetype.MERCHANT)
+
+        assertEquals(rare.id, BotAuctions.listing(save, cards, busyTiers(), merchant)?.cardId)
     }
 
     /** A finished lot frees its tier: a bot's history does not count against it. */
@@ -94,7 +129,7 @@ class BotAuctionsTest {
         val save = seller().withCard(rare.id, HOARD)
         val sold = lot(rare.id, yours = true).copy(status = AuctionStatus.SOLD)
 
-        assertEquals(rare.id, BotAuctions.listing(save, cards, listOf(sold))?.cardId)
+        assertEquals(rare.id, BotAuctions.listing(save, cards, listOf(sold), PLAIN)?.cardId)
     }
 
     /** A purse that cannot cover the listing fee lists nothing, rather than being refused. */
@@ -102,7 +137,7 @@ class BotAuctionsTest {
     fun aPurseShortOfTheFeeListsNothing() {
         val save = seller().withCard(rare.id, HOARD).copy(mgp = 0)
 
-        assertNull(BotAuctions.listing(save, cards, emptyList()))
+        assertNull(BotAuctions.listing(save, cards, emptyList(), PLAIN))
     }
 
     // ---- Bidding ----------------------------------------------------------
@@ -114,7 +149,7 @@ class BotAuctionsTest {
 
         assertEquals(
             BotBid(wanted.id, wanted.minimumBid),
-            BotAuctions.bidding(buyer(), format, cards, listOf(wanted), emptyList()),
+            BotAuctions.bidding(buyer(), format, cards, listOf(wanted), emptyList(), PLAIN),
         )
     }
 
@@ -130,7 +165,77 @@ class BotAuctionsTest {
         val card = needed()
         val dear = lot(card.id, startPrice = CardValue.worthOf(card) + 1)
 
-        assertNull(BotAuctions.bidding(buyer(), format, cards, listOf(dear), emptyList()))
+        assertNull(BotAuctions.bidding(buyer(), format, cards, listOf(dear), emptyList(), PLAIN))
+    }
+
+    /**
+     * **A collector pays up to a quarter over worth for its own set — and not a coin more.**
+     *
+     * The premium is the one place a bot pays over worth, and it is bounded for the reason the
+     * pin above is: `BotPersonality.COLLECTOR_PREMIUM`. A duelist facing the same lot leaves it.
+     */
+    @Test
+    fun aCollectorGoesAQuarterOverWorthAndNoFurther() {
+        val card = needed()
+        val collector = plainPersonality(BotArchetype.COLLECTOR)
+        val ceiling = CardValue.worthOf(card) * PREMIUM_NUMERATOR / PREMIUM_DENOMINATOR
+        val atCeiling = lot(card.id, startPrice = ceiling)
+        val beyond = lot(card.id, startPrice = ceiling + 1)
+
+        assertEquals(
+            BotBid(atCeiling.id, ceiling),
+            BotAuctions.bidding(buyer(), format, cards, listOf(atCeiling), emptyList(), collector),
+        )
+        assertNull(
+            BotAuctions.bidding(buyer(), format, cards, listOf(beyond), emptyList(), collector),
+        )
+        assertNull(
+            BotAuctions.bidding(buyer(), format, cards, listOf(atCeiling), emptyList(), PLAIN),
+            "the premium is a collector's, not everybody's",
+        )
+    }
+
+    /**
+     * **A collector bids for the binder, a duelist only for its decks.**
+     *
+     * A purse with no cards builds no hand at all, so no lot is a card any deck of its would field:
+     * the duelist has nothing to bid on, and the collector bids on the card it is missing that is
+     * worth the most — which is every card, since it owns none.
+     */
+    @Test
+    fun aCollectorBidsOnACardNoDeckWouldField() {
+        val bare = GameSave.new("binder", createdAt = NOW).copy(mgp = PURSE)
+        val lots = listOf(lot(rare.id), lot(common.id))
+        val collector = plainPersonality(BotArchetype.COLLECTOR)
+
+        assertNull(BotAuctions.bidding(bare, format, cards, lots, emptyList(), PLAIN))
+        assertEquals(
+            "lot-${rare.id}",
+            BotAuctions.bidding(bare, format, cards, lots, emptyList(), collector)?.lotId,
+            "the dearer of two missing cards is the one a collector goes for first",
+        )
+    }
+
+    /** A card outside the set it collects is not the collector's business, however cheap. */
+    @Test
+    fun aCollectorBidsOnlyOnItsOwnSet() {
+        val foreign = assertNotNull(
+            cards.all.firstOrNull { !format.admitsCard(it.id) },
+            "the catalogue holds a card this format does not admit",
+        )
+        val bare = GameSave.new("binder", createdAt = NOW).copy(mgp = PURSE)
+        val collector = plainPersonality(BotArchetype.COLLECTOR)
+
+        assertNull(
+            BotAuctions.bidding(
+                bare,
+                format,
+                cards,
+                listOf(lot(foreign.id)),
+                emptyList(),
+                collector,
+            ),
+        )
     }
 
     /** A card the bot already owns is not bought twice: a second copy never enters a hand. */
@@ -139,7 +244,9 @@ class BotAuctionsTest {
         val card = needed()
         val save = buyer().withCard(card.id)
 
-        assertNull(BotAuctions.bidding(save, format, cards, listOf(lot(card.id)), emptyList()))
+        assertNull(
+            BotAuctions.bidding(save, format, cards, listOf(lot(card.id)), emptyList(), PLAIN),
+        )
     }
 
     /** A bot's own lot, and one it already leads, are not bid on. */
@@ -149,7 +256,9 @@ class BotAuctionsTest {
         val own = lot(card.id, yours = true)
         val leading = lot(card.id, id = "leading").leading()
 
-        assertNull(BotAuctions.bidding(buyer(), format, cards, listOf(own, leading), emptyList()))
+        assertNull(
+            BotAuctions.bidding(buyer(), format, cards, listOf(own, leading), emptyList(), PLAIN),
+        )
     }
 
     /** Leading on one lot for a card, a bot does not open a second front for the same card. */
@@ -160,7 +269,7 @@ class BotAuctionsTest {
         val another = lot(card.id, id = "another")
 
         assertNull(
-            BotAuctions.bidding(buyer(), format, cards, listOf(another), listOf(winning)),
+            BotAuctions.bidding(buyer(), format, cards, listOf(another), listOf(winning), PLAIN),
         )
     }
 
@@ -170,12 +279,24 @@ class BotAuctionsTest {
         val wanted = lot(needed().id)
         val poor = buyer().copy(mgp = AuctionRules.totalDue(wanted.minimumBid) - 1)
 
-        assertNull(BotAuctions.bidding(poor, format, cards, listOf(wanted), emptyList()))
+        assertNull(BotAuctions.bidding(poor, format, cards, listOf(wanted), emptyList(), PLAIN))
     }
 
     // ---- Fixtures ---------------------------------------------------------
 
     private fun admitted(): List<Card> = cards.admittedBy(format)
+
+    /** What [personality] asks for [card]. The price rule is `BotPersonality`'s, not ours. */
+    private fun priceOf(card: Card, personality: BotPersonality): Int = personality.askingPrice(
+        worth = CardValue.worthOf(card),
+        resale = CardValue.resaleOf(card.id, cards.byId),
+    )
+
+    /** One lot of the bot's own open in each tier, for cards other than [rare] and [common]. */
+    private fun busyTiers(): List<AuctionLot> = listOf(
+        lot(admitted().last { it.rarity > BotBrain.SELLABLE_RARITY }.id, yours = true),
+        lot(admitted().last { it.rarity <= BotBrain.SELLABLE_RARITY }.id, yours = true),
+    )
 
     /** A purse that covers any listing fee, and no cards. */
     private fun seller(): GameSave = GameSave.new("seller", createdAt = NOW).copy(mgp = PURSE)
@@ -221,5 +342,15 @@ class BotAuctionsTest {
 
         /** A hand's worth, the least a collection needs for any deck to be built at all. */
         const val HAND_SIZE_OWNED = 5
+
+        val PLAIN = plainPersonality()
+
+        /** `BotPersonality.PRICE_STEP`, which is private and is what a listing is rounded to. */
+        const val PRICE_STEP = 10
+        const val MERCHANT_MARKUP = 1.2
+
+        /** `BotPersonality.COLLECTOR_PREMIUM`, as the fraction it is, so the ceiling is exact. */
+        const val PREMIUM_NUMERATOR = 5
+        const val PREMIUM_DENOMINATOR = 4
     }
 }

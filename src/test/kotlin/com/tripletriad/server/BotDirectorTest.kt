@@ -2,6 +2,7 @@ package com.tripletriad.server
 
 import com.tripletriad.data.AuctionRules
 import com.tripletriad.data.CardValue
+import com.tripletriad.data.PveMatches
 import com.tripletriad.data.StarterPack
 import com.tripletriad.model.Card
 import com.tripletriad.model.CardColor
@@ -9,6 +10,7 @@ import com.tripletriad.model.GameRules
 import com.tripletriad.model.GameSave
 import com.tripletriad.model.NpcLevel
 import com.tripletriad.model.TradeRule
+import com.tripletriad.model.questDayOf
 import com.tripletriad.protocol.AuctionDuration
 import com.tripletriad.protocol.AuctionOutcome
 import com.tripletriad.protocol.ListCardRequest
@@ -44,6 +46,13 @@ import kotlin.test.assertTrue
  * Clearing is safe in a way truncating `accounts` would not be: the table is touched by this file
  * alone, JUnit runs these methods one at a time, and each test enrols what it needs. The accounts
  * behind the deleted rows are left alone — they are ordinary accounts that nothing plays any more.
+ *
+ * ### Why most bots here are nobody in particular
+ *
+ * A bot enrolled by the director is drawn a personality, and a drawn one could collect FF8 — own
+ * FF8's starter and have no business at the FF14 table a test opened — or wait three times the
+ * policy's wait before sitting down. Neither is what those tests are about, so they take
+ * [plainBot]; the tests about who a bot is are the ones that do not.
  */
 class BotDirectorTest {
 
@@ -173,6 +182,81 @@ class BotDirectorTest {
         }
     }
 
+    /**
+     * **Every new bot is somebody, and starts in the set it collects.**
+     *
+     * Asserted over every bot the roster enrols rather than over one drawn to collect FF8, because
+     * the draw is the director's and the generator is shared: whichever sets these bots were drawn,
+     * each must be able to sit down in its own format on its first pass. A bot collecting FF8 that
+     * opened FF14's box would own nothing its format deals.
+     */
+    @Test
+    fun everyNewBotIsSomebodyAndStartsInItsOwnSet() {
+        clearBots()
+        val director = director(policy(count = ROSTER))
+        repeat(ROSTER / PAIR) { director.ensureRoster() }
+
+        val roster = bots.due(now)
+        assertEquals(ROSTER, roster.size)
+        roster.forEach { bot ->
+            val personality = assertNotNull(bot.personality, "a new bot is enrolled as somebody")
+            val format = assertNotNull(Catalogs.formats[personality.favourite.formatId])
+            val save = assertNotNull(accounts.saveFor(bot.accountId))
+            assertTrue(
+                save.ownedCardIds().all(format::admitsCard),
+                "a ${personality.favourite} bot's starter should be one of its own set's boxes",
+            )
+            assertTrue(
+                PveMatches.playableDecks(save, Catalogs.cards, format).isNotEmpty(),
+                "and it should have a deck its own format deals",
+            )
+        }
+    }
+
+    /**
+     * A bot enrolled before there were personalities is drawn one on its first pass, keeps the
+     * set its collection was built in, and is the same bot on the next pass.
+     */
+    @Test
+    fun aBotEnrolledBeforePersonalitiesIsDrawnOneAndKeepsIt() {
+        clearBots()
+        val accountId = person("legacy")
+        assertTrue(bots.enrol(accountId, NpcLevel.EXPERT, now))
+        val director = director(policy(count = 1))
+
+        director.tick()
+        val drawn = assertNotNull(
+            bots.due(now + NEVER).single().personality,
+            "the director should have drawn and stored a personality",
+        )
+        assertEquals(FavouriteSet.FF14, drawn.favourite, "it keeps TTO_BOTS_FORMAT's set")
+
+        bots.schedule(accountId, now)
+        director.tick()
+        assertEquals(drawn, bots.due(now + NEVER).single().personality, "and keeps who it is")
+    }
+
+    /** A personality this build cannot read is drawn afresh, rather than wedging the bot. */
+    @Test
+    fun anUnreadablePersonalityIsDrawnAfresh() {
+        clearBots()
+        val accountId = person("unreadable")
+        assertTrue(bots.enrol(accountId, NpcLevel.EXPERT, now))
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                "UPDATE bots SET personality = '{\"archetype\": \"WIZARD\"}' WHERE account_id = ?",
+            ).use {
+                it.setLong(1, accountId)
+                it.executeUpdate()
+            }
+            db.commit()
+        }
+        assertNull(bots.due(now).single().personality, "a document it cannot read reads as none")
+
+        director(policy(count = 1)).tick()
+        assertNotNull(bots.due(now + NEVER).single().personality, "and is replaced by one it can")
+    }
+
     // ---- Playing on its own -----------------------------------------------
 
     /**
@@ -186,8 +270,7 @@ class BotDirectorTest {
     fun aBotPlaysASoloMatchThrough() {
         clearBots()
         val director = director(policy(count = 1))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
         val before = assertNotNull(accounts.saveFor(bot.accountId))
 
         repeat(PASSES) {
@@ -217,8 +300,7 @@ class BotDirectorTest {
     fun aMatchTheOpponentOpensIsPlayedNotAbandoned() {
         clearBots()
         val director = director(policy(count = 1))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
 
         val owed = assertNotNull(
             (1..PASSES).firstNotNullOfOrNull {
@@ -252,8 +334,7 @@ class BotDirectorTest {
     fun aTableNobodyTookIsJoinedAndAFreshOneIsNot() {
         clearBots()
         val director = director(policy(count = 1))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
         levelUp(bot.accountId)
 
         val host = person("host")
@@ -289,8 +370,7 @@ class BotDirectorTest {
     fun aBotAttendsTheMatchItJoins() {
         clearBots()
         val director = director(policy(count = 1))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
         levelUp(bot.accountId)
 
         val host = person("attend")
@@ -323,8 +403,7 @@ class BotDirectorTest {
     fun aBotTakesACardTradeOnlyWhileTradesAreOn() {
         clearBots()
         val refusing = director(policy(count = 1, trades = false))
-        refusing.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(refusing)
         levelUp(bot.accountId)
 
         val host = person("traded")
@@ -359,8 +438,7 @@ class BotDirectorTest {
     fun aBotWillNotSitDownForAnMgpWager() {
         clearBots()
         val director = director(policy(count = 1, trades = true))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
         levelUp(bot.accountId, mgp = WAGER * 2)
 
         val host = person("wager", mgp = WAGER * 2)
@@ -379,8 +457,7 @@ class BotDirectorTest {
     fun aBotBelowTheUnlockDoesNotEnterTheLobby() {
         clearBots()
         val director = director(policy(count = 1))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
 
         val host = person("locked")
         val table = assertNotNull(open(host, PvpStake.None), "the fixture needs a table")
@@ -398,15 +475,16 @@ class BotDirectorTest {
     /**
      * A bot with spare copies of a three-star puts one up, at what the card is worth.
      *
-     * The start price and the reserve are asserted equal because that is what keeps a bot's lot
-     * from ever waiting on a seller's decision — see `BotAuctions`.
+     * Worth to the ten, which is `BotPersonality.askingPrice` for a bot with no markup: a merchant
+     * would ask more and a duelist less, and `BotAuctionsTest` is where that is asserted. The start
+     * price and the reserve are asserted equal because that is what keeps a bot's lot from ever
+     * waiting on a seller's decision — see `BotAuctions`.
      */
     @Test
     fun aBotPutsASpareCardUpForWhatItIsWorth() {
         clearBots()
         val director = director(policy(count = 1, wait = NEVER))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
         val save = assertNotNull(accounts.saveFor(bot.accountId))
         val format = assertNotNull(Catalogs.formats[FORMAT])
 
@@ -426,7 +504,11 @@ class BotDirectorTest {
             auctions.mine(bot.accountId).lots.firstOrNull { it.yours && it.cardId == spare.id },
             "a bot with spares to clear should have opened a lot",
         )
-        assertEquals(CardValue.worthOf(spare), lot.startPrice, "a bot asks what the card is worth")
+        val asked = plainPersonality().askingPrice(
+            worth = CardValue.worthOf(spare),
+            resale = CardValue.resaleOf(spare.id, Catalogs.cards.byId),
+        )
+        assertEquals(asked, lot.startPrice, "a bot asks what the card is worth")
         assertEquals(lot.startPrice, lot.reservePrice, "and any bid at all is a sale")
         assertEquals(
             SPARE_COPIES - 1,
@@ -446,8 +528,7 @@ class BotDirectorTest {
     fun aBotBidsOnACardItsDecksWouldField() {
         clearBots()
         val director = director(policy(count = 1, wait = NEVER))
-        director.ensureRoster()
-        val bot = assertNotNull(bots.due(now).firstOrNull())
+        val bot = plainBot(director)
         val save = assertNotNull(accounts.saveFor(bot.accountId))
         val format = assertNotNull(Catalogs.formats[FORMAT])
 
@@ -482,6 +563,68 @@ class BotDirectorTest {
         )
     }
 
+    // ---- Tournaments -------------------------------------------------------
+
+    /**
+     * **An ambitious bot saves for a tournament's fee, pays it, and climbs.**
+     *
+     * The purse is exactly the reserve and the fee, which is the case the shop used to win: a pass
+     * spends what lies above the reserve on packs before it ever reaches the entry, so a bot that
+     * bought one pack first would be short of the fee for good. The bot must go in instead, and
+     * then sit down against the ladder's first rung — a match credited to the run, not an ordinary
+     * one.
+     */
+    @Test
+    fun anAmbitiousBotSavesForATournamentEntersItAndClimbs() {
+        clearBots()
+        val policy = policy(count = 1, wait = NEVER)
+        val director = director(policy)
+        val bot = plainBot(director)
+        bots.personalize(
+            bot.accountId,
+            plainPersonality(BotArchetype.COMPETITOR).copy(ambition = 1.0),
+        )
+
+        val ladder = Catalogs.campaigns.all.first { it.format == FORMAT }
+        val achievement = assertNotNull(ladder.requiresAchievement, "the fixture needs a gate")
+        val save = assertNotNull(accounts.saveFor(bot.accountId))
+        val earned = save.copy(
+            mgp = policy.reserve + ladder.fee,
+            achievements = mapOf(achievement to now),
+        )
+        assertTrue(accounts.replaceSave(bot.accountId, earned))
+
+        val run = assertNotNull(
+            (1..PASSES).firstNotNullOfOrNull {
+                director.tick()
+                now += PASS_MILLIS
+                accounts.saveFor(bot.accountId)?.campaignRun
+            },
+            "an ambitious bot with the fee over its reserve should have gone in",
+        )
+        assertEquals(ladder.key, run.campaignKey)
+        assertTrue(
+            assertNotNull(
+                accounts.saveFor(bot.accountId),
+            ).hasEnteredToday(ladder.key, questDayOf(now)),
+            "the entry is stamped, so the bot goes in once today",
+        )
+
+        val rung = assertNotNull(
+            (1..PASSES).firstNotNullOfOrNull {
+                director.tick()
+                now += PASS_MILLIS
+                pve.activeFor(bot.accountId)
+            },
+            "a bot in a tournament should sit down against its ladder",
+        )
+        assertEquals(
+            ladder.key,
+            rung.campaignKey,
+            "the rung is played as the run's, not as free play",
+        )
+    }
+
     // ---- Fixtures ---------------------------------------------------------
 
     private fun policy(count: Int, trades: Boolean = true, wait: Long = WAIT) = BotPolicy(
@@ -500,6 +643,7 @@ class BotDirectorTest {
         npcs = Catalogs.npcs,
         formats = Catalogs.formats,
         starters = Catalogs.starters,
+        campaigns = Catalogs.campaigns,
         accounts = accounts,
         bots = bots,
         pve = pve,
@@ -513,18 +657,35 @@ class BotDirectorTest {
         random = { GENERATOR },
     )
 
+    /**
+     * Enrols one bot through the roster and makes it the plain FF14 duelist most tests here want:
+     * [plainPersonality], and FF14's starter box in place of whichever box its drawn set opened.
+     * See the class KDoc.
+     */
+    private fun plainBot(director: BotDirector): Bot {
+        director.ensureRoster()
+        val bot = assertNotNull(bots.due(now).firstOrNull())
+        bots.personalize(bot.accountId, plainPersonality())
+        val name = assertNotNull(accounts.usernameFor(bot.accountId))
+        assertTrue(accounts.replaceSave(bot.accountId, boxed(name)))
+        return bot
+    }
+
     /** A person with a starter box and a complete deck, so they can host a table. */
     private fun person(prefix: String, mgp: Int = 0): Long {
         val name = Postgres.freshAccount(prefix)
-        val save = StarterPack.grantedTo(
-            GameSave.new(name, createdAt = now),
-            Catalogs.starters,
-            Catalogs.cards.byId,
-            GENERATOR,
-            null,
-        ).copy(mgp = mgp)
+        val save = boxed(name).copy(mgp = mgp)
         return assertNotNull(accounts.register(name, "hash-$name", save, "$name@example.test"))
     }
+
+    /** A fresh profile with the first starter box opened — FF14's, which is what [FORMAT] deals. */
+    private fun boxed(name: String): GameSave = StarterPack.grantedTo(
+        GameSave.new(name, createdAt = now),
+        Catalogs.starters,
+        Catalogs.cards.byId,
+        GENERATOR,
+        null,
+    )
 
     private fun open(host: Long, stake: PvpStake) = pvpReferee.openTable(
         host,
@@ -587,6 +748,9 @@ class BotDirectorTest {
 
         /** Two, which is `BotDirector.ENROL_PER_PASS` — the point being that one pass fills it. */
         const val PAIR = 2
+
+        /** Enough bots that the sets they were drawn to collect are unlikely to be all the same. */
+        const val ROSTER = 6
 
         /** Comfortably past nine placements at one a pass, with rematches allowed for. */
         const val PASSES = 40

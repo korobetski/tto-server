@@ -414,8 +414,17 @@ data class MailConfig(
  * turns out to be too small to ever be there when somebody opens a table. Compiling them in would
  * make each of those a release.
  *
+ * ### A floor under every bot, not a setting for each
+ *
+ * Every bot has a `BotPersonality` of its own — `V20__bot_personality.sql` — and the numbers here
+ * are the frame it is drawn inside. [reserve], [tableWaitMillis] and the cadence are **minimums**:
+ * a personality multiplies each by a factor of at least one, so a bot can be more careful, more
+ * patient or slower than the policy, never less. [formatId] is no longer the format every bot plays
+ * — each plays the one its favourite set is spelled as — but the one a bot falls back to when this
+ * deployment does not ship that format, and the set a bot enrolled before personalities keeps.
+ *
  * They do **not** travel to clients in `ServerInfo`. Nothing in the protocol says a bot exists —
- * see `V16__bots.sql` on why that is a decision rather than an omission — so there is nothing for a
+ * see `V17__bots.sql` on why that is a decision rather than an omission — so there is nothing for a
  * client to render and nothing it could act on.
  *
  * @property band how hard every bot plays. `EXPERT` is the top of `MatchAiOptions.forLevel`: depth
@@ -430,12 +439,14 @@ data class MailConfig(
  *   hands is bounded by the five cards each side brings, and a bot is as able to lose them as to
  *   win them — see `BotBrain.joinable`. `TTO_BOTS_TRADES=false` is the switch if the numbers say
  *   otherwise. A table staking MGP *and* cards needs [wagers] as well.
- * @property auctions whether a bot lists its surplus at the auction house and bids on cards its
- *   decks want. True, and bounded by `BotAuctions` to a card's worth either way. Also gated on
+ * @property auctions whether a bot lists its surplus at the auction house and bids on cards it
+ *   needs. True, and bounded by `BotAuctions` to a card's worth — a quarter over it for a
+ *   collector bidding on its own set, `BotPersonality.COLLECTOR_PREMIUM`. Also gated on
  *   `Unlocks.allowsAuction`, the deployment's own level, exactly as a person is.
- * @property reserve MGP a bot keeps back from the shop — so that a purse reaches a table it can
- *   cover once [wagers] is on, and so that a card one of its decks wants at auction is not
- *   outbid by a pack it bought on the previous pass.
+ * @property reserve the least MGP a bot keeps back from the shop and from a tournament's fee — so
+ *   that a purse reaches a table it can cover once [wagers] is on, and so that a card it needs at
+ *   auction is not outbid by a pack it bought on the previous pass. Each bot keeps this times its
+ *   own `BotPersonality.thrift`; see `BotShopping` for the card it saves for on top.
  */
 data class BotPolicy(
     val enabled: Boolean = false,
