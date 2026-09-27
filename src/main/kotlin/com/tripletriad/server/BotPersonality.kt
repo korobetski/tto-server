@@ -76,9 +76,9 @@ data class BotPersonality(
      * The most this bot will bid for a card [worth] that much.
      *
      * A collector goes to [COLLECTOR_PREMIUM] of its [appetite] — at most a quarter over worth —
-     * because completing the set is what it is for. `BotAuctions.bidding` only ever asks this of a
-     * card of the bot's own format, which is the set it collects: the premium is for the set, and
-     * the format is how the set is spelled.
+     * because completing the set is what it is for. `BotAuctions.bidding` asks this of a card of
+     * another set only for a merchant buying to sell again, and a merchant is paid no premium: the
+     * premium is for the set, and the format is how the set is spelled.
      */
     fun bidCeiling(worth: Int): Int {
         val premium = if (archetype == BotArchetype.COLLECTOR) COLLECTOR_PREMIUM else 1.0
@@ -111,8 +111,11 @@ data class BotPersonality(
      */
     fun whim(key: Int): Double = Random(seed * WHIM_MIX + key).nextDouble()
 
-    /** Whether this bot bids on any card it is missing, not only on what a deck would use. */
+    /** Whether this bot bids on any card of its set it is missing from its whole purse. */
     val collects: Boolean get() = archetype.collects
+
+    /** Whether this bot buys cards to sell them again. See `BotAuctions.bidding`. */
+    val trades: Boolean get() = archetype.trades
 
     /** How many lots per tier this bot keeps open. See `BotAuctions.listing`. */
     val lotsPerTier: Int get() = archetype.lotsPerTier
@@ -175,18 +178,35 @@ data class BotPersonality(
          *   spends rather than saves.
          * - A **duelist** takes a table sooner than anybody ([patience] at the policy's own wait)
          *   and plays faster ([pace] near 1). Saves little.
-         * - A **merchant** keeps the biggest reserve, asks over worth, bids under it, and is in no
-         *   hurry to sit down at anything.
+         * - A **merchant** keeps the biggest reserve, asks at or over worth, bids under it — on
+         *   anything, of any set, it can put up again at a profit — and is in no hurry to sit down
+         *   at anything.
          *
          * `ambition` reaches 0 for a merchant on purpose: some of them never enter a tournament at
          * all, which is a personality too.
+         *
+         * ### [appetite] and [markup] are drawn to meet
+         *
+         * A bot's lot is bought by another bot only when the buyer's [bidCeiling] reaches the
+         * seller's [askingPrice]. The first ranges put nearly every ask at or over worth and nearly
+         * every ceiling under it: a competitor could afford one bot lot in nine, a duelist one in
+         * thirty, a merchant none, and the house was a collectors' shop. So the non-merchants' asks
+         * now sit *under* worth — a duelist sells cheapest, it wants the card gone and the next
+         * match — and their appetites start at or over where the merchant's ends. That brings a
+         * competitor to about three bot lots in five, a duelist to one in two (uniform draws,
+         * prices alone).
+         *
+         * **Rejected: raising the ceilings instead.** Over worth is where a bot becomes a way to
+         * pump MGP out of the roster, and [COLLECTOR_PREMIUM] is the only place it goes there; the
+         * meeting point had to move down, not up. `V22__bot_prices_meet.sql` moved the bots
+         * already enrolled by the same amount, each keeping its place inside its range.
          */
         private val TEMPERAMENTS = mapOf(
             BotArchetype.COLLECTOR to Temperament(
                 thrift = 1.2..2.0,
                 horizon = 2.0..5.0,
                 appetite = 0.85..1.0,
-                markup = 0.95..1.1,
+                markup = 0.9..1.0,
                 daring = 0.1..0.5,
                 greed = 0.7..1.0,
                 ambition = 0.05..0.25,
@@ -196,8 +216,8 @@ data class BotPersonality(
             BotArchetype.COMPETITOR to Temperament(
                 thrift = 1.0..1.6,
                 horizon = 0.5..2.0,
-                appetite = 0.8..1.0,
-                markup = 0.9..1.05,
+                appetite = 0.9..1.0,
+                markup = 0.85..0.95,
                 daring = 0.6..1.0,
                 greed = 0.1..0.4,
                 ambition = 0.5..0.9,
@@ -207,8 +227,8 @@ data class BotPersonality(
             BotArchetype.DUELIST to Temperament(
                 thrift = 1.0..1.4,
                 horizon = 0.3..1.2,
-                appetite = 0.75..0.95,
-                markup = 0.9..1.0,
+                appetite = 0.85..1.0,
+                markup = 0.8..0.9,
                 daring = 0.3..0.7,
                 greed = 0.1..0.4,
                 ambition = 0.1..0.3,
@@ -219,7 +239,7 @@ data class BotPersonality(
                 thrift = 2.0..3.5,
                 horizon = 1.5..4.0,
                 appetite = 0.7..0.85,
-                markup = 1.05..1.2,
+                markup = 1.0..1.1,
                 daring = 0.1..0.4,
                 greed = 0.3..0.6,
                 ambition = 0.0..0.1,
@@ -246,20 +266,24 @@ data class BotPersonality(
 /**
  * The four kinds of player a bot can be. See [BotPersonality] for what each does with its traits.
  *
- * @property collects whether it bids on any card of its set it is missing. A collector and a
- *   merchant do — the first to complete the set, the second because a card bought under worth is a
- *   card bought well. A competitor and a duelist bid only on what one of their decks would field:
- *   a card in the binder wins them nothing.
+ * @property collects whether it bids on any card of its set it is missing from its whole purse. A
+ *   collector and a merchant do — the first to complete the set, the second because a card bought
+ *   under worth is a card bought well. A competitor and a duelist spend their whole purse only on
+ *   what one of their decks would field, and on the binder only what lies over their reserve: a
+ *   card in the binder wins them nothing.
+ * @property trades whether it buys cards to sell them again: any card, of any set, owned or not,
+ *   under worth and while a lot is free to put it up in. A merchant alone — the one archetype that
+ *   is after MGP rather than a collection. See `BotAuctions.bidding`.
  * @property lotsPerTier how many lots of each tier it keeps open at the auction house. A merchant
  *   keeps two, so it sells at the house what another bot would sell at the counter; everybody else
  *   keeps one. See `BotAuctions.listing`.
  */
 @Serializable
-enum class BotArchetype(val collects: Boolean, val lotsPerTier: Int) {
-    COLLECTOR(collects = true, lotsPerTier = 1),
-    COMPETITOR(collects = false, lotsPerTier = 1),
-    DUELIST(collects = false, lotsPerTier = 1),
-    MERCHANT(collects = true, lotsPerTier = 2),
+enum class BotArchetype(val collects: Boolean, val trades: Boolean, val lotsPerTier: Int) {
+    COLLECTOR(collects = true, trades = false, lotsPerTier = 1),
+    COMPETITOR(collects = false, trades = false, lotsPerTier = 1),
+    DUELIST(collects = false, trades = false, lotsPerTier = 1),
+    MERCHANT(collects = true, trades = true, lotsPerTier = 2),
 }
 
 /**

@@ -429,7 +429,8 @@ object BotBrain {
 
     /**
      * One spare of everything survives, because the copy after a deck's copy is the useful one.
-     * Shared with `BotAuctions.listing`, which keeps the same spare for the same reason.
+     * Shared with `BotAuctions.listing`, which keeps the same spare for the same reason — but for a
+     * merchant's card of a set it does not play, which no deck of its will ever name.
      */
     internal const val KEPT_SPARES = 1
 

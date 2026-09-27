@@ -35,7 +35,8 @@ import kotlin.random.Random
  * - an **earmark**: the fee of the tournament it means to enter today, `BotBrain.fancied`. Kept
  *   back from the goal and the packs alike until the bot has paid it, for the same reason.
  *
- * The bid at the auction house is the one purchase that may reach into the reserve — see
+ * The bid at the auction house is the one purchase that may reach into the reserve — for a card a
+ * deck would field, for a collector's or a merchant's missing card, and for a merchant's stock; see
  * `BotAuctions.bidding` — because a card wanted and on offer now is the use the money was kept for.
  *
  * ### Varied, but never careless

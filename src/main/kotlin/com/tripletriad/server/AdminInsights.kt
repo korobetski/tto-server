@@ -39,6 +39,11 @@ import javax.sql.DataSource
  * accounts that exist. So every query takes a [BotFilter] and the console decides — it defaults to
  * humans, and says so beside the figures.
  */
+// TooManyFunctions counts the console's reads plus the row readers and statement helpers they
+// share. The rule is aimed at a class doing too many things; this one still does one, which is
+// reading for the console. The bot roster's auction figures tipped it over as a query of their
+// own, and folding that query into `botRoster` would trade this rule for `LongMethod`.
+@Suppress("TooManyFunctions")
 class AdminInsightStore(private val dataSource: DataSource) {
 
     /**
@@ -157,7 +162,7 @@ class AdminInsightStore(private val dataSource: DataSource) {
     }
 
     /**
-     * Every bot, its profile decoded, and what it has played in the window against NPCs.
+     * Every bot, its profile decoded, and what it has played and traded in the window.
      *
      * The save is decoded here rather than read by column because a bot's record, level and
      * collection all live in it, and `BotStore.progress` already does the same for the director.
@@ -165,6 +170,7 @@ class AdminInsightStore(private val dataSource: DataSource) {
      */
     @Suppress("MagicNumber")
     fun botRoster(days: Int?): List<BotRosterEntry> = transaction { db ->
+        val auctions = botAuctions(db, days)
         val pve = db.prepareStatement(
             """
             SELECT m.account_id,
@@ -207,11 +213,64 @@ class AdminInsightStore(private val dataSource: DataSource) {
                             SaveJson.decodeFromString(GameSave.serializer(), save)
                         },
                         pve = pve[accountId] ?: AdminRecord(0, 0, 0),
+                        auctions = auctions[accountId] ?: AdminBotAuctions.NONE,
                     )
                 }
             }
         }
     }
+
+    /**
+     * What each bot did at the auction house in the window, by the moment each thing happened.
+     *
+     * One event per row — a lot opened, a lot sold, a lot bought, a bid placed — each stamped with
+     * its own time, so the window means the same thing for all four: a lot opened last week and
+     * sold today is a sale today and not a listing. Counting sales by the lot's `created_at`
+     * instead would put a sale in the window it was *offered* in, and a busy day would show up
+     * as listings the day before.
+     *
+     * A sale and a purchase are read off the lot — `SOLD`, with the seller or the top bidder —
+     * rather than off the held bid's `settled_at`, so both halves of one trade come from the same
+     * row and cannot disagree about when it happened.
+     */
+    private fun botAuctions(db: Connection, days: Int?): Map<Long, AdminBotAuctions> =
+        db.prepareStatement(
+            """
+            SELECT e.account_id,
+                   count(*) FILTER (WHERE e.kind = 'LISTED') AS listed,
+                   count(*) FILTER (WHERE e.kind = 'SOLD') AS sold,
+                   count(*) FILTER (WHERE e.kind = 'BID') AS bids,
+                   count(*) FILTER (WHERE e.kind = 'WON') AS won
+            FROM (
+                SELECT l.seller_account AS account_id, 'LISTED' AS kind, l.created_at AS at
+                FROM auction_lots l
+                UNION ALL
+                SELECT l.seller_account, 'SOLD', l.settled_at
+                FROM auction_lots l WHERE l.status = 'SOLD'
+                UNION ALL
+                SELECT l.top_bidder, 'WON', l.settled_at
+                FROM auction_lots l WHERE l.status = 'SOLD'
+                UNION ALL
+                SELECT ab.bidder_account, 'BID', ab.placed_at
+                FROM auction_bids ab
+            ) AS e
+            JOIN bots b ON b.account_id = e.account_id
+            WHERE ?::int IS NULL OR e.at > now() - make_interval(days => ?::int)
+            GROUP BY e.account_id
+            """.trimIndent(),
+        ).use { statement ->
+            statement.bindDays(days, 1)
+            statement.executeQuery().use { rows ->
+                rows.collect {
+                    it.getLong("account_id") to AdminBotAuctions(
+                        listed = it.getInt("listed"),
+                        sold = it.getInt("sold"),
+                        bids = it.getInt("bids"),
+                        won = it.getInt("won"),
+                    )
+                }.toMap()
+            }
+        }
 
     /**
      * The MGP every purse holds, bots included — the denominator for "how much of it is theirs".
@@ -341,6 +400,7 @@ data class BotRosterEntry(
      */
     val save: GameSave?,
     val pve: AdminRecord,
+    val auctions: AdminBotAuctions,
 )
 
 /* -- the routes ------------------------------------------------------------------------------- */
@@ -502,6 +562,7 @@ private fun BotRosterEntry.toRow(pvp: AdminRecord) = AdminBotRow(
     ),
     pve = pve,
     pvp = pvp,
+    auctions = auctions,
 )
 
 /** Wins, losses and draws being counted, from one side's point of view. */
@@ -698,4 +759,29 @@ data class AdminBotRow(
     val pve: AdminRecord,
     /** In the window, against anybody, from the sampled replays. */
     val pvp: AdminRecord,
+    /** In the window: what it put up, sold, bid and bought at the auction house. */
+    val auctions: AdminBotAuctions,
 )
+
+/**
+ * A bot's auction house activity in the window, each thing counted when it happened.
+ *
+ * Counts and not amounts: the question these answer is whether the bots use the house at all, and
+ * who they trade with is on each lot's own page. [sold] and [won] both include trades with another
+ * bot — one trade between two bots is a sale on one row and a purchase on the other.
+ */
+@Serializable
+data class AdminBotAuctions(
+    /** Lots it opened. */
+    val listed: Int,
+    /** Of its lots, those that closed sold — whenever they were opened. */
+    val sold: Int,
+    /** Bids it placed, whether or not they were outbid since. */
+    val bids: Int,
+    /** Lots it bought: closed sold, with it as the top bidder. */
+    val won: Int,
+) {
+    companion object {
+        val NONE = AdminBotAuctions(listed = 0, sold = 0, bids = 0, won = 0)
+    }
+}

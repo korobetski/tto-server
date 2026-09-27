@@ -366,7 +366,7 @@ class BotDirector(
     private fun auctioned(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
         val format = formatOf(personality)?.takeIf { auctioning(save) } ?: return false
         val own = auctions.mine(bot.accountId).lots
-        val listing = BotAuctions.listing(save, cards, own, personality)
+        val listing = BotAuctions.listing(save, format, cards, own, personality)
 
         val response = if (listing != null) {
             val request = ListCardRequest(
@@ -385,6 +385,7 @@ class BotDirector(
                 lots = auctions.browse(bot.accountId).lots,
                 own = own,
                 personality = personality,
+                reserve = personality.reserveOver(policy.reserve),
             )?.let { bid ->
                 auctions.bid(bot.accountId, BidRequest(bid.lotId, bid.amount, operationId()))
             }

@@ -142,11 +142,16 @@ What a bot actually does, between matches and in them:
 - **Uses the auction house** (`BotAuctions`), once past `TTO_UNLOCK_AUCTION`. It keeps one lot open
   per tier — one for a spare card of three stars or more, one for a spare common; two each for a
   merchant — each asking `CardValue.worthOf` times its markup (never under what the counter would
-  pay), with the reserve equal to the start price so any bid is a sale. A collector or a merchant
-  bids on any card of its set it does not own; the others only on one a deck would field. It bids
-  the least the lot will take, and stops once that passes its ceiling: its appetite times the
-  card's worth, which is never over worth except for a collector, whose premium takes it up to
-  **125 %** of worth — the one case where a bot pays over the odds, and only for its own set.
+  pay), with the reserve equal to the start price so any bid is a sale. Every bot bids from its
+  whole purse on a card of its set it does not own and a deck would field. A collector or a
+  merchant does the same for any other card of its set it does not own; a competitor or a duelist
+  only with what the bid leaves over its reserve. A merchant also buys to sell again: any card of
+  any set, owned or not, when a lot is free to put it up in, it has none open for that card, and
+  its asking price covers the bid, the buyer's fee and the listing fee. It keeps no spare of a
+  card of another set, so what it buys there goes back on the list. A bot bids the least the lot
+  will take, and stops once that passes its ceiling: its appetite times the card's worth, which is
+  never over worth except for a collector, whose premium takes it up to **125 %** of worth — the
+  one case where a bot pays over the odds, and only for its own set.
 - **Keeps up to eight decks and chooses between them** (`BotDecks`): the strongest legal five, the
   five spread over the most types, and up to six typed decks — one per card type the collection can
   concentrate to three of the five. A table states its rules and an opponent declares theirs, so
@@ -174,8 +179,8 @@ parts:
 - **An archetype**, a quarter each. A **collector** farms drops, saves long for singles and bids
   readily, with a premium on its own set. A **competitor** likes hard opponents and tournaments and
   spends rather than saves. A **duelist** takes a table soonest and plays fastest. A **merchant**
-  keeps the biggest reserve, asks over worth, bids under it, keeps two lots per tier and is in no
-  hurry to sit down.
+  keeps the biggest reserve, asks at or over worth, bids under it — on anything it can sell again
+  at a profit — keeps two lots per tier and is in no hurry to sit down.
 - **A value for every trait, inside its archetype's range**, and a seed for its whims — so two
   collectors are both collectors and still not the same one.
 

@@ -175,10 +175,103 @@ class AdminInsightsTest {
         }
     }
 
-    private suspend fun ApplicationTestBuilder.rosterRow(session: String, bot: Long) =
-        client.get("/admin/stats/bots") { cookie(session) }.expectOk()["bots"]!!.jsonArray
-            .map { it.jsonObject }
-            .first { it["accountId"]!!.jsonPrimitive.long == bot }
+    /**
+     * A bot's auction figures count each thing in the window it happened in, and only its own.
+     *
+     * The lot that makes this worth a test is the one opened a month ago and sold today: a sale in
+     * this week's figures and a listing in no week's but the one it was opened in. Counting both
+     * off the lot's `created_at` — the one-column version of the query — reads it as a listing and
+     * a sale this week or as neither, and either would say the house was busier or quieter than it
+     * was. The buyer is a human account, so its bid and its purchase appear on no bot's row.
+     */
+    @Test
+    fun aBotsAuctionFiguresCountWhatItDidInTheWindow() = console {
+        val session = signedIn()
+        val bot = register(Postgres.freshAccount("auctionbot"))
+        val human = register(Postgres.freshAccount("auctionhuman"))
+        withBot(bot) {
+            lot(seller = bot, daysAgo = 0, buyer = null)
+            lot(seller = bot, daysAgo = MONTH, buyer = human)
+            bid(lot(seller = human, daysAgo = 0, buyer = bot), bidder = bot, daysAgo = 0)
+            bid(lot(seller = human, daysAgo = MONTH, buyer = null), bidder = bot, daysAgo = MONTH)
+
+            val week = rosterRow(session, bot, days = 7)["auctions"]!!.jsonObject
+            assertEquals(listOf(1, 1, 1, 1), AUCTION_FIGURES.map { week[it]!!.jsonPrimitive.int })
+
+            val ever = rosterRow(session, bot)["auctions"]!!.jsonObject
+            assertEquals(listOf(2, 1, 2, 1), AUCTION_FIGURES.map { ever[it]!!.jsonPrimitive.int })
+        }
+    }
+
+    /**
+     * A lot opened [daysAgo], and sold to [buyer] today unless [buyer] is null: open, then.
+     *
+     * Through SQL for `openLot`'s reason, and apart from it because this test is about *when*: the
+     * two timestamps the figures are counted by are the ones set here. Opened and then closed, in
+     * two statements, as the house does it.
+     */
+    private fun lot(seller: Long, daysAgo: Int, buyer: Long?): String {
+        val id = "lot-${Postgres.freshAccount("tally")}"
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                """
+                INSERT INTO auction_lots
+                    (id, seller_account, card_id, start_price, reserve_price, listing_fee,
+                     created_at, ends_at)
+                VALUES (?, ?, ?, 10, 10, 1, now() - ? * interval '1 day', now() + interval '1 hour')
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, id)
+                statement.setLong(2, seller)
+                statement.setInt(3, CARD_ID)
+                statement.setInt(4, daysAgo)
+                assertEquals(1, statement.executeUpdate())
+            }
+            buyer?.let { winner ->
+                db.prepareStatement(
+                    """
+                    UPDATE auction_lots
+                    SET status = 'SOLD', top_bid = 10, top_bidder = ?, bid_count = 1,
+                        sold_for = 10, settled_at = now()
+                    WHERE id = ?
+                    """.trimIndent(),
+                ).use { statement ->
+                    statement.setLong(1, winner)
+                    statement.setString(2, id)
+                    assertEquals(1, statement.executeUpdate())
+                }
+            }
+            db.commit()
+        }
+        return id
+    }
+
+    /** A bid placed [daysAgo], its hold already ended: a count is all the figures read of it. */
+    private fun bid(lot: String, bidder: Long, daysAgo: Int) =
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(
+                """
+                INSERT INTO auction_bids
+                    (lot_id, bidder_account, amount, fee, placed_at, settled_at)
+                VALUES (?, ?, 10, 1, now() - ? * interval '1 day', now())
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, lot)
+                statement.setLong(2, bidder)
+                statement.setInt(3, daysAgo)
+                assertEquals(1, statement.executeUpdate())
+            }
+            db.commit()
+        }
+
+    private suspend fun ApplicationTestBuilder.rosterRow(
+        session: String,
+        bot: Long,
+        days: Int? = null,
+    ) = client.get("/admin/stats/bots" + (days?.let { "?days=$it" } ?: "")) { cookie(session) }
+        .expectOk()["bots"]!!.jsonArray
+        .map { it.jsonObject }
+        .first { it["accountId"]!!.jsonPrimitive.long == bot }
 
     private suspend fun ApplicationTestBuilder.playerPage(session: String, accountId: Long) =
         client.get("/admin/players/$accountId") { cookie(session) }.expectOk()
@@ -278,5 +371,13 @@ class AdminInsightsTest {
         assertTrue(body["boosters"]!!.jsonArray.any { it.jsonPrimitive.content == "GOLD" })
         assertTrue(body["potions"]!!.jsonArray.any { it.jsonPrimitive.content == "LUCK" })
         assertTrue(body["origins"]!!.jsonArray.any { it.jsonPrimitive.content == "PLAIN" })
+    }
+
+    private companion object {
+        /** Far enough outside the seven-day window that no clock skew brings it back in. */
+        const val MONTH = 30
+
+        /** The four figures, in the order the assertions list them. */
+        val AUCTION_FIGURES = listOf("listed", "sold", "bids", "won")
     }
 }

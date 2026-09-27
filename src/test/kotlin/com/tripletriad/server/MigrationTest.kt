@@ -1,5 +1,6 @@
 package com.tripletriad.server
 
+import org.flywaydb.core.Flyway
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.Test
@@ -146,6 +147,76 @@ class MigrationTest {
     }
 
     /**
+     * V22 moves a bot already enrolled onto the new price ranges, and keeps its place in them.
+     *
+     * Run from V21 with a roster in it, because that is the only database V22 does anything to: on
+     * an empty `bots` table it is two UPDATEs of nothing, and the idempotence test above would pass
+     * whatever they said. The figures are the ones a reader can check by hand — a duelist at the
+     * middle of its old appetite range lands at the middle of the new one, a merchant at the top
+     * of its old markup range at the top of the new one — and a merchant's appetite, whose range
+     * did not move, is where it was.
+     */
+    @Test
+    fun v22MovesAnEnrolledBotsPricesAndKeepsItsPlaceInTheRange() {
+        withPostgres { config ->
+            Database.pool(config).use { pool ->
+                Flyway.configure()
+                    .dataSource(pool)
+                    .locations("classpath:db/migration")
+                    .target("21")
+                    .load()
+                    .migrate()
+
+                val (duelist, merchant, undrawn) = pool.connection.use { db ->
+                    val ids = Triple(
+                        insertBot(db, "duelist", DUELIST_BEFORE),
+                        insertBot(db, "merchant", MERCHANT_BEFORE),
+                        insertBot(db, "undrawn", null),
+                    )
+                    db.commit()
+                    ids
+                }
+
+                Database.migrate(pool)
+
+                assertEquals(0.925, trait(pool, duelist, "appetite")!!, TOLERANCE)
+                assertEquals(0.85, trait(pool, duelist, "markup")!!, TOLERANCE)
+                assertEquals(0.8, trait(pool, merchant, "appetite")!!, TOLERANCE)
+                assertEquals(1.1, trait(pool, merchant, "markup")!!, TOLERANCE)
+                // Drawn from the new ranges when the director next acts for it, not here.
+                assertEquals(null, trait(pool, undrawn, "appetite"))
+            }
+        }
+    }
+
+    /** @return the bot's account id. */
+    private fun insertBot(db: java.sql.Connection, name: String, personality: String?): Long {
+        val id = insertAccount(db, name)
+        db.prepareStatement(
+            "INSERT INTO bots (account_id, band, personality) VALUES (?, 'AVERAGE', ?::jsonb)",
+        ).use { statement ->
+            statement.setLong(1, id)
+            statement.setString(2, personality)
+            statement.executeUpdate()
+        }
+        return id
+    }
+
+    private fun trait(pool: javax.sql.DataSource, bot: Long, key: String): Double? =
+        pool.connection.use { db ->
+            db.prepareStatement(
+                "SELECT (personality ->> ?)::float8 FROM bots WHERE account_id = ?",
+            ).use { statement ->
+                statement.setString(1, key)
+                statement.setLong(2, bot)
+                statement.executeQuery().use { rows ->
+                    rows.next()
+                    rows.getDouble(1).takeUnless { rows.wasNull() }
+                }
+            }
+        }
+
+    /**
      * Whether Postgres refuses [statement] — on a connection of its own, which is the whole point.
      *
      * The pool hands out connections with `autoCommit = false`, so a statement that fails aborts
@@ -194,5 +265,11 @@ class MigrationTest {
     private companion object {
         /** Kept identical to the image in `compose.yaml`. */
         const val POSTGRES_IMAGE = "postgres:17-alpine"
+
+        const val TOLERANCE = 1e-9
+
+        /** Literal, not encoded by `SaveJson`: V22 reads the stored document, not a class. */
+        const val DUELIST_BEFORE = """{"archetype": "DUELIST", "appetite": 0.85, "markup": 0.95}"""
+        const val MERCHANT_BEFORE = """{"archetype": "MERCHANT", "appetite": 0.8, "markup": 1.2}"""
     }
 }
