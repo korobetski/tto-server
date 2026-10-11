@@ -15,6 +15,7 @@ import com.tripletriad.protocol.AuctionDuration
 import com.tripletriad.protocol.AuctionOutcome
 import com.tripletriad.protocol.ListCardRequest
 import com.tripletriad.protocol.PveMatchStatus
+import com.tripletriad.protocol.PveMove
 import com.tripletriad.protocol.PvpStake
 import com.tripletriad.protocol.PvpTableRequest
 import com.tripletriad.protocol.Unlocks
@@ -317,6 +318,70 @@ class BotDirectorTest {
         val after = assertNotNull(pve.matchById(owed.id, bot.accountId))
         assertEquals(PveMatchStatus.PLAYING, after.status, "the bot walked away from its match")
         assertTrue(after.moves.isNotEmpty(), "the opponent's opening move is still owed")
+    }
+
+    /**
+     * **A Sudden Death that will not end is left, and one that might is played.**
+     *
+     * The roster's outage of September–October 2026: every bot sat in a Sudden Death draw that
+     * re-dealt itself board after board — over two hundred thousand placements for the oldest —
+     * and since playing its match comes first, none of them reached anything else again.
+     *
+     * The draw is built rather than found: five copies of one card a side, a card whose opposite
+     * sides are equal, so no placement captures, each side keeps what it put down and every board
+     * ends five to five. Asserted on both sides of [BotDirector.MAX_REMATCHES], because a bot that
+     * abandons every Sudden Death passes the first half alone.
+     */
+    @Test
+    fun anEndlessSuddenDeathIsLeftAndAShortOneIsPlayed() {
+        clearBots()
+        val director = director(policy(count = 1))
+        val bot = plainBot(director)
+
+        val short = drawnOut(bot.accountId, BotDirector.MAX_REMATCHES - 1)
+        now += HOUR
+        director.tick()
+        val played = assertNotNull(pve.matchById(short, bot.accountId))
+        assertEquals(PveMatchStatus.PLAYING, played.status, "a short Sudden Death was abandoned")
+        assertTrue(played.moves.size > BOARD * (BotDirector.MAX_REMATCHES - 1), "no card placed")
+
+        pve.abandonLive(bot.accountId)
+        val endless = drawnOut(bot.accountId, BotDirector.MAX_REMATCHES)
+        now += HOUR
+        director.tick()
+        assertEquals(
+            PveMatchStatus.ABANDONED,
+            assertNotNull(pve.matchById(endless, bot.accountId)).status,
+            "the bot stayed in a Sudden Death that never ends",
+        )
+    }
+
+    /**
+     * A live Sudden Death match for [accountId], [boards] drawn boards in: see
+     * [anEndlessSuddenDeathIsLeftAndAShortOneIsPlayed] for why every one of them is a draw.
+     */
+    private fun drawnOut(accountId: Long, boards: Int): String {
+        val flat = assertNotNull(
+            Catalogs.cards.all.firstOrNull { it.top == it.bottom && it.left == it.right },
+            "the catalogue has no card whose opposite sides match",
+        )
+        val id = "endless-${Postgres.freshAccount("draw")}"
+        val row = PveMatchRow(
+            id = id,
+            accountId = accountId,
+            formatId = FORMAT,
+            opponentIconId = "ruhtwyda",
+            rules = GameRules(suddenDeath = true),
+            seed = 1,
+            blueHand = List(HAND) { flat.id },
+            redHand = List(HAND) { flat.id },
+            first = CardColor.BLUE,
+            moves = List(BOARD * boards) { PveMove(handIndex = 0, position = it % BOARD) },
+            status = PveMatchStatus.PLAYING,
+        )
+        assertNotNull(pve.open(row), "the fixture row has to be storable")
+        assertEquals(boards, row.position(Catalogs.cards)?.rematch, "the boards were not all draws")
+        return id
     }
 
     // ---- Sitting down with a person ---------------------------------------
@@ -755,6 +820,13 @@ class BotDirectorTest {
         /** Comfortably past nine placements at one a pass, with rematches allowed for. */
         const val PASSES = 40
         const val PASS_MILLIS = 10_000L
+
+        /** Longer than any bot's paced wait, so the next tick finds it due. */
+        const val HOUR = 3_600_000L
+
+        /** A hand, and the placements that fill a board. */
+        const val HAND = 5
+        const val BOARD = 9
 
         /** The policy's wait, and a moment that is nothing like it. */
         const val WAIT = 45_000L

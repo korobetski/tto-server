@@ -314,12 +314,36 @@ class BotDirector(
      * made: the point of the cadence is that a bot takes a human amount of time over a board, and
      * playing a whole match inside one pass would undo it.
      */
-    // ReturnCount: an owed opening is an action of its own, like attending in `playedPvp`, and
-    // the three ways to have nothing to place are three different facts.
+    // ReturnCount: an owed opening and leaving an endless Sudden Death are actions of their own,
+    // like attending in `playedPvp`, and the three ways to have nothing to place are three
+    // different facts.
     @Suppress("ReturnCount")
     private fun playedPve(bot: Bot): Boolean {
         val row = pve.activeFor(bot.accountId) ?: return false
         val at = row.position(cards) ?: return false
+
+        // **A Sudden Death that will not end is walked away from.**
+        //
+        // A draw deals each side the cards it ended up owning, and nothing in `:core` limits how
+        // often — the original game does not either. Two programs that see both hands (All Open)
+        // re-deal the same board, play the same match and draw again, forever: the whole roster
+        // sat in such matches for weeks, each pass placing one card on its ten-thousandth board,
+        // and since this step comes before everything else, no bot reached the auction house,
+        // the shop or another match. A person gets bored and leaves; this is the bot leaving.
+        //
+        // Abandoning pays nothing, which is what leaving costs a person too. **Rejected: capping
+        // the rematches in the rules** — that changes the game for everybody and has to ship in
+        // `:core` and the client together, or the two ends disagree about who won.
+        if (at.rematch >= MAX_REMATCHES) {
+            pve.abandonLive(bot.accountId)
+            logger.info(
+                "Bot {} left match {} after {} rematches",
+                bot.accountId,
+                row.id,
+                at.rematch,
+            )
+            return true
+        }
 
         // **Reading the board is what starts a match the opponent won the toss for.**
         //
@@ -704,7 +728,15 @@ class BotDirector(
     private fun moveDelay(): Long =
         policy.moveMinMillis + random().nextLong(policy.moveSpreadMillis + 1)
 
-    private companion object {
+    internal companion object {
+        /**
+         * How many Sudden Death rematches a bot sits through before it leaves. See [playedPve].
+         *
+         * Ten boards: a real Sudden Death is settled in two or three, and a loop is a loop by the
+         * second — the margin is for a draw that merely looks like one.
+         */
+        const val MAX_REMATCHES = 10
+
         /** How many bots one pass may create. See [ensureRoster]. */
         const val ENROL_PER_PASS = 2
 

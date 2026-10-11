@@ -215,6 +215,14 @@ Four things are worth deciding deliberately rather than inheriting:
    node budget of 400 000, on the process that serves requests. Ten bots at one placement every
    three to nine seconds is small; a hundred has not been measured.
 
+**A bot leaves a Sudden Death after ten drawn boards** (`BotDirector.MAX_REMATCHES`), abandoning
+the match unpaid as a person who quits would. Nothing in the rules ends a run of draws, and two
+programs that see both hands can re-deal the same draw forever: until this, the whole roster sat
+in such matches for weeks, never reaching the shop, the auction house or another opponent. A bot
+whose solo matches stopped climbing in `tto_bots_matches` is the symptom; `SELECT account_id,
+jsonb_array_length(moves) FROM pve_matches WHERE status = 'PLAYING'` showing a count in the
+thousands is the cause.
+
 ### What the bots are for, and how to read them
 
 Three uses, in the order they pay off:
