@@ -564,8 +564,11 @@ A schedule, a copy off the machine and a retention policy can all be satisfied w
 is unreadable. Nothing detects that except restoring one, and the failure is silent by construction:
 a backup is only ever consulted on the day it is the last copy.
 
-`restore-drill.sh` restores into a container that exists for a minute — its own tmpfs, no network to
-production, destroyed on exit however the script ends. It creates the roles the dump names rather
+`restore-drill.sh` restores into a container that exists for a minute — its own anonymous volume, no
+network to production, both destroyed on exit however the script ends. The volume is on disk, so the
+drill needs free space of the order of the live database plus 1 GB of WAL while it runs. It was a
+tmpfs until the 2026-11-23 drill ran out of it: an unsized tmpfs is half the RAM, the database had
+outgrown that, and filling RAM on the host that runs production is the wrong place to find out. It creates the roles the dump names rather
 than skipping the grants with `--no-privileges`, so a dump whose privileges are broken still fails
 here instead of during the restore it was kept for. It asserts the schema is not empty and prints a
 row count per table; it deliberately does not assert a row *threshold*, which would fail on the day

@@ -44,17 +44,24 @@ echo "    size: $(wc -c < "$DUMP") bytes"
 # Removed however this script exits, including on an interrupt. A drill that leaves a container and
 # a volume behind is one that stops being run after the third time.
 cleanup() {
-    docker rm -f "$CONTAINER" > /dev/null 2>&1 || true
+    # `-v` takes the anonymous data volume with the container.
+    docker rm -f -v "$CONTAINER" > /dev/null 2>&1 || true
 }
 trap cleanup EXIT INT TERM
 
 # No published port and no compose network: nothing outside this script can reach it, and it cannot
-# reach production. `--tmpfs` for the data directory, so the whole thing lives in RAM and leaves no
-# volume to forget about.
+# reach production.
+#
+# The data directory is an anonymous volume on disk, not a tmpfs. It was a tmpfs until 2026-11-23,
+# when the drill failed with "No space left on device" halfway through `pve_matches`: a tmpfs with
+# no size is capped at half the RAM (1.9 GB on the VPS), and a 1.35 GB database plus the WAL of its
+# own restore no longer fit. Raising the cap would only have moved the failure — and a tmpfs is
+# RAM, on a host with no swap that also runs production, so a drill that fills it starves the
+# server it is meant to protect. Disk grows with the database; RAM does not.
 docker run -d --name "$CONTAINER" \
     -e POSTGRES_PASSWORD="$DRILL_PASSWORD" \
     -e POSTGRES_DB=drill \
-    --tmpfs /var/lib/postgresql/data:rw \
+    -v /var/lib/postgresql/data \
     "$IMAGE" > /dev/null
 
 echo "==> waiting for the drill instance"

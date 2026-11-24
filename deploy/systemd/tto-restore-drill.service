@@ -4,7 +4,7 @@
 # schedule, a copy off the machine, a retention policy — can all be satisfied while every dump held
 # is unreadable, and nothing detects that except restoring one.
 #
-# It touches nothing the server uses: its own container, its own tmpfs, no network to production.
+# It touches nothing the server uses: its own container, its own throwaway volume, no network to production.
 
 [Unit]
 Description=Restore the newest dump into a throwaway Postgres, and check it
