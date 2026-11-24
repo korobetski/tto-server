@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 private val logger = LoggerFactory.getLogger("com.tripletriad.server.BotDirector")
@@ -117,6 +118,15 @@ class BotDirector(
 ) {
 
     /**
+     * When each bot may next sit down to a solo match — see [BotPolicy.pveIntervalMillis].
+     *
+     * In memory rather than in `bots`, on purpose: forgetting it costs one match dealt early per
+     * bot per restart, and a column would cost a migration and a write per match for that. Read
+     * the other way, nothing here survives a restart that should.
+     */
+    private val pveAfter = ConcurrentHashMap<Long, Long>()
+
+    /**
      * Brings the roster up to [BotPolicy.count], and answers how many it had to create.
      *
      * Called on every pass rather than once at start-up, because the roster can shrink under it: an
@@ -183,7 +193,8 @@ class BotDirector(
      * 8. **Entering a tournament**, when it has the achievement, the fee over its reserve, and the
      *    ambition today.
      * 9. **A new PvE match.** The grind, which is what turns a fresh account into one that has a
-     *    collection and a level to wager with.
+     *    collection and a level to wager with — at most one per
+     *    [BotPolicy.pveIntervalMillis], like the rung in 7.
      */
     private fun act(bot: Bot, personality: BotPersonality): Boolean {
         val save = accounts.saveFor(bot.accountId) ?: return false
@@ -193,9 +204,34 @@ class BotDirector(
             playedPve(bot) ||
             auctioned(bot, save, personality) ||
             developed(bot, save, personality) ||
-            climbed(bot, save) ||
+            climbing(bot, save, personality) ||
             entered(bot, save, personality) ||
-            opened(bot, save, personality)
+            opening(bot, save, personality)
+    }
+
+    /** [climbed], once this bot's solo interval is over. See [dealing]. */
+    private fun climbing(bot: Bot, save: GameSave, personality: BotPersonality): Boolean =
+        dealing(bot, personality) { climbed(bot, save) }
+
+    /** [opened], once this bot's solo interval is over. See [dealing]. */
+    private fun opening(bot: Bot, save: GameSave, personality: BotPersonality): Boolean =
+        dealing(bot, personality) { opened(bot, save, personality) }
+
+    /**
+     * Deals a solo match through [deal] only once [BotPolicy.pveIntervalMillis] — stretched by the
+     * bot's pace — has passed since the last one it was dealt, and starts the interval again when
+     * one is.
+     *
+     * Around the deal and not around [playedPve]: a match under way is played out, and what this
+     * spaces is how often a new one begins. Entering a tournament is not a match and is not held
+     * back; its rungs are, like any other.
+     */
+    private fun dealing(bot: Bot, personality: BotPersonality, deal: () -> Boolean): Boolean {
+        val now = clock()
+        if ((pveAfter[bot.accountId] ?: 0) > now) return false
+        return deal().also { dealt ->
+            if (dealt) pveAfter[bot.accountId] = now + personality.paced(policy.pveIntervalMillis)
+        }
     }
 
     // ---- Player versus player ---------------------------------------------
@@ -390,7 +426,8 @@ class BotDirector(
     private fun auctioned(bot: Bot, save: GameSave, personality: BotPersonality): Boolean {
         val format = formatOf(personality)?.takeIf { auctioning(save) } ?: return false
         val own = auctions.mine(bot.accountId).lots
-        val listing = BotAuctions.listing(save, format, cards, own, personality)
+        val market = auctions.browse(bot.accountId).lots
+        val listing = BotAuctions.listing(save, format, cards, own, market, personality, random())
 
         val response = if (listing != null) {
             val request = ListCardRequest(
@@ -406,7 +443,7 @@ class BotDirector(
                 save = save,
                 format = format,
                 cards = cards,
-                lots = auctions.browse(bot.accountId).lots,
+                lots = market,
                 own = own,
                 personality = personality,
                 reserve = personality.reserveOver(policy.reserve),

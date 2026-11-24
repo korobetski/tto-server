@@ -76,6 +76,7 @@ server.
 | `TTO_BOTS_MOVE_SPREAD_SECONDS` | `6` | added to the above, drawn per move |
 | `TTO_BOTS_IDLE_SECONDS` | `20` | how long a bot with nothing to do waits, at the least — its personality stretches this by up to a half and never shortens it. The two move timings above are stretched the same way |
 | `TTO_BOTS_TICK_SECONDS` | `2` | how often the director looks at all |
+| `TTO_BOTS_PVE_INTERVAL_SECONDS` | `3600` | the **least** time between two solo matches one bot sits down to, tournament rungs included; its pace stretches it. Kept in memory, so a restart lets each bot deal one match early |
 
 ### Mail, and why the server refuses to start without a provider
 

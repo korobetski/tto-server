@@ -134,6 +134,65 @@ class BotAuctionsTest {
         assertEquals(rare.id, listing(save, listOf(sold), PLAIN)?.cardId)
     }
 
+    /**
+     * **Several spares in a tier are drawn among, not ranked.** The bug this answers: every bot
+     * put up its single most valuable spare, so the whole roster relisted the same two cards —
+     * 883 lots for one of them by 2026-11-24, nine in ten unsold.
+     */
+    @Test
+    fun spareCardsOfOneTierTakeTurnsAtTheHouse() {
+        val rares = admitted().filter { it.rarity > BotBrain.SELLABLE_RARITY }.take(RARES)
+        val save = rares.fold(seller()) { profile, card -> profile.withCard(card.id, HOARD) }
+
+        val drawn = (0 until DRAWS)
+            .mapNotNull { seed -> listing(save, emptyList(), PLAIN, random = Random(seed))?.cardId }
+            .toSet()
+
+        assertEquals(rares.map { it.id }.toSet(), drawn, "every spare should get its turn")
+    }
+
+    /** A card whose last lot did not sell steps aside for one that has not been tried. */
+    @Test
+    fun aCardThatJustWentUnsoldStepsAside() {
+        val (tried, untried) = admitted().filter { it.rarity > BotBrain.SELLABLE_RARITY }.take(2)
+        val save = seller().withCard(tried.id, HOARD).withCard(untried.id, HOARD)
+        val unsold = lot(tried.id, yours = true).copy(status = AuctionStatus.UNSOLD)
+
+        (0 until DRAWS).forEach { seed ->
+            assertEquals(
+                untried.id,
+                listing(save, listOf(unsold), PLAIN, random = Random(seed))?.cardId,
+            )
+        }
+    }
+
+    /** A card somebody already has on the list steps aside too: a second lot only competes. */
+    @Test
+    fun aCardAlreadyOnOfferStepsAside() {
+        val (offered, other) = admitted().filter { it.rarity > BotBrain.SELLABLE_RARITY }.take(2)
+        val save = seller().withCard(offered.id, HOARD).withCard(other.id, HOARD)
+        val market = listOf(lot(offered.id))
+
+        (0 until DRAWS).forEach { seed ->
+            assertEquals(
+                other.id,
+                listing(save, emptyList(), PLAIN, market, Random(seed))?.cardId,
+            )
+        }
+    }
+
+    /**
+     * With nothing untried left, the bot lists what it has anyway — stepping aside is a
+     * preference, not a ban, or a bot with one spare would never sell it.
+     */
+    @Test
+    fun theOnlySpareIsListedEvenAfterGoingUnsold() {
+        val save = seller().withCard(rare.id, HOARD)
+        val unsold = lot(rare.id, yours = true).copy(status = AuctionStatus.UNSOLD)
+
+        assertEquals(rare.id, listing(save, listOf(unsold), PLAIN, listOf(lot(rare.id)))?.cardId)
+    }
+
     /** A purse that cannot cover the listing fee lists nothing, rather than being refused. */
     @Test
     fun aPurseShortOfTheFeeListsNothing() {
@@ -424,7 +483,9 @@ class BotAuctionsTest {
         save: GameSave,
         own: List<AuctionLot>,
         personality: BotPersonality,
-    ): BotListing? = BotAuctions.listing(save, format, cards, own, personality)
+        market: List<AuctionLot> = emptyList(),
+        random: Random = Random(SEED),
+    ): BotListing? = BotAuctions.listing(save, format, cards, own, market, personality, random)
 
     /**
      * [BotAuctions.bidding] against [format], with a [reserve] of the whole purse unless a test
@@ -499,6 +560,9 @@ class BotAuctionsTest {
 
         /** Two past the kept spare. */
         const val HOARD = 3
+
+        /** Any fixed draw: a test that depends on which one is about the choosing, not the luck. */
+        const val SEED = 7
         const val PURSE = 100_000
         const val CHEAP = 1
 
@@ -512,6 +576,9 @@ class BotAuctionsTest {
 
         /** Enough draws that every archetype turns up many times over. */
         const val DRAWS = 200
+
+        /** Spare rare cards held at once by [spareCardsOfOneTierTakeTurnsAtTheHouse]. */
+        const val RARES = 4
 
         /** `BotPersonality.PRICE_STEP`, which is private and is what a listing is rounded to. */
         const val PRICE_STEP = 10

@@ -150,6 +150,7 @@ services:
       TTO_BOTS_MOVE_SPREAD_SECONDS: ${TTO_BOTS_MOVE_SPREAD_SECONDS:-}
       TTO_BOTS_IDLE_SECONDS: ${TTO_BOTS_IDLE_SECONDS:-}
       TTO_BOTS_TICK_SECONDS: ${TTO_BOTS_TICK_SECONDS:-}
+      TTO_BOTS_PVE_INTERVAL_SECONDS: ${TTO_BOTS_PVE_INTERVAL_SECONDS:-}
     # No published port either: Caddy reaches it as `server:8080` on this network. Publishing it
     # would put a plaintext HTTP server on the VPS's public address, next to the HTTPS one, and
     # every client that found it would work — which is how a TLS deployment stays untested.

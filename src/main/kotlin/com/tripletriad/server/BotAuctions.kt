@@ -7,6 +7,8 @@ import com.tripletriad.data.Format
 import com.tripletriad.model.Card
 import com.tripletriad.model.GameSave
 import com.tripletriad.protocol.AuctionLot
+import com.tripletriad.protocol.AuctionStatus
+import kotlin.random.Random
 
 /**
  * What a bot puts up at the auction house, and what it bids on.
@@ -64,37 +66,59 @@ object BotAuctions {
     /**
      * The card this bot should put up, and its price — or null when it has nothing to sell.
      *
-     * The most valuable spare whose [tier] still has room for a lot — `BotPersonality.lotsPerTier`
-     * of them: it is the listing a person is likeliest to want, and the rare tier is asked first
-     * for that reason alone. A card the bot already has a lot open for waits for that lot to
-     * finish. A spare is a copy past the ones [kept] holds back.
+     * A spare whose [tier] still has room for a lot — `BotPersonality.lotsPerTier` of them — with
+     * the rare tier asked first: it is where the listing a person is likeliest to want is. A card
+     * the bot already has a lot open for waits for that lot to finish. A spare is a copy past the
+     * ones [kept] holds back.
+     *
+     * ### Which spare, drawn rather than ranked
+     *
+     * Within the tier the card is drawn, and drawn first among the spares nobody is selling and
+     * this bot did not just fail to sell — falling back to all of them when there is no such
+     * spare. It used to be the most valuable spare, every time, and that is a ranking every bot
+     * shares: by 2026-11-24 the ten bots had opened 883 lots for one card and 738 for another,
+     * nine in ten of them unsold, and the house read as two cards on a loop. A card that did not
+     * sell at its price will not sell at the same price an hour later, and a second lot for a card
+     * already on the list only competes with the first.
      *
      * The price is `BotPersonality.askingPrice`: the bot's markup over worth, never under what the
      * counter would pay, which is also the auction house's own floor.
      *
      * @param format the format the bot plays, which says which of its cards are of its set.
-     * @param own the bot's lots as `AuctionStore.mine` answers them, finished ones included.
+     * @param own the bot's lots as `AuctionStore.mine` answers them, finished ones included — the
+     *   unsold ones among them are what "just failed to sell" means.
+     * @param market what is on offer now — `AuctionStore.browse` — whoever is selling it.
      */
+    // LongParameterList: the profile, the format, the catalogue, the two lists the auction house
+    // answers with, who is selling, and the draw — each a separate fact, as for [bidding].
+    @Suppress("LongParameterList")
     fun listing(
         save: GameSave,
         format: Format,
         cards: CardCatalog,
         own: List<AuctionLot>,
+        market: List<AuctionLot>,
         personality: BotPersonality,
+        random: Random,
     ): BotListing? {
         val live = own.filter { it.yours && !it.status.isFinished }
         val listed = live.map { it.cardId }.toSet()
         val open = perTier(live, cards)
+        val stale = own.filter { it.yours && it.status == AuctionStatus.UNSOLD }.map { it.cardId } +
+            market.filter { it.status.isOpen }.map { it.cardId }
 
-        return save.cards.keys
+        val spares = save.cards.keys
             .mapNotNull { cards.byId[it] }
             .filter { card ->
                 (open[tier(card)] ?: 0) < personality.lotsPerTier &&
                     card.id !in listed &&
                     save.spareCopiesOf(card.id) > kept(card.id, format, personality)
             }
-            .sortedWith(compareByDescending<Card> { CardValue.worthOf(it) }.thenBy { it.id })
-            .firstOrNull()
+            .sortedBy { it.id }
+        val inTier = spares.filter { tier(it) == Tier.RARE }.ifEmpty { spares }
+        val fresh = inTier.filter { it.id !in stale }.ifEmpty { inTier }
+
+        return fresh.randomOrNull(random)
             ?.let { card -> BotListing(card.id, askingPrice(card.id, cards, personality)) }
             ?.takeIf { save.mgp >= AuctionRules.listingFee(it.price) }
     }

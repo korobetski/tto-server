@@ -23,6 +23,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -283,6 +284,61 @@ class BotDirectorTest {
         assertTrue(after.pveMatches > before.pveMatches, "a bot should finish what it starts")
         assertTrue(after.xp > before.xp, "a settled match pays")
     }
+
+    /**
+     * **One solo match per interval, and the next one once it is over.**
+     *
+     * The bug this answers: with no interval, ten bots dealt themselves some thirty-five matches an
+     * hour each, and by 2026-11-24 their history was 1.1 GB of a 1.3 GB database. Asserted on both
+     * sides of the interval, because a bot that never deals again passes the first half alone.
+     */
+    @Test
+    fun aBotWaitsOutItsIntervalBeforeItsNextSoloMatch() {
+        clearBots()
+        val director = director(policy(count = 1, pveInterval = HOUR))
+        val bot = plainBot(director)
+
+        repeat(PASSES) {
+            director.tick()
+            now += PASS_MILLIS
+        }
+        assertEquals(1, soloMatchesOf(bot.accountId), "a second match was dealt inside the hour")
+        assertNotEquals(
+            PveMatchStatus.PLAYING,
+            pve.matchById(soloMatchIdOf(bot.accountId), bot.accountId)?.status,
+            "the first match should have been played out meanwhile",
+        )
+
+        // As many passes again, not one: whatever else the bot has to do comes first, and the
+        // interval holding a third match back is the same assertion as the first half's.
+        now += HOUR
+        repeat(PASSES) {
+            director.tick()
+            now += PASS_MILLIS
+        }
+        assertEquals(2, soloMatchesOf(bot.accountId), "the interval is over and nothing was dealt")
+    }
+
+    private fun soloMatchesOf(accountId: Long): Int = soloMatchQuery(
+        "SELECT count(*) FROM pve_matches WHERE account_id = ?",
+        accountId,
+    ).toInt()
+
+    private fun soloMatchIdOf(accountId: Long): String = soloMatchQuery(
+        "SELECT id FROM pve_matches WHERE account_id = ? ORDER BY created_at DESC LIMIT 1",
+        accountId,
+    )
+
+    private fun soloMatchQuery(sql: String, accountId: Long): String =
+        Postgres.dataSource.connection.use { db ->
+            db.prepareStatement(sql).use { statement ->
+                statement.setLong(1, accountId)
+                statement.executeQuery().use { rows ->
+                    assertTrue(rows.next())
+                    rows.getString(1)
+                }
+            }
+        }
 
     /**
      * **A match the opponent opens is played, not walked away from.**
@@ -692,7 +748,16 @@ class BotDirectorTest {
 
     // ---- Fixtures ---------------------------------------------------------
 
-    private fun policy(count: Int, trades: Boolean = true, wait: Long = WAIT) = BotPolicy(
+    /**
+     * No solo interval unless a test asks for one: most of this file is about what a bot does
+     * between matches, and an hour's wait would only be clock-winding in each of them.
+     */
+    private fun policy(
+        count: Int,
+        trades: Boolean = true,
+        wait: Long = WAIT,
+        pveInterval: Long = 0,
+    ) = BotPolicy(
         enabled = true,
         count = count,
         band = NpcLevel.EXPERT,
@@ -701,6 +766,7 @@ class BotDirectorTest {
         wagers = false,
         trades = trades,
         tableWaitMillis = wait,
+        pveIntervalMillis = pveInterval,
     )
 
     private fun director(policy: BotPolicy) = BotDirector(

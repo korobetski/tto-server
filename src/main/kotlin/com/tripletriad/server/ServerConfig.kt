@@ -447,6 +447,9 @@ data class MailConfig(
  *   that a purse reaches a table it can cover once [wagers] is on, and so that a card it needs at
  *   auction is not outbid by a pack it bought on the previous pass. Each bot keeps this times its
  *   own `BotPersonality.thrift`; see `BotShopping` for the card it saves for on top.
+ * @property pveIntervalMillis the least time between two solo matches one bot sits down to, a
+ *   tournament's rungs included — a minimum like the cadence, stretched by the bot's own pace. A
+ *   match already under way is played out at the usual cadence; this only spaces the dealing.
  */
 data class BotPolicy(
     val enabled: Boolean = false,
@@ -463,6 +466,7 @@ data class BotPolicy(
     val moveSpreadMillis: Long = DEFAULT_MOVE_SPREAD_SECONDS * MILLIS,
     val idleMillis: Long = DEFAULT_IDLE_SECONDS * MILLIS,
     val tickMillis: Long = DEFAULT_TICK_SECONDS * MILLIS,
+    val pveIntervalMillis: Long = DEFAULT_PVE_INTERVAL_SECONDS * MILLIS,
 ) {
     companion object {
         /**
@@ -499,6 +503,8 @@ data class BotPolicy(
                     ?: defaults.moveSpreadMillis,
                 idleMillis = seconds(lookup("TTO_BOTS_IDLE_SECONDS")) ?: defaults.idleMillis,
                 tickMillis = seconds(lookup("TTO_BOTS_TICK_SECONDS")) ?: defaults.tickMillis,
+                pveIntervalMillis = seconds(lookup("TTO_BOTS_PVE_INTERVAL_SECONDS"))
+                    ?: defaults.pveIntervalMillis,
             )
         }
 
@@ -549,6 +555,17 @@ data class BotPolicy(
 
         /** How long a bot with nothing to do waits before looking again. */
         private const val DEFAULT_IDLE_SECONDS = 20L
+
+        /**
+         * An hour between two solo matches a bot sits down to.
+         *
+         * Until 2026-11-24 there was no such floor: a bot with nothing better to do dealt itself
+         * the next match on the next pass, and ten of them had played 970 000 solo matches in
+         * eleven weeks — some thirty-five an hour each, 1.1 GB of a 1.3 GB database, and the
+         * reason the restore drill outgrew its tmpfs. A bot is there to be at the tables and
+         * the auction house when a person is, and grinding round the clock is not that.
+         */
+        private const val DEFAULT_PVE_INTERVAL_SECONDS = 3_600L
 
         /**
          * How often the director looks at all.
